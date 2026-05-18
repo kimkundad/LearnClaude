@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_theme.dart';
+import '../services/api_service.dart';
+import '../services/auth_service.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -18,6 +20,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _obscurePassword = true;
   bool _obscureConfirm = true;
   bool _acceptTerms = false;
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -73,8 +76,37 @@ class _RegisterScreenState extends State<RegisterScreen> {
       _passwordsMatch &&
       _acceptTerms;
 
-  void _onRegister() {
-    context.go('/home');
+  Future<void> _onRegister() async {
+    setState(() => _isLoading = true);
+    try {
+      final data = await ApiService.instance.register(
+        _usernameCtrl.text.trim(),
+        _emailCtrl.text.trim(),
+        _passwordCtrl.text,
+      );
+      await AuthService.instance.saveSession(
+        data['token'] as String,
+        data['profile'] as Map<String, dynamic>,
+      );
+      if (mounted) context.go('/complete-profile');
+    } on ApiException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message), backgroundColor: AppTheme.priceRed),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('ไม่สามารถเชื่อมต่อได้ กรุณาตรวจสอบเครือข่าย'),
+            backgroundColor: AppTheme.priceRed,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -248,8 +280,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 20),
               ElevatedButton(
-                onPressed: _canSubmit ? _onRegister : null,
-                child: const Text('สร้างบัญชี →'),
+                onPressed: (_canSubmit && !_isLoading) ? _onRegister : null,
+                child: _isLoading
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      )
+                    : const Text('สร้างบัญชี →'),
               ),
               const SizedBox(height: 20),
               Center(

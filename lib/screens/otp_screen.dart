@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_theme.dart';
+import '../services/api_service.dart';
 
 class OTPScreen extends StatefulWidget {
   final String email;
@@ -20,6 +21,7 @@ class _OTPScreenState extends State<OTPScreen> {
   final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
   int _secondsLeft = 60;
   Timer? _timer;
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -31,6 +33,7 @@ class _OTPScreenState extends State<OTPScreen> {
   }
 
   void _startTimer() {
+    _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 1), (t) {
       if (_secondsLeft > 0) {
         setState(() => _secondsLeft--);
@@ -40,9 +43,23 @@ class _OTPScreenState extends State<OTPScreen> {
     });
   }
 
-  void _resend() {
-    setState(() => _secondsLeft = 60);
-    _startTimer();
+  Future<void> _resend() async {
+    try {
+      await ApiService.instance.forgotPassword(widget.email);
+      if (mounted) {
+        setState(() => _secondsLeft = 60);
+        _startTimer();
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('ส่งรหัสใหม่แล้ว', style: GoogleFonts.sarabun()),
+          backgroundColor: AppTheme.primary,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          margin: const EdgeInsets.all(16),
+        ));
+      }
+    } catch (_) {
+      if (mounted) _showError('ส่งรหัสไม่สำเร็จ กรุณาลองใหม่');
+    }
   }
 
   @override
@@ -58,11 +75,35 @@ class _OTPScreenState extends State<OTPScreen> {
   }
 
   String get _otp => _controllers.map((c) => c.text).join();
-
   bool get _isComplete => _otp.length == 6;
 
-  void _onVerify() {
-    context.push('/set-password');
+  Future<void> _onVerify() async {
+    setState(() => _isLoading = true);
+    try {
+      final resetToken = await ApiService.instance.verifyOtp(widget.email, _otp);
+      if (mounted) {
+        context.push('/set-password', extra: {
+          'email': widget.email,
+          'reset_token': resetToken,
+        });
+      }
+    } on ApiException catch (e) {
+      _showError(e.message);
+    } catch (_) {
+      _showError('ไม่สามารถเชื่อมต่อได้ กรุณาตรวจสอบเครือข่าย');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  void _showError(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(msg, style: GoogleFonts.sarabun()),
+      backgroundColor: AppTheme.priceRed,
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      margin: const EdgeInsets.all(16),
+    ));
   }
 
   @override
@@ -123,29 +164,7 @@ class _OTPScreenState extends State<OTPScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: List.generate(6, (i) => _buildOtpBox(i)),
               ),
-              const SizedBox(height: 20),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFFDE7),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: const Color(0xFFFFEB3B).withOpacity(0.5)),
-                ),
-                child: Row(
-                  children: [
-                    const Text('💡', style: TextStyle(fontSize: 16)),
-                    const SizedBox(width: 8),
-                    Text(
-                      'สาธิต: ใช้รหัส 123456',
-                      style: GoogleFonts.sarabun(
-                        fontSize: 13,
-                        color: const Color(0xFF795548),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 28),
               Center(
                 child: _secondsLeft > 0
                     ? Text(
@@ -169,8 +188,14 @@ class _OTPScreenState extends State<OTPScreen> {
               ),
               const SizedBox(height: 28),
               ElevatedButton(
-                onPressed: _isComplete ? _onVerify : null,
-                child: const Text('ยืนยันรหัส →'),
+                onPressed: (_isComplete && !_isLoading) ? _onVerify : null,
+                child: _isLoading
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      )
+                    : const Text('ยืนยันรหัส →'),
               ),
               const SizedBox(height: 24),
             ],

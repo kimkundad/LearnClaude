@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_theme.dart';
+import '../services/auth_service.dart';
+import '../services/api_service.dart';
 import 'chat_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -13,6 +15,44 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   bool _notificationsEnabled = true;
+  String  _name      = '';
+  String  _initial   = '';
+  String  _points    = '';
+  String? _avatarUrl;
+
+  static const _avatarBase = 'https://learnsbuy.com/assets/images/avatar/';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfile();
+  }
+
+  Future<void> _loadProfile() async {
+    // ใช้ cache ก่อนเพื่อให้แสดงเร็ว
+    final cached = await AuthService.instance.getUser();
+    if (cached != null) _applyProfile(cached);
+    // ดึงข้อมูลใหม่จาก API
+    try {
+      final fresh = await ApiService.instance.getMe();
+      _applyProfile(fresh);
+      final token = await AuthService.instance.getToken();
+      if (token != null) await AuthService.instance.saveSession(token, fresh);
+    } catch (_) {}
+  }
+
+  void _applyProfile(Map<String, dynamic> u) {
+    if (!mounted) return;
+    final name = (u['name'] as String?) ?? '';
+    final points = (u['user_coin'] as num?)?.toStringAsFixed(0) ?? '';
+    final f = u['avatar'] as String?;
+    setState(() {
+      _name      = name;
+      _initial   = name.isNotEmpty ? name[0].toUpperCase() : '?';
+      _points    = points;
+      _avatarUrl = (f != null && f.isNotEmpty) ? '$_avatarBase$f' : null;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +72,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         icon: Icons.person_outline_rounded,
                         label: 'Edit Profile',
                         labelTh: 'แก้ไขโปรไฟล์',
-                        onTap: () => context.push('/edit-profile'),
+                        onTap: () async {
+                          await context.push('/edit-profile');
+                          _loadProfile();
+                        },
+                      ),
+                      _MenuItem(
+                        icon: Icons.lock_reset_rounded,
+                        label: 'Reset Password',
+                        labelTh: 'เปลี่ยนรหัสผ่าน',
+                        onTap: () => context.push('/change-password'),
                       ),
                       _MenuItem(
                         icon: Icons.headset_mic_outlined,
@@ -62,6 +111,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ]),
                     const SizedBox(height: 12),
                     _buildMenuGroup([
+                      _MenuItem(
+                        icon: Icons.campaign_rounded,
+                        label: 'Announcement',
+                        labelTh: 'ประชาสัมพันธ์',
+                        onTap: () => context.push('/articles'),
+                      ),
                       _MenuItem(
                         icon: Icons.lock_outline_rounded,
                         label: 'Privacy Policy',
@@ -112,6 +167,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  Widget _initialCircle() {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [AppTheme.primary, Color(0xFF0A8A7E)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: Center(
+        child: Text(
+          _initial,
+          style: GoogleFonts.sarabun(
+            fontSize: 36,
+            fontWeight: FontWeight.w900,
+            color: Colors.white,
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildProfileHeader() {
     return Container(
       color: Colors.white,
@@ -126,11 +203,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 height: 90,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  gradient: const LinearGradient(
-                    colors: [AppTheme.primary, Color(0xFF0A8A7E)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
                   boxShadow: [
                     BoxShadow(
                       color: AppTheme.primary.withOpacity(0.35),
@@ -139,15 +211,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                   ],
                 ),
-                child: Center(
-                  child: Text(
-                    'K',
-                    style: GoogleFonts.sarabun(
-                      fontSize: 36,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.white,
-                    ),
-                  ),
+                child: ClipOval(
+                  child: _avatarUrl != null
+                      ? Image.network(
+                          _avatarUrl!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => _initialCircle(),
+                        )
+                      : _initialCircle(),
                 ),
               ),
               Positioned(
@@ -175,7 +246,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: 14),
           Text(
-            'kim kundad.',
+            _name,
             style: GoogleFonts.sarabun(
               fontSize: 20,
               fontWeight: FontWeight.w800,
@@ -195,7 +266,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const Icon(Icons.stars_rounded, size: 14, color: AppTheme.primary),
                 const SizedBox(width: 4),
                 Text(
-                  'POINT 509,849.5',
+                  'POINT $_points',
                   style: GoogleFonts.sarabun(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
@@ -371,9 +442,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(ctx);
-              context.go('/login');
+              await AuthService.instance.logout();
+              if (context.mounted) context.go('/login');
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.priceRed,

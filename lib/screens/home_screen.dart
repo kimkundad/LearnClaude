@@ -1,10 +1,16 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import '../theme/app_theme.dart';
 import '../widgets/course_card.dart';
+import '../services/api_service.dart';
+import '../services/auth_service.dart';
+import '../services/notification_service.dart';
+import '../config/app_config.dart';
 import 'chat_screen.dart';
+import 'teacher_inbox_screen.dart';
 import 'help_screen.dart';
 import 'my_course_screen.dart';
 import 'settings_screen.dart';
@@ -18,62 +24,213 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
+  final _myCourseKey = GlobalKey<MyCourseScreenState>();
   final _bannerController = PageController();
-  String _selectedCategory = 'All';
+  Timer? _bannerTimer;
 
-  final List<String> _categories = ['All', 'ภาษาญี่ปุ่น', 'ภาษาเกาหลี', 'ภาษาจีน', 'ภาษาเยอรมัน', 'อื่นๆ'];
+  // User info
+  String  _userName    = '';
+  String  _userInitial = 'K';
+  int     _userId      = 0;
+  String? _avatarUrl;
 
-  final List<CourseModel> _courses = const [
-    CourseModel(
-      flashLabel: 'FLASH\nA-LEVEL',
-      courseName: 'ติวโค้งสุดท้าย A-Level ญี่ปุ่น',
-      rating: 5.0,
-      students: 953,
-      price: 3950,
-      bgStart: Color(0xFFFF6B8A),
-      bgEnd: Color(0xFFFF4757),
-      icon: Icons.track_changes,
-      tags: ['โค้งสุดท้าย'],
-    ),
-    CourseModel(
-      flashLabel: 'FLASH\nA-LEVEL',
-      courseName: 'ติวโค้งสุดท้าย A-Level ญี่ปุ่น Pro',
-      rating: 5.0,
-      students: 48,
-      price: 3950,
-      bgStart: Color(0xFFFF6B8A),
-      bgEnd: Color(0xFFFF4757),
-      icon: Icons.track_changes,
-      tags: ['โค้งสุดท้าย'],
-    ),
-    CourseModel(
-      flashLabel: 'FLASH\nN5',
-      courseName: 'เรียนภาษาญี่ปุ่นเบื้องต้น N5',
-      rating: 4.9,
-      students: 1204,
-      price: 2900,
-      bgStart: Color(0xFF9B59B6),
-      bgEnd: Color(0xFF6C3483),
-      icon: Icons.local_florist,
-      tags: ['N5 Basic'],
-    ),
-    CourseModel(
-      flashLabel: 'FLASH\nเดือน',
-      courseName: 'เรียนภาษาญี่ปุ่นพื้นฐาน 2 เดือน',
-      rating: 4.8,
-      students: 720,
-      price: 2900,
-      bgStart: Color(0xFFFF9F43),
-      bgEnd: Color(0xFFEE5A24),
-      icon: Icons.bolt,
-      tags: ['Fast Track'],
-    ),
+  static const _avatarBase = 'https://learnsbuy.com/assets/images/avatar/';
+
+  // Data
+  bool _isLoading = true;
+  List<Map<String, dynamic>> _departments = [];
+  List<Map<String, dynamic>> _courseList  = [];
+  List<Map<String, dynamic>> _packageList = [];
+  List<Map<String, dynamic>> _slideList   = [];
+  int _selectedDeptId = 0;
+
+  static const _courseColors = <List<Color>>[
+    [Color(0xFFFF6B8A), Color(0xFFFF4757)],
+    [Color(0xFF9B59B6), Color(0xFF6C3483)],
+    [Color(0xFF0FB5A6), Color(0xFF0A8A7E)],
+    [Color(0xFFFF9F43), Color(0xFFEE5A24)],
+    [Color(0xFF3498DB), Color(0xFF1A73C7)],
+    [Color(0xFF2ECC71), Color(0xFF1A9B5F)],
+    [Color(0xFFE74C3C), Color(0xFFC0392B)],
+    [Color(0xFF2C3E7A), Color(0xFF1A2460)],
+  ];
+
+  static const _pkgGradients = <List<Color>>[
+    [Color(0xFF2C3E7A), Color(0xFF1A2460)],
+    [Color(0xFF0F3460), Color(0xFF533483)],
+    [Color(0xFF1A1A2E), Color(0xFF16213E)],
+    [Color(0xFF6A0572), Color(0xFF9B59B6)],
+    [Color(0xFF1B4332), Color(0xFF2D6A4F)],
+    [Color(0xFFCC0000), Color(0xFFFF4444)],
+    [Color(0xFF0FB5A6), Color(0xFF0A8A7E)],
+    [Color(0xFFE67E22), Color(0xFFD35400)],
+  ];
+
+  static const _pkgIcons = <IconData>[
+    Icons.school,
+    Icons.translate,
+    Icons.live_tv,
+    Icons.emoji_events,
+    Icons.speed,
+    Icons.menu_book,
+    Icons.bolt,
+    Icons.card_giftcard,
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _loadData();
+    _startBannerTimer();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) NotificationService.instance.init(context);
+    });
+  }
+
+  void _startBannerTimer() {
+    _bannerTimer = Timer.periodic(const Duration(seconds: 4), (_) {
+      if (!_bannerController.hasClients || _slideList.isEmpty) return;
+      final next = (_bannerController.page?.round() ?? 0) + 1;
+      _bannerController.animateToPage(
+        next % _slideList.length,
+        duration: const Duration(milliseconds: 600),
+        curve: Curves.easeInOut,
+      );
+    });
+  }
+
+  @override
   void dispose() {
+    _bannerTimer?.cancel();
     _bannerController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadData() async {
+    // โหลด public data และ user data แยกกัน เพื่อกัน auth error ไม่ให้กระทบหน้า
+    await Future.wait([
+      _loadPublicData(),
+      _loadUserName(),
+    ]);
+  }
+
+  Future<void> _loadPublicData() async {
+    try {
+      final results = await Future.wait<dynamic>([
+        ApiService.instance.getDepartments(),
+        ApiService.instance.getCourses(),
+        ApiService.instance.getPackages(),
+        ApiService.instance.getSlideShows(),
+      ]);
+      if (!mounted) return;
+      setState(() {
+        _departments = _asMaps(results[0] as List);
+        _courseList  = _asMaps(results[1] as List);
+        _packageList = _asMaps(results[2] as List);
+        _slideList   = _asMaps(results[3] as List);
+        _isLoading   = false;
+      });
+    } catch (_) {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _loadUserName() async {
+    String name = '';
+    int uid = 0;
+    try {
+      // ลอง API ก่อน (fresh data)
+      final data = await ApiService.instance.getMe();
+      name = (data['name'] as String?) ?? '';
+      uid  = (data['id']   as num?)?.toInt() ?? 0;
+    } catch (_) {
+      // fallback ใช้ cache จาก SharedPreferences
+      try {
+        final user = await AuthService.instance.getUser();
+        name = (user?['name'] as String?) ?? '';
+        uid  = (user?['id']   as num?)?.toInt() ?? 0;
+      } catch (_) {}
+    }
+    if (mounted) setState(() => _userId = uid);
+    if (uid > 0) NotificationService.instance.saveToken(uid);
+    if (mounted && name.isNotEmpty) {
+      setState(() => _userInitial = name[0].toUpperCase());
+    }
+    try {
+      final user = await AuthService.instance.getUser();
+      final f = user?['avatar'] as String?;
+      if (mounted && f != null && f.isNotEmpty) {
+        setState(() {
+          _userName   = name;
+          _avatarUrl  = '$_avatarBase$f';
+        });
+        return;
+      }
+    } catch (_) {}
+    if (mounted && name.isNotEmpty) setState(() => _userName = name);
+  }
+
+  void _openChat() {
+    final screen = _userId == AppConfig.teacherId
+        ? const TeacherInboxScreen()
+        : const ChatScreen();
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => screen));
+  }
+
+  Future<void> _selectDept(int deptId) async {
+    setState(() => _selectedDeptId = deptId);
+    try {
+      final courses = await ApiService.instance.getCourses(departmentId: deptId);
+      if (mounted) setState(() => _courseList = _asMaps(courses));
+    } catch (_) {}
+  }
+
+  List<Map<String, dynamic>> _asMaps(List raw) =>
+      raw.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+
+  static const _imgBase = 'https://learnsbuy.com/assets/uploads/';
+
+  List<CourseModel> get _courseModels {
+    return _courseList.asMap().entries.map((entry) {
+      final i   = entry.key;
+      final j   = entry.value;
+      final c   = _courseColors[i % _courseColors.length];
+      final dept = (j['name_department'] as String?) ?? '';
+      final img  = j['image_course'] as String?;
+      return CourseModel(
+        flashLabel: dept.isNotEmpty ? dept : 'คอร์ส',
+        courseName: (j['title_course'] as String?) ?? '-',
+        rating: 4.9,
+        students: (j['student_count'] as num?)?.toInt() ?? 0,
+        price: (j['price_course'] as num?)?.toInt() ?? 0,
+        bgStart: c[0],
+        bgEnd: c[1],
+        icon: Icons.local_florist,
+        tags: dept.isNotEmpty ? [dept] : [],
+        imageUrl: (img != null && img.isNotEmpty) ? '$_imgBase$img' : null,
+      );
+    }).toList();
+  }
+
+  List<_PackageInfo> get _packageInfoList {
+    return _packageList.asMap().entries.map((entry) {
+      final i   = entry.key;
+      final p   = entry.value;
+      final original = (p['c_pack_price'] as num?)?.toInt() ?? 0;
+      final sale     = (p['c_pack_price_2'] as num?)?.toInt() ?? original;
+      final grad     = _pkgGradients[i % _pkgGradients.length];
+      final img      = p['c_pack_image'] as String?;
+      return _PackageInfo(
+        badge: 'แพ็กเกจ',
+        title: (p['c_pack_name'] as String?) ?? '-',
+        originalPrice: original,
+        salePrice: sale,
+        gradient: grad,
+        icon: _pkgIcons[i % _pkgIcons.length],
+        id: (p['id'] as num?)?.toInt() ?? 0,
+        imageUrl: (img != null && img.isNotEmpty) ? '$_imgBase$img' : null,
+      );
+    }).toList();
   }
 
   @override
@@ -84,7 +241,7 @@ class _HomeScreenState extends State<HomeScreen> {
         index: _currentIndex,
         children: [
           _buildHomePage(),
-          const MyCourseScreen(),
+          MyCourseScreen(key: _myCourseKey),
           const HelpScreen(),
           const SettingsScreen(),
         ],
@@ -94,41 +251,61 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildHomePage() {
+    final courses = _courseModels;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isTablet = screenWidth > 600;
     return SafeArea(
       child: CustomScrollView(
         slivers: [
           SliverToBoxAdapter(child: _buildHeader()),
           SliverToBoxAdapter(child: _buildBanner()),
-          SliverToBoxAdapter(child: _buildPackages()),
+          if (_packageList.isNotEmpty)
+            SliverToBoxAdapter(child: _buildPackages()),
           SliverToBoxAdapter(child: _buildCategorySection()),
-          SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            sliver: SliverGrid(
-              delegate: SliverChildBuilderDelegate(
-                (ctx, i) {
-                  final filtered = _filteredCourses;
-                  if (i >= filtered.length) return null;
-                  return CourseCard(course: filtered[i]);
-                },
-                childCount: _filteredCourses.length,
+          if (_isLoading)
+            const SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 40),
+                child: Center(child: CircularProgressIndicator()),
               ),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-                childAspectRatio: 0.68,
+            )
+          else if (courses.isEmpty)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 40),
+                child: Center(
+                  child: Text(
+                    'ไม่พบคอร์สเรียน',
+                    style: GoogleFonts.sarabun(fontSize: 15, color: AppTheme.textLight),
+                  ),
+                ),
+              ),
+            )
+          else
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              sliver: SliverGrid(
+                delegate: SliverChildBuilderDelegate(
+                  (ctx, i) => i < courses.length
+                      ? CourseCard(
+                          course: courses[i],
+                          onTap: () => context.push('/course', extra: _courseList[i]),
+                        )
+                      : null,
+                  childCount: courses.length,
+                ),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: isTablet ? 3 : 2,
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
+                  childAspectRatio: isTablet ? 0.85 : 0.68,
+                ),
               ),
             ),
-          ),
           const SliverToBoxAdapter(child: SizedBox(height: 20)),
         ],
       ),
     );
-  }
-
-  List<CourseModel> get _filteredCourses {
-    if (_selectedCategory == 'All') return _courses;
-    return _courses;
   }
 
   Widget _buildHeader() {
@@ -139,14 +316,17 @@ class _HomeScreenState extends State<HomeScreen> {
           CircleAvatar(
             radius: 22,
             backgroundColor: AppTheme.primaryLight,
-            child: Text(
-              'K',
-              style: GoogleFonts.sarabun(
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
-                color: AppTheme.primary,
-              ),
-            ),
+            backgroundImage: _avatarUrl != null ? NetworkImage(_avatarUrl!) : null,
+            child: _avatarUrl == null
+                ? Text(
+                    _userInitial,
+                    style: GoogleFonts.sarabun(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      color: AppTheme.primary,
+                    ),
+                  )
+                : null,
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -154,7 +334,7 @@ class _HomeScreenState extends State<HomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'POINT 509,849.5',
+                  'ครูพี่โฮม',
                   style: GoogleFonts.sarabun(
                     fontSize: 11,
                     color: AppTheme.primary,
@@ -162,7 +342,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 Text(
-                  'kim kundad.,',
+                  _userName.isNotEmpty ? '$_userName,' : 'ยินดีต้อนรับ',
                   style: GoogleFonts.sarabun(
                     fontSize: 16,
                     fontWeight: FontWeight.w800,
@@ -176,9 +356,7 @@ class _HomeScreenState extends State<HomeScreen> {
             color: AppTheme.white,
             borderRadius: BorderRadius.circular(10),
             child: InkWell(
-              onTap: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const ChatScreen()),
-              ),
+              onTap: _openChat,
               borderRadius: BorderRadius.circular(10),
               child: Container(
                 width: 40,
@@ -200,42 +378,28 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  static const _slideImgBase = 'https://learnsbuy.com/assets/image/slide/';
+
   Widget _buildBanner() {
-    final banners = [
-      _BannerData(
-        label: 'Learnsbuy',
-        title: 'ลด 40%',
-        subtitle: 'แพ็คคู่ PAT + ญี่ปุ่น',
-        note: 'PAT 300 เติมคะแนนประกวดประชัน',
-        chips: ['G-MAN', 'dictasia', 'Dek-D'],
-        gradient: [const Color(0xFF6C5CE7), const Color(0xFF4834D4)],
-      ),
-      _BannerData(
-        label: 'โปรพิเศษ',
-        title: 'N5 ฟรี!',
-        subtitle: 'ลงทะเบียนวันนี้',
-        note: 'เรียนได้ไม่จำกัด 30 วัน',
-        chips: ['N5', 'Beginner'],
-        gradient: [const Color(0xFF0FB5A6), const Color(0xFF0A8A7E)],
-      ),
-    ];
+    final slides = _slideList;
+    if (slides.isEmpty) return const SizedBox.shrink();
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       child: Column(
         children: [
-          SizedBox(
-            height: 150,
+          AspectRatio(
+            aspectRatio: 2.2,
             child: PageView.builder(
               controller: _bannerController,
-              itemCount: banners.length,
-              itemBuilder: (_, i) => _buildBannerCard(banners[i]),
+              itemCount: slides.length,
+              itemBuilder: (_, i) => _buildSlideCard(slides[i]),
             ),
           ),
           const SizedBox(height: 10),
           SmoothPageIndicator(
             controller: _bannerController,
-            count: banners.length,
+            count: slides.length,
             effect: ExpandingDotsEffect(
               activeDotColor: AppTheme.primary,
               dotColor: AppTheme.border,
@@ -249,195 +413,38 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildBannerCard(_BannerData data) {
+  Widget _buildSlideCard(Map<String, dynamic> slide) {
+    final imgFile = (slide['image_slide'] as String?) ?? '';
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 2),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: data.gradient,
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
         borderRadius: BorderRadius.circular(16),
+        color: Colors.grey.shade300,
       ),
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.play_arrow, color: Colors.white, size: 12),
-                      const SizedBox(width: 4),
-                      Text(
-                        data.label,
-                        style: GoogleFonts.sarabun(
-                          fontSize: 11,
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
+      clipBehavior: Clip.antiAlias,
+      child: imgFile.isNotEmpty
+          ? Image.network(
+              '$_slideImgBase$imgFile',
+              fit: BoxFit.cover,
+              width: double.infinity,
+              height: double.infinity,
+              errorBuilder: (_, __, ___) => Container(color: const Color(0xFF2C3E7A)),
+            )
+          : Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Color(0xFF2C3E7A), Color(0xFF1A2460)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
-                const SizedBox(height: 6),
-                Text(
-                  data.title,
-                  style: GoogleFonts.sarabun(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w900,
-                    color: Colors.white,
-                    height: 1.1,
-                  ),
-                ),
-                Text(
-                  data.subtitle,
-                  style: GoogleFonts.sarabun(
-                    fontSize: 13,
-                    color: Colors.white.withOpacity(0.9),
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Wrap(
-                  spacing: 4,
-                  children: data.chips.map((chip) => Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      chip,
-                      style: GoogleFonts.sarabun(
-                        fontSize: 10,
-                        color: Colors.white,
-                      ),
-                    ),
-                  )).toList(),
-                ),
-              ],
+              ),
             ),
-          ),
-          const SizedBox(width: 12),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.15),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'อ้อมิ้ง\nสาระ',
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.sarabun(
-                    fontSize: 10,
-                    color: Colors.white.withOpacity(0.8),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Text(
-                    'สุดคุ้ม',
-                    style: GoogleFonts.sarabun(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      color: data.gradient.first,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
     );
   }
 
   Widget _buildPackages() {
-    final packages = [
-      _PackageInfo(
-        badge: 'พิเศษ 15%',
-        title: 'AD1 + AD2 + เก็งข้อสอบ A-Level ญี่ปุ่น',
-        originalPrice: 9000,
-        salePrice: 7650,
-        gradient: [const Color(0xFF2C3E7A), const Color(0xFF1a2460)],
-        icon: Icons.school,
-      ),
-      _PackageInfo(
-        badge: 'JAPAN ONLINE',
-        title: 'เรียนภาษาญี่ปุ่นเบื้องต้นจาก 0 สู่ N4 (A-Level)',
-        originalPrice: 14800,
-        salePrice: 7400,
-        gradient: [const Color(0xFFE8F4FF), const Color(0xFFBBDEFB)],
-        icon: Icons.translate,
-      ),
-      _PackageInfo(
-        badge: 'สอนสด',
-        title: 'ติว A-Level ญี่ปุ่น สอนสด TCAS70 (เรียนออนไลน์ ย้อนได้) ครูพี่โฮม รีวิว',
-        originalPrice: 5500,
-        salePrice: 4950,
-        gradient: [const Color(0xFF1a1a2e), const Color(0xFF16213e)],
-        icon: Icons.live_tv,
-      ),
-      _PackageInfo(
-        badge: 'NEW FIGHT',
-        title: 'เก็งข้อสอบ A-Level ญี่ปุ่น สอนสด 2026 TCAS70',
-        originalPrice: 5500,
-        salePrice: 4950,
-        gradient: [const Color(0xFF0F3460), const Color(0xFF533483)],
-        icon: Icons.emoji_events,
-      ),
-      _PackageInfo(
-        badge: 'FAST PASS N4',
-        title: 'ติว N4 JLPT คอร์สติวสอบวัดระดับ N4 ภาษาญี่ปุ่น',
-        originalPrice: 4500,
-        salePrice: 3950,
-        gradient: [const Color(0xFF6A0572), const Color(0xFF9B59B6)],
-        icon: Icons.speed,
-      ),
-      _PackageInfo(
-        badge: 'INTENSIVE N3',
-        title: 'ติว N3 JLPT คอร์สติวสอบวัดระดับ N3 ภาษาญี่ปุ่น',
-        originalPrice: 6500,
-        salePrice: 5850,
-        gradient: [const Color(0xFF1B4332), const Color(0xFF2D6A4F)],
-        icon: Icons.menu_book,
-      ),
-      _PackageInfo(
-        badge: 'FLASH A-LEVEL',
-        title: 'ติว A-Level ภาษาญี่ปุ่น (จบใน 1 เดือน) ครูพี่โฮม',
-        originalPrice: 4950,
-        salePrice: 3950,
-        gradient: [const Color(0xFFCC0000), const Color(0xFFFF4444)],
-        icon: Icons.bolt,
-      ),
-      _PackageInfo(
-        badge: 'ครูพี่โฮม',
-        title: 'ทดลองเรียน คอร์สเรียนภาษาญี่ปุ่นออนไลน์ ฟรี',
-        originalPrice: 0,
-        salePrice: 0,
-        gradient: [const Color(0xFF0FB5A6), const Color(0xFF0A8A7E)],
-        icon: Icons.card_giftcard,
-      ),
-    ];
-
+    final packs = _packageInfoList;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 20, 0, 0),
       child: Column(
@@ -456,12 +463,15 @@ class _HomeScreenState extends State<HomeScreen> {
                     color: AppTheme.textDark,
                   ),
                 ),
-                Text(
-                  'ทั้งหมด ›',
-                  style: GoogleFonts.sarabun(
-                    fontSize: 14,
-                    color: AppTheme.primary,
-                    fontWeight: FontWeight.w600,
+                GestureDetector(
+                  onTap: () => context.push('/packages'),
+                  child: Text(
+                    'ทั้งหมด ›',
+                    style: GoogleFonts.sarabun(
+                      fontSize: 14,
+                      color: AppTheme.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ],
@@ -473,9 +483,9 @@ class _HomeScreenState extends State<HomeScreen> {
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.only(right: 16),
-              itemCount: packages.length,
+              itemCount: packs.length,
               separatorBuilder: (_, __) => const SizedBox(width: 12),
-              itemBuilder: (_, i) => _buildPackageCard(packages[i]),
+              itemBuilder: (_, i) => _buildPackageCard(packs[i]),
             ),
           ),
         ],
@@ -484,149 +494,161 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildPackageCard(_PackageInfo p) {
-    final isFree = p.salePrice == 0;
+    final isFree      = p.salePrice == 0;
     final hasDiscount = p.originalPrice != null && p.originalPrice! > p.salePrice;
 
     return GestureDetector(
-      onTap: () => context.push('/package'),
+      onTap: () => context.push('/package', extra: p.id),
       child: Container(
-      width: 172,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Thumbnail
-          SizedBox(
-            height: 110,
-            child: Stack(
-              children: [
-                Container(
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: p.gradient,
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                  ),
-                  child: Center(
-                    child: Icon(p.icon, size: 52, color: Colors.white.withOpacity(0.25)),
-                  ),
-                ),
-                Positioned(
-                  top: 8,
-                  left: 8,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: AppTheme.priceRed,
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      p.badge,
-                      style: GoogleFonts.sarabun(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white,
+        width: 172,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              height: 110,
+              child: Stack(
+                children: [
+                  if (p.imageUrl != null && p.imageUrl!.isNotEmpty)
+                    Positioned.fill(
+                      child: Image.network(
+                        p.imageUrl!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => _pkgGradientBg(p),
                       ),
-                    ),
-                  ),
-                ),
-                if (isFree)
+                    )
+                  else
+                    _pkgGradientBg(p),
                   Positioned(
-                    bottom: 8,
-                    right: 8,
+                    top: 8,
+                    left: 8,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: AppTheme.priceRed,
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
-                        'ฟรี',
-                        style: GoogleFonts.sarabun(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w900,
-                          color: AppTheme.primary,
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          // Info
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Text(
-                      p.title,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.sarabun(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: AppTheme.textDark,
-                        height: 1.4,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  if (isFree) ...[
-                    Text(
-                      'เรียนฟรี ไม่มีค่าใช้จ่าย',
-                      style: GoogleFonts.sarabun(
-                        fontSize: 11,
-                        color: AppTheme.primary,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ] else ...[
-                    if (hasDiscount)
-                      Text(
-                        'จากราคา ฿${_fmt(p.originalPrice!)}',
+                        p.badge,
                         style: GoogleFonts.sarabun(
                           fontSize: 10,
-                          color: AppTheme.textLight,
-                          decoration: TextDecoration.lineThrough,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
                         ),
                       ),
-                    Text(
-                      'เหลือ ฿${_fmt(p.salePrice)}',
-                      style: GoogleFonts.sarabun(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w800,
-                        color: AppTheme.primary,
+                    ),
+                  ),
+                  if (isFree)
+                    Positioned(
+                      bottom: 8,
+                      right: 8,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          'ฟรี',
+                          style: GoogleFonts.sarabun(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w900,
+                            color: AppTheme.primary,
+                          ),
+                        ),
                       ),
                     ),
-                  ],
                 ],
               ),
             ),
-          ),
-        ],
-      ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        p.title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.sarabun(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: AppTheme.textDark,
+                          height: 1.4,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    if (isFree) ...[
+                      Text(
+                        'เรียนฟรี ไม่มีค่าใช้จ่าย',
+                        style: GoogleFonts.sarabun(
+                          fontSize: 11,
+                          color: AppTheme.primary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ] else ...[
+                      if (hasDiscount)
+                        Text(
+                          'จากราคา ฿${_fmt(p.originalPrice!)}',
+                          style: GoogleFonts.sarabun(
+                            fontSize: 10,
+                            color: AppTheme.textLight,
+                            decoration: TextDecoration.lineThrough,
+                          ),
+                        ),
+                      Text(
+                        'เหลือ ฿${_fmt(p.salePrice)}',
+                        style: GoogleFonts.sarabun(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w800,
+                          color: AppTheme.primary,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  String _fmt(int n) =>
-      n.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]},');
+  Widget _pkgGradientBg(_PackageInfo p) {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: p.gradient,
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: Center(
+        child: Icon(p.icon, size: 52, color: Colors.white.withOpacity(0.25)),
+      ),
+    );
+  }
+
+  String _fmt(int n) => n
+      .toString()
+      .replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]},');
 
   Widget _buildCategorySection() {
     return Padding(
@@ -646,31 +668,14 @@ class _HomeScreenState extends State<HomeScreen> {
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
-              children: _categories.map((cat) {
-                final selected = _selectedCategory == cat;
-                return GestureDetector(
-                  onTap: () => setState(() => _selectedCategory = cat),
-                  child: Container(
-                    margin: const EdgeInsets.only(right: 8),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: selected ? AppTheme.primary : AppTheme.white,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: selected ? AppTheme.primary : AppTheme.border,
-                      ),
-                    ),
-                    child: Text(
-                      cat,
-                      style: GoogleFonts.sarabun(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: selected ? Colors.white : AppTheme.textMedium,
-                      ),
-                    ),
-                  ),
-                );
-              }).toList(),
+              children: [
+                _categoryChip(0, 'ทั้งหมด'),
+                ..._departments.map((d) {
+                  final id   = (d['id'] as num?)?.toInt() ?? 0;
+                  final name = (d['name_department'] as String?) ?? '';
+                  return _categoryChip(id, name);
+                }),
+              ],
             ),
           ),
         ],
@@ -678,12 +683,36 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Widget _categoryChip(int id, String label) {
+    final selected = _selectedDeptId == id;
+    return GestureDetector(
+      onTap: () => _selectDept(id),
+      child: Container(
+        margin: const EdgeInsets.only(right: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: selected ? AppTheme.primary : AppTheme.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: selected ? AppTheme.primary : AppTheme.border),
+        ),
+        child: Text(
+          label,
+          style: GoogleFonts.sarabun(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: selected ? Colors.white : AppTheme.textMedium,
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildBottomNav() {
     final items = [
-      _NavItem(icon: Icons.home_outlined, activeIcon: Icons.home, label: 'Home'),
-      _NavItem(icon: Icons.menu_book_outlined, activeIcon: Icons.menu_book, label: 'My Course'),
+      _NavItem(icon: Icons.home_outlined,       activeIcon: Icons.home,       label: 'Home'),
+      _NavItem(icon: Icons.menu_book_outlined,  activeIcon: Icons.menu_book,  label: 'My Course'),
       _NavItem(icon: Icons.chat_bubble_outline, activeIcon: Icons.chat_bubble, label: 'Help'),
-      _NavItem(icon: Icons.settings_outlined, activeIcon: Icons.settings, label: 'Setting'),
+      _NavItem(icon: Icons.settings_outlined,  activeIcon: Icons.settings,   label: 'Setting'),
     ];
 
     return Container(
@@ -698,10 +727,13 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: List.generate(items.length, (i) {
-              final item = items[i];
+              final item     = items[i];
               final selected = _currentIndex == i;
               return GestureDetector(
-                onTap: () => setState(() => _currentIndex = i),
+                onTap: () {
+                  setState(() => _currentIndex = i);
+                  if (i == 1) _myCourseKey.currentState?.reload();
+                },
                 behavior: HitTestBehavior.opaque,
                 child: SizedBox(
                   width: 72,
@@ -732,42 +764,9 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-
-  Widget _buildPlaceholder(String title, IconData icon) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: 64, color: AppTheme.border),
-          const SizedBox(height: 16),
-          Text(
-            title,
-            style: GoogleFonts.sarabun(
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-              color: AppTheme.textLight,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
-class _BannerData {
-  final String label, title, subtitle, note;
-  final List<String> chips;
-  final List<Color> gradient;
-
-  const _BannerData({
-    required this.label,
-    required this.title,
-    required this.subtitle,
-    required this.note,
-    required this.chips,
-    required this.gradient,
-  });
-}
+// ── Data models ─────────────────────────────────────────────────────────────
 
 class _PackageInfo {
   final String badge;
@@ -776,6 +775,8 @@ class _PackageInfo {
   final int salePrice;
   final List<Color> gradient;
   final IconData icon;
+  final int id;
+  final String? imageUrl;
 
   const _PackageInfo({
     required this.badge,
@@ -784,6 +785,8 @@ class _PackageInfo {
     required this.salePrice,
     required this.gradient,
     required this.icon,
+    required this.id,
+    this.imageUrl,
   });
 }
 

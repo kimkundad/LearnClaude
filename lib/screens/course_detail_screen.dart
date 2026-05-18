@@ -1,40 +1,276 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 import '../theme/app_theme.dart';
-// ignore: unused_import
-import 'video_player_screen.dart';
+import '../services/api_service.dart';
+import '../services/auth_service.dart';
 
 class CourseDetailScreen extends StatefulWidget {
-  const CourseDetailScreen({super.key});
+  final Map<String, dynamic>? courseData;
+  const CourseDetailScreen({super.key, this.courseData});
 
   @override
   State<CourseDetailScreen> createState() => _CourseDetailScreenState();
 }
 
 class _CourseDetailScreenState extends State<CourseDetailScreen> {
-  int _tabIndex = 0;
+  int _tabIndex     = 0;
   bool _showFullDesc = false;
+  bool _isOwned     = false;
+  bool _isLoggedIn  = false;
 
-  static const String _description =
-      'เรียน มินนะ โนะ นิฮงโกะ ออนไลน์ Minna no Nihongo เล่ม 1 เล่ม 2 ONLINE คอร์ส เรียนภาษาญี่ปุ่น สุดคุ้ม "จาก 0 สู่ N5" ราคา คอร์สเรียน เฉลี่ยเดือนละ 375 บาท ที่เดียวที่สอน accent การออกเสียง ภาษาญี่ปุ่น เสียงสูงต่ำ อย่างละเอียด ทุกคำ อ่านอักษร ฮิรางานะ คาตาคานะ ได้คล่อง เข้าใจไวยากรณ์ Minna 1+2 ครบทุกบท พูดทักทาย แนะนำตัว ใช้ในชีวิตประจำวันได้';
+  // detail data
+  bool _detailLoading = true;
+  Map<String, dynamic> _course    = {};
+  List<Map<String, dynamic>> _exVideos = [];
+  List<Map<String, dynamic>> _videos   = [];
+  List<dynamic> _exercises = [];
+  bool _exercisesLoaded = false;
+  int _selectedEx = 0;
 
-  static const List<_LessonItem> _lessons = [
-    _LessonItem('แนะนำคอร์ส และวิธีการเรียน', '12 min', Color(0xFFFF6B8A), Icons.play_circle_outline),
-    _LessonItem('มินนะ บทที่ 1 หน้า 54 練習A ไวยากรณ์ は', '15 min', Color(0xFF5B8DEF), Icons.menu_book_outlined),
-    _LessonItem('มินนะ บทที่ 1 หน้า 54 練習A ไวยากรณ์ です', '18 min', Color(0xFFFFB347), Icons.emoji_emotions_outlined),
-    _LessonItem('ไวยากรณ์ มินนะ บทที่ 7 あげます (1) ละเอียดสุด', '20 min', Color(0xFF7EC8E3), Icons.edit_outlined),
-    _LessonItem('ไวยากรณ์ มินนะ บทที่ 7 あげます (2) ละเอียดสุด', '22 min', Color(0xFFD291BC), Icons.remove_red_eye_outlined),
-    _LessonItem('ไวยากรณ์ มินนะ บทที่ 7 くれます ละเอียดสุด', '25 min', Color(0xFF87CEAB), Icons.map_outlined),
-    _LessonItem('การแยกกลุ่มกริยา (นอกเหนือตำราเรียนร่วมกับคอร์ส AD1)', '12 min', Color(0xFFFF8C69), Icons.flag_outlined),
-    _LessonItem('การผันกริยารูป ます (นอกเหนือตำราเรียนร่วมกับคอร์ส AD1)', '15 min', Color(0xFFDDA0DD), Icons.local_florist_outlined),
-  ];
+  // reviews
+  bool _reviewsLoading = false;
+  bool _reviewsLoaded  = false;
+  List<Map<String, dynamic>> _reviewList = [];
+  double _avgRating  = 0;
+  int _totalReviews  = 0;
+  Map<int, int> _ratingDist = {};
+  bool _hasMyReview     = false;
+  int  _myRating        = 5;
+  final TextEditingController _reviewCtrl = TextEditingController();
+  bool _submittingReview = false;
+  int  _currentUserId   = 0;
 
-  static const List<_Review> _reviews = [
-    _Review('น้องไอย์', 5, 'อธิบายเข้าใจง่ายมากค่ะ ครูพี่โฮมสอนละเอียดทุก step คุ้มค่าคาจริงๆ', Color(0xFFFF8FAB)),
-    _Review('พี่ตูน', 5, 'จาก 0 มาถึง N5 ได้จริง ดูซ้ำได้ไม่จำกัดด้วย', Color(0xFF6BCB77)),
-    _Review('น้องบีม', 5, 'เนื้อหาแน่นมาก แถม PDF ให้กกทวนด้วย ประกันใจสุดๆ', Color(0xFFFFAA5A)),
-  ];
+  // media controller
+  WebViewController? _mediaCtrl;
+
+  static const _thumbBase = 'https://learnsbuy.com/assets/uploads/';
+  static const _imgBase   = 'https://learnsbuy.com/assets/uploads/';
+
+  // ── computed helpers ───────────────────────────────────────────────────────
+
+  int get _courseId {
+    final raw = widget.courseData?['id']
+        ?? widget.courseData?['c_id']
+        ?? widget.courseData?['course_id'];
+    return (raw as num?)?.toInt() ?? 0;
+  }
+
+  String get _title    => (_course['title_course']     as String?) ??
+      (widget.courseData?['title_course'] as String?) ?? 'รายละเอียดคอร์ส';
+  String get _desc     => (_course['detail_course']    as String?) ?? '';
+  int    get _price    => (_course['price_course']     as num?)?.toInt() ??
+      (widget.courseData?['price_course'] as num?)?.toInt() ?? 0;
+  int    get _students => (widget.courseData?['student_count'] as num?)?.toInt() ?? 0;
+  String get _duration => (_course['time_course_text'] as String?) ?? '';
+  String? get _youtubeUrl => (_course['url_youtube'] as String?)?.isNotEmpty == true
+      ? _course['url_youtube'] as String : null;
+  String? get _imageFile  => (_course['image_course']  as String?);
+
+  // ── lifecycle ──────────────────────────────────────────────────────────────
+
+  @override
+  void initState() {
+    super.initState();
+    // ถ้ามาจาก MyCourseScreen (มี key 'course_id') แสดงว่าซื้อแล้ว
+    if (widget.courseData?.containsKey('course_id') == true) {
+      _isOwned = true;
+    }
+    _checkLogin();
+    if (_courseId > 0) {
+      _loadDetail();
+    } else {
+      _initMediaFromCourseData();
+      setState(() => _detailLoading = false);
+    }
+  }
+
+  @override
+  void dispose() {
+    _reviewCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _checkLogin() async {
+    final token = await AuthService.instance.getToken();
+    if (mounted) setState(() => _isLoggedIn = token != null);
+  }
+
+  Future<void> _loadDetail() async {
+    try {
+      final data = await ApiService.instance.getCourseDetail(_courseId);
+      if (!mounted) return;
+      final course   = Map<String, dynamic>.from(data['course'] as Map);
+      final exVideos = (data['ex_video'] as List? ?? [])
+          .map((e) => Map<String, dynamic>.from(e as Map))
+          .toList();
+      final videos   = (data['videos'] as List? ?? [])
+          .map((e) => Map<String, dynamic>.from(e as Map))
+          .toList();
+      setState(() {
+        _course   = course;
+        _exVideos = exVideos;
+        _videos   = videos;
+        _isOwned  = data['is_owned'] == true;
+        _detailLoading = false;
+      });
+      _initMedia();
+    } catch (_) {
+      if (mounted) setState(() => _detailLoading = false);
+      _initMediaFromCourseData();
+    }
+  }
+
+  Future<void> _loadReviews() async {
+    if (_reviewsLoaded || _courseId <= 0) return;
+    setState(() => _reviewsLoading = true);
+    try {
+      final data = await ApiService.instance.getReviews(_courseId);
+      final reviews = (data['reviews'] as List? ?? [])
+          .map((e) => Map<String, dynamic>.from(e as Map))
+          .toList();
+      final dist = Map<String, dynamic>.from(data['distribution'] as Map? ?? {});
+
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString('user_profile');
+      int uid = 0;
+      if (raw != null) {
+        try {
+          final p = jsonDecode(raw) as Map<String, dynamic>;
+          uid = (p['id'] as num?)?.toInt() ?? 0;
+        } catch (_) {}
+      }
+
+      final myReview = reviews.where(
+        (r) => (r['user_id'] as num?)?.toInt() == uid
+      ).firstOrNull;
+
+      if (!mounted) return;
+      setState(() {
+        _reviewList   = reviews;
+        _avgRating    = (data['average'] as num?)?.toDouble() ?? 0;
+        _totalReviews = (data['total'] as num?)?.toInt() ?? 0;
+        _ratingDist   = {
+          for (int i = 1; i <= 5; i++)
+            i: (dist['$i'] as num?)?.toInt() ?? 0,
+        };
+        _currentUserId = uid;
+        if (myReview != null) {
+          _hasMyReview = true;
+          _myRating    = (myReview['rating'] as num?)?.toInt() ?? 5;
+          _reviewCtrl.text = (myReview['review_text'] as String?) ?? '';
+        }
+        _reviewsLoaded  = true;
+        _reviewsLoading = false;
+      });
+    } catch (e) {
+      if (mounted) {
+        setState(() { _reviewsLoading = false; _reviewsLoaded = true; });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('โหลดรีวิวไม่สำเร็จ: ${e.toString()}')),
+        );
+      }
+    }
+  }
+
+  Future<void> _submitReview() async {
+    final text = _reviewCtrl.text.trim();
+    if (text.length < 10) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('กรุณาเขียนรีวิวอย่างน้อย 10 ตัวอักษร')),
+      );
+      return;
+    }
+    setState(() => _submittingReview = true);
+    try {
+      final msg = await ApiService.instance.submitReview(_courseId, _myRating, text);
+      if (!mounted) return;
+      setState(() { _hasMyReview = true; _reviewsLoaded = false; _submittingReview = false; });
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+      _loadReviews();
+    } catch (e) {
+      if (mounted) setState(() => _submittingReview = false);
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(e.toString())));
+    }
+  }
+
+  Future<void> _loadExercises() async {
+    if (_exercisesLoaded || _courseId <= 0) return;
+    try {
+      final list = await ApiService.instance.getExamList(_courseId);
+      if (!mounted) return;
+      setState(() {
+        _exercises = list;
+        _exercisesLoaded = true;
+      });
+    } catch (_) {
+      if (mounted) setState(() => _exercisesLoaded = true);
+    }
+  }
+
+  void _initMedia() {
+    if (_exVideos.isNotEmpty) {
+      _loadExVideo(0);
+    } else {
+      _initMediaFromCourseData();
+    }
+  }
+
+  void _initMediaFromCourseData() {
+    final ytUrl = _youtubeUrl;
+    if (ytUrl != null) {
+      _mediaCtrl = WebViewController()
+        ..setJavaScriptMode(JavaScriptMode.unrestricted)
+        ..setBackgroundColor(Colors.black)
+        ..loadRequest(Uri.parse(ytUrl));
+      if (mounted) setState(() {});
+    }
+  }
+
+  void _loadExVideo(int index) {
+    if (index < 0 || index >= _exVideos.length) return;
+    final v       = _exVideos[index];
+    final url     = (v['course_video_url'] as String?) ?? '';
+    final thumb   = (v['thumbnail_img']    as String?) ?? '';
+    final poster  = thumb.isNotEmpty ? '$_thumbBase$thumb' : '';
+    if (url.isEmpty) return;
+
+    final ctrl = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setBackgroundColor(Colors.black)
+      ..loadHtmlString(_videoHtml(url, poster));
+
+    setState(() {
+      _selectedEx = index;
+      _mediaCtrl  = ctrl;
+    });
+  }
+
+  String _videoHtml(String videoUrl, String poster) => '''
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    html,body{background:#000;width:100%;height:100%;overflow:hidden}
+    video{width:100%;height:100%;object-fit:contain;display:block}
+  </style>
+</head>
+<body>
+  <video controls playsinline preload="metadata"${poster.isNotEmpty ? ' poster="$poster"' : ''}>
+    <source src="$videoUrl" type="video/mp4">
+  </video>
+</body>
+</html>
+''';
+
+  // ── build ──────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
@@ -43,13 +279,17 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
       body: CustomScrollView(
         slivers: [
           _buildAppBar(),
-          SliverToBoxAdapter(child: _buildVideoThumbnail()),
+          SliverToBoxAdapter(child: _buildMediaSection()),
           SliverToBoxAdapter(child: _buildCourseInfo()),
           SliverPersistentHeader(
             pinned: true,
             delegate: _StickyTabBar(
               tabIndex: _tabIndex,
-              onChanged: (i) => setState(() => _tabIndex = i),
+              onChanged: (i) {
+                setState(() => _tabIndex = i);
+                if (i == 2) _loadReviews();
+                if (i == 3) _loadExercises();
+              },
             ),
           ),
           SliverToBoxAdapter(child: _buildTabContent()),
@@ -60,7 +300,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     );
   }
 
-  // ─── App Bar ───────────────────────────────────────────────────────────────
+  // ── App Bar ────────────────────────────────────────────────────────────────
 
   SliverAppBar _buildAppBar() {
     return SliverAppBar(
@@ -69,109 +309,92 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
       elevation: 0,
       leading: IconButton(
         icon: const Icon(Icons.chevron_left_rounded, color: Colors.white, size: 30),
-        onPressed: () {
-          if (context.canPop()) {
-            context.pop();
-          } else {
-            context.go('/home');
-          }
-        },
+        onPressed: () => context.canPop() ? context.pop() : context.go('/home'),
       ),
       title: Text(
         'รายละเอียดคอร์ส',
-        style: GoogleFonts.sarabun(
-          fontSize: 17,
-          fontWeight: FontWeight.w700,
-          color: Colors.white,
-        ),
+        style: GoogleFonts.sarabun(fontSize: 17, fontWeight: FontWeight.w700, color: Colors.white),
       ),
       centerTitle: true,
     );
   }
 
-  // ─── Video Thumbnail ───────────────────────────────────────────────────────
+  // ── Media Section ──────────────────────────────────────────────────────────
 
-  Widget _buildVideoThumbnail() {
-    return Container(
-      height: 210,
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFFFF6B8A), Color(0xFFFF8E53)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-      ),
+  Widget _buildMediaSection() {
+    return Column(
+      children: [
+        _buildMainPlayer(),
+        if (_exVideos.length > 1) _buildExVideoSelector(),
+      ],
+    );
+  }
+
+  Widget _buildMainPlayer() {
+    final hasExVideo = _exVideos.isNotEmpty;
+    final ctrl = _mediaCtrl;
+
+    return SizedBox(
+      height: 220,
       child: Stack(
+        fit: StackFit.expand,
         children: [
-          Positioned(
-            top: -30, right: -30,
-            child: Container(
-              width: 130, height: 130,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white.withOpacity(0.08),
+          // ── background ──
+          if (ctrl != null)
+            WebViewWidget(controller: ctrl)
+          else if (_imageFile != null && _imageFile!.isNotEmpty)
+            Image.network(
+              '$_imgBase$_imageFile',
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => _gradientBg(),
+            )
+          else
+            _gradientBg(),
+
+          // ── scrim ──
+          if (ctrl == null)
+            Positioned(
+              bottom: 0, left: 0, right: 0,
+              child: Container(
+                height: 90,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.transparent, Colors.black.withOpacity(0.6)],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                  ),
+                ),
               ),
             ),
-          ),
-          Positioned(
-            bottom: -20, left: 60,
-            child: Container(
-              width: 80, height: 80,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white.withOpacity(0.08),
-              ),
-            ),
-          ),
-          Positioned(
-            bottom: 16, left: 16,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+
+          // ── "ทดลองชมฟรี" badge ──
+          if (hasExVideo)
+            Positioned(
+              top: 12, left: 12,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF2ECC71),
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.25), blurRadius: 6)],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
+                    const Icon(Icons.play_circle_filled, color: Colors.white, size: 14),
+                    const SizedBox(width: 4),
                     Text(
-                      'MINNA',
+                      'ทดลองชมฟรี',
                       style: GoogleFonts.sarabun(
-                        fontSize: 22, fontWeight: FontWeight.w900, color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.25),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        '1+2',
-                        style: GoogleFonts.sarabun(
-                          fontSize: 14, fontWeight: FontWeight.w900, color: Colors.white,
-                        ),
+                        fontSize: 12, fontWeight: FontWeight.w800, color: Colors.white,
                       ),
                     ),
                   ],
                 ),
-                Text(
-                  'ภาษาญี่ปุ่น',
-                  style: GoogleFonts.sarabun(
-                    fontSize: 13, color: Colors.white.withOpacity(0.9), fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Center(
-            child: Container(
-              width: 58, height: 58,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.18), blurRadius: 16, offset: const Offset(0, 5))],
               ),
-              child: const Icon(Icons.play_arrow_rounded, color: AppTheme.primary, size: 34),
             ),
-          ),
+
+          // ── action buttons ──
           Positioned(
             top: 12, right: 12,
             child: Row(
@@ -187,6 +410,85 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     );
   }
 
+  // เมนูเลือก ex_video (กรณีมีหลาย clip)
+  Widget _buildExVideoSelector() {
+    return Container(
+      height: 90,
+      color: Colors.black,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        itemCount: _exVideos.length,
+        itemBuilder: (_, i) {
+          final v     = _exVideos[i];
+          final thumb = (v['thumbnail_img'] as String?) ?? '';
+          final name  = (v['course_video_name'] as String?) ?? 'คลิป ${i + 1}';
+          final sel   = _selectedEx == i;
+          return GestureDetector(
+            onTap: () => _loadExVideo(i),
+            child: Container(
+              width: 120,
+              margin: const EdgeInsets.only(right: 8),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: sel ? const Color(0xFF2ECC71) : Colors.transparent,
+                  width: 2,
+                ),
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  thumb.isNotEmpty
+                      ? Image.network(
+                          '$_thumbBase$thumb',
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => Container(color: const Color(0xFF333333)),
+                        )
+                      : Container(color: const Color(0xFF333333)),
+                  Container(color: Colors.black.withOpacity(0.35)),
+                  Center(
+                    child: Icon(
+                      sel ? Icons.pause_circle_filled : Icons.play_circle_outline,
+                      color: sel ? const Color(0xFF2ECC71) : Colors.white,
+                      size: 28,
+                    ),
+                  ),
+                  Positioned(
+                    bottom: 0, left: 0, right: 0,
+                    child: Container(
+                      color: Colors.black54,
+                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 3),
+                      child: Text(
+                        name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.sarabun(fontSize: 10, color: Colors.white),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _gradientBg() {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFFFF6B8A), Color(0xFFFF8E53)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+    );
+  }
+
   Widget _overlayBtn(IconData icon) {
     return Container(
       width: 36, height: 36,
@@ -198,7 +500,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     );
   }
 
-  // ─── Course Info ───────────────────────────────────────────────────────────
+  // ── Course Info ────────────────────────────────────────────────────────────
 
   Widget _buildCourseInfo() {
     return Container(
@@ -208,20 +510,28 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'ติวโค้งสุดท้าย A-Level ญี่ปุ่น',
-            style: GoogleFonts.sarabun(fontSize: 18, fontWeight: FontWeight.w800, color: AppTheme.textDark, height: 1.3),
+            _title,
+            style: GoogleFonts.sarabun(
+              fontSize: 18, fontWeight: FontWeight.w800,
+              color: AppTheme.textDark, height: 1.3,
+            ),
           ),
           const SizedBox(height: 10),
           Wrap(
             spacing: 8, runSpacing: 6,
             children: [
-              _chip(Icons.access_time_rounded, '2h 30m', AppTheme.primary),
-              _chip(Icons.flag_outlined, 'ได้สุดท้าย A-Level', AppTheme.primary),
+              if (_duration.isNotEmpty)
+                _chip(Icons.access_time_rounded, _duration, AppTheme.primary),
               _chip(Icons.star_rounded, '5.0', const Color(0xFFFFB800)),
+              if (_videos.isNotEmpty)
+                _chip(Icons.play_lesson_outlined, '${_videos.length} บทเรียน', AppTheme.primary),
             ],
           ),
-          const SizedBox(height: 10),
-          Text('953 students', style: GoogleFonts.sarabun(fontSize: 13, color: AppTheme.textLight)),
+          if (_students > 0) ...[
+            const SizedBox(height: 10),
+            Text('$_students students',
+                style: GoogleFonts.sarabun(fontSize: 13, color: AppTheme.textLight)),
+          ],
           const SizedBox(height: 4),
         ],
       ),
@@ -231,44 +541,47 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
   Widget _chip(IconData icon, String label, Color color) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-      decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+      decoration: BoxDecoration(
+          color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 13, color: color),
           const SizedBox(width: 4),
-          Text(label, style: GoogleFonts.sarabun(fontSize: 12, color: color, fontWeight: FontWeight.w600)),
+          Text(label,
+              style: GoogleFonts.sarabun(
+                  fontSize: 12, color: color, fontWeight: FontWeight.w600)),
         ],
       ),
     );
   }
 
-  // ─── Tab Content Router ────────────────────────────────────────────────────
+  // ── Tab Content ────────────────────────────────────────────────────────────
 
   Widget _buildTabContent() {
     switch (_tabIndex) {
-      case 1: return _buildLessonsContent();
-      case 2: return _buildReviewsContent();
-      case 3: return _buildQuizContent();
+      case 1:  return _buildLessonsContent();
+      case 2:  return _buildReviewsContent();
+      case 3:  return _buildQuizContent();
       default: return _buildOverviewContent();
     }
   }
 
-  // ─── Overview ─────────────────────────────────────────────────────────────
+  // ── Overview ───────────────────────────────────────────────────────────────
 
   Widget _buildOverviewContent() {
     return Column(
       children: [
         _buildDescSection(),
-        _buildWhatYouLearnSection(),
         _buildInstructorSection(),
         _buildFeaturesSection(),
-        _buildLessonsPreview(),
+        if (_videos.isNotEmpty) _buildLessonsPreview(),
       ],
     );
   }
 
   Widget _buildDescSection() {
+    final text = _desc.isNotEmpty ? _desc : 'กำลังโหลด...';
     return Container(
       color: Colors.white,
       padding: const EdgeInsets.all(16),
@@ -278,59 +591,21 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
           _sectionTitle('Overview'),
           const SizedBox(height: 10),
           Text(
-            _description,
+            text,
             maxLines: _showFullDesc ? null : 4,
             overflow: _showFullDesc ? null : TextOverflow.ellipsis,
-            style: GoogleFonts.sarabun(fontSize: 13, color: AppTheme.textMedium, height: 1.7),
+            style: GoogleFonts.sarabun(
+                fontSize: 13, color: AppTheme.textMedium, height: 1.7),
           ),
           const SizedBox(height: 8),
           GestureDetector(
             onTap: () => setState(() => _showFullDesc = !_showFullDesc),
             child: Text(
               _showFullDesc ? 'Show less' : 'Show more',
-              style: GoogleFonts.sarabun(fontSize: 13, color: AppTheme.primary, fontWeight: FontWeight.w700),
+              style: GoogleFonts.sarabun(
+                  fontSize: 13, color: AppTheme.primary, fontWeight: FontWeight.w700),
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildWhatYouLearnSection() {
-    const items = [
-      'อ่าน ฮิรางานะ คาตาคานะ ได้คล่อง',
-      'เข้าใจไวยากรณ์ Minna 1+2 ครบทุกบท',
-      'พูดทักทาย แนะนำตัว ใช้ในชีวิตประจำวันได้',
-      'ฝึกกริยา て-form / て-form / ない-form / Plain ได้',
-      'พร้อมต่อยอดสู่ระดับ N4 และเตรียมสอบ JLPT N5',
-    ];
-    return Container(
-      color: Colors.white,
-      margin: const EdgeInsets.only(top: 8),
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _sectionTitle('สิ่งที่คุณจะได้เรียน'),
-          const SizedBox(height: 12),
-          ...items.map((item) => Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: 20, height: 20,
-                  margin: const EdgeInsets.only(top: 1),
-                  decoration: BoxDecoration(color: AppTheme.primary, borderRadius: BorderRadius.circular(5)),
-                  child: const Icon(Icons.check, size: 13, color: Colors.white),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(item, style: GoogleFonts.sarabun(fontSize: 13, color: AppTheme.textMedium, height: 1.5)),
-                ),
-              ],
-            ),
-          )),
         ],
       ),
     );
@@ -357,10 +632,15 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
-                  boxShadow: [BoxShadow(color: AppTheme.primary.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 4))],
+                  boxShadow: [BoxShadow(
+                      color: AppTheme.primary.withOpacity(0.3),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4))],
                 ),
                 child: Center(
-                  child: Text('ホ', style: GoogleFonts.sarabun(fontSize: 24, fontWeight: FontWeight.w900, color: Colors.white)),
+                  child: Text('ホ',
+                      style: GoogleFonts.sarabun(
+                          fontSize: 24, fontWeight: FontWeight.w900, color: Colors.white)),
                 ),
               ),
               const SizedBox(width: 14),
@@ -368,8 +648,11 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('ครูพี่โฮม', style: GoogleFonts.sarabun(fontSize: 16, fontWeight: FontWeight.w800, color: AppTheme.textDark)),
-                    Text('ผู้เชี่ยวชาญภาษาญี่ปุ่น JLPT N1', style: GoogleFonts.sarabun(fontSize: 12, color: AppTheme.textLight)),
+                    Text('ครูพี่โฮม',
+                        style: GoogleFonts.sarabun(
+                            fontSize: 16, fontWeight: FontWeight.w800, color: AppTheme.textDark)),
+                    Text('ผู้เชี่ยวชาญภาษาญี่ปุ่น JLPT N1',
+                        style: GoogleFonts.sarabun(fontSize: 12, color: AppTheme.textLight)),
                     const SizedBox(height: 8),
                     Row(
                       children: [
@@ -393,20 +676,23 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
   Widget _stat(String value, String label) {
     return Column(
       children: [
-        Text(value, style: GoogleFonts.sarabun(fontSize: 14, fontWeight: FontWeight.w800, color: AppTheme.primary)),
-        Text(label, style: GoogleFonts.sarabun(fontSize: 10, color: AppTheme.textLight)),
+        Text(value,
+            style: GoogleFonts.sarabun(
+                fontSize: 14, fontWeight: FontWeight.w800, color: AppTheme.primary)),
+        Text(label,
+            style: GoogleFonts.sarabun(fontSize: 10, color: AppTheme.textLight)),
       ],
     );
   }
 
   Widget _buildFeaturesSection() {
-    final features = [
-      const _Feature(Icons.play_circle_outline_rounded, 'ดูได้ไม่จำกัด'),
-      const _Feature(Icons.devices_rounded, 'ดูได้ทุกอุปกรณ์'),
-      const _Feature(Icons.picture_as_pdf_outlined, 'มี PDF ดาวน์โหลด'),
-      const _Feature(Icons.chat_bubble_outline_rounded, 'ถาม-ตอบกับครูได้'),
-      const _Feature(Icons.workspace_premium_outlined, 'มีประกาศนียบัตร'),
-      const _Feature(Icons.refresh_rounded, 'คืนเงินใน 7 วัน'),
+    const features = [
+      _Feature(Icons.play_circle_outline_rounded, 'ดูได้ไม่จำกัด'),
+      _Feature(Icons.devices_rounded, 'ดูได้ทุกอุปกรณ์'),
+      _Feature(Icons.picture_as_pdf_outlined, 'มี PDF ดาวน์โหลด'),
+      _Feature(Icons.chat_bubble_outline_rounded, 'ถาม-ตอบกับครูได้'),
+      _Feature(Icons.workspace_premium_outlined, 'มีประกาศนียบัตร'),
+      _Feature(Icons.refresh_rounded, 'คืนเงินใน 7 วัน'),
     ];
     return Container(
       color: Colors.white,
@@ -434,7 +720,11 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                       Icon(f.icon, size: 16, color: AppTheme.primary),
                       const SizedBox(width: 6),
                       Expanded(
-                        child: Text(f.label, style: GoogleFonts.sarabun(fontSize: 12, color: AppTheme.primary, fontWeight: FontWeight.w600)),
+                        child: Text(f.label,
+                            style: GoogleFonts.sarabun(
+                                fontSize: 12,
+                                color: AppTheme.primary,
+                                fontWeight: FontWeight.w600)),
                       ),
                     ],
                   ),
@@ -448,6 +738,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
   }
 
   Widget _buildLessonsPreview() {
+    final preview = _videos.take(3).toList();
     return Container(
       color: Colors.white,
       margin: const EdgeInsets.only(top: 8),
@@ -457,9 +748,10 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
         children: [
           _sectionTitle('Lessons'),
           const SizedBox(height: 4),
-          Text('38 Lessons · ทั้งหมด 13 ชั่วโมง', style: GoogleFonts.sarabun(fontSize: 12, color: AppTheme.textLight)),
+          Text('${_videos.length} บทเรียน',
+              style: GoogleFonts.sarabun(fontSize: 12, color: AppTheme.textLight)),
           const SizedBox(height: 12),
-          ..._lessons.take(3).map((l) => _lessonRow(l)),
+          ...preview.map((v) => _lessonRow(v)),
           GestureDetector(
             onTap: () => setState(() => _tabIndex = 1),
             child: Container(
@@ -467,8 +759,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
               padding: const EdgeInsets.symmetric(vertical: 14),
               alignment: Alignment.center,
               child: Text(
-                'ดูบทเรียนทั้งหมด 38 บท →',
-                style: GoogleFonts.sarabun(fontSize: 13, color: AppTheme.primary, fontWeight: FontWeight.w700),
+                'ดูบทเรียนทั้งหมด ${_videos.length} บท →',
+                style: GoogleFonts.sarabun(
+                    fontSize: 13, color: AppTheme.primary, fontWeight: FontWeight.w700),
               ),
             ),
           ),
@@ -477,7 +770,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     );
   }
 
-  // ─── Lessons ───────────────────────────────────────────────────────────────
+  // ── Lessons Tab ────────────────────────────────────────────────────────────
 
   Widget _buildLessonsContent() {
     return Container(
@@ -492,81 +785,178 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
               children: [
                 _sectionTitle('Lessons'),
                 const SizedBox(height: 4),
-                Text('38 Lessons · ทั้งหมด 13 ชั่วโมง', style: GoogleFonts.sarabun(fontSize: 12, color: AppTheme.textLight)),
+                Text('${_videos.length} บทเรียน',
+                    style: GoogleFonts.sarabun(
+                        fontSize: 12, color: AppTheme.textLight)),
               ],
             ),
           ),
-          ..._lessons.map((l) => _lessonRow(l)),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: OutlinedButton(
-              onPressed: () {},
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppTheme.primary,
-                side: const BorderSide(color: AppTheme.primary),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                minimumSize: const Size.fromHeight(48),
+          if (_detailLoading)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 32),
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else if (_videos.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 32),
+              child: Center(
+                child: Text('ยังไม่มีบทเรียน',
+                    style: GoogleFonts.sarabun(
+                        fontSize: 14, color: AppTheme.textLight)),
               ),
-              child: Text('ดูบทเรียนทั้งหมด 38 บท →', style: GoogleFonts.sarabun(fontWeight: FontWeight.w700, fontSize: 14)),
-            ),
-          ),
+            )
+          else
+            ..._videos.asMap().entries.map((e) => _lessonRow(e.value, index: e.key)),
         ],
       ),
     );
   }
 
-  Widget _lessonRow(_LessonItem lesson) {
-    return GestureDetector(
-      onTap: () => context.push('/video'),
-      child: Container(
+  Widget _lessonRow(Map<String, dynamic> v, {int? index}) {
+    final name      = (v['course_video_name'] as String?) ?? 'บทเรียนที่ ${(index ?? 0) + 1}';
+    final duration  = (v['time_video'] as String?) ?? '';
+    final isFree    = (v['free_video'] as num?)?.toInt() == 1;
+    final thumbFile = (v['thumbnail_img'] as String?) ?? '';
+    final thumbUrl  = thumbFile.isNotEmpty ? '$_thumbBase$thumbFile' : '';
+
+    const placeholderColors = [
+      Color(0xFFFF6B8A), Color(0xFF5B8DEF), Color(0xFFFFB347),
+      Color(0xFF7EC8E3), Color(0xFFD291BC), Color(0xFF87CEAB),
+    ];
+    final placeholderColor = placeholderColors[(index ?? 0) % placeholderColors.length];
+
+    return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: BoxDecoration(border: Border(bottom: BorderSide(color: AppTheme.border.withOpacity(0.5)))),
+      decoration: BoxDecoration(
+          border: Border(bottom: BorderSide(color: AppTheme.border.withOpacity(0.5)))),
       child: Row(
         children: [
-          Container(
-            width: 52, height: 42,
-            decoration: BoxDecoration(color: lesson.color, borderRadius: BorderRadius.circular(10)),
-            child: Icon(lesson.icon, color: Colors.white, size: 20),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: SizedBox(
+              width: 80, height: 52,
+              child: thumbUrl.isNotEmpty
+                  ? Image.network(
+                      thumbUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Container(
+                        color: placeholderColor,
+                        child: Center(
+                          child: Text(
+                            '${(index ?? 0) + 1}',
+                            style: GoogleFonts.sarabun(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w900,
+                                color: Colors.white),
+                          ),
+                        ),
+                      ),
+                    )
+                  : Container(
+                      color: placeholderColor,
+                      child: Center(
+                        child: Text(
+                          '${(index ?? 0) + 1}',
+                          style: GoogleFonts.sarabun(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.white),
+                        ),
+                      ),
+                    ),
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(lesson.title, maxLines: 2, overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.sarabun(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.textDark, height: 1.4)),
-                const SizedBox(height: 3),
-                Text(lesson.duration, style: GoogleFonts.sarabun(fontSize: 11, color: AppTheme.textLight)),
+                Text(name,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.sarabun(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.textDark,
+                        height: 1.4)),
+                if (duration.isNotEmpty) ...[
+                  const SizedBox(height: 3),
+                  Text(duration,
+                      style: GoogleFonts.sarabun(
+                          fontSize: 11, color: AppTheme.textLight)),
+                ],
               ],
             ),
           ),
           const SizedBox(width: 8),
-          Container(
-            width: 32, height: 32,
-            decoration: const BoxDecoration(color: AppTheme.primaryLight, shape: BoxShape.circle),
-            child: const Icon(Icons.play_arrow_rounded, color: AppTheme.primary, size: 18),
-          ),
+          if (isFree)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: const Color(0xFF2ECC71).withOpacity(0.12),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text('ฟรี',
+                  style: GoogleFonts.sarabun(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF2ECC71))),
+            )
+          else
+            Container(
+              width: 32, height: 32,
+              decoration: const BoxDecoration(
+                  color: AppTheme.primaryLight, shape: BoxShape.circle),
+              child: const Icon(Icons.lock_outline,
+                  color: AppTheme.textLight, size: 16),
+            ),
         ],
       ),
-    ));
+    );
   }
 
-  // ─── Reviews ───────────────────────────────────────────────────────────────
+  // ── Reviews ────────────────────────────────────────────────────────────────
+
+  static const _avatarColors = [
+    Color(0xFFFF8FAB), Color(0xFF6BCB77), Color(0xFFFFAA5A),
+    Color(0xFF5B8DEF), Color(0xFFD291BC), Color(0xFF87CEAB),
+  ];
 
   Widget _buildReviewsContent() {
+    if (_reviewsLoading) {
+      return const Padding(
+        padding: EdgeInsets.all(40),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
           _buildRatingSummary(),
+          if (_isLoggedIn) ...[
+            const SizedBox(height: 16),
+            _buildReviewForm(),
+          ],
           const SizedBox(height: 16),
-          ..._reviews.map((r) => _reviewCard(r)),
+          if (_reviewList.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 24),
+              child: Center(
+                child: Text('ยังไม่มีรีวิว เป็นคนแรกที่รีวิวคอร์สนี้!',
+                    style: GoogleFonts.sarabun(fontSize: 14, color: AppTheme.textLight)),
+              ),
+            )
+          else
+            ..._reviewList.map((r) => _reviewCardFromData(r)),
         ],
       ),
     );
   }
 
   Widget _buildRatingSummary() {
+    final avg   = _reviewsLoaded ? _avgRating : 0.0;
+    final total = _reviewsLoaded ? _totalReviews : 0;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -578,24 +968,31 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
         children: [
           Column(
             children: [
-              Text('5.0',
-                style: GoogleFonts.sarabun(fontSize: 48, fontWeight: FontWeight.w900, color: AppTheme.textDark, height: 1)),
+              Text(avg.toStringAsFixed(1),
+                  style: GoogleFonts.sarabun(
+                      fontSize: 48, fontWeight: FontWeight.w900,
+                      color: AppTheme.textDark, height: 1)),
               const SizedBox(height: 6),
-              Row(children: List.generate(5, (_) => const Icon(Icons.star_rounded, size: 14, color: Color(0xFFFFB800)))),
+              Row(
+                children: List.generate(5, (i) => Icon(
+                  i < avg.round() ? Icons.star_rounded : Icons.star_outline_rounded,
+                  size: 14, color: const Color(0xFFFFB800),
+                )),
+              ),
               const SizedBox(height: 4),
-              Text('248 รีวิว', style: GoogleFonts.sarabun(fontSize: 11, color: AppTheme.textLight)),
+              Text('$total รีวิว',
+                  style: GoogleFonts.sarabun(fontSize: 11, color: AppTheme.textLight)),
             ],
           ),
           const SizedBox(width: 20),
           Expanded(
             child: Column(
-              children: [
-                _ratingBar(5, 0.82, '82%'),
-                _ratingBar(4, 0.14, '14%'),
-                _ratingBar(3, 0.03, '3%'),
-                _ratingBar(2, 0.01, '1%'),
-                _ratingBar(1, 0.00, '0%'),
-              ],
+              children: List.generate(5, (i) {
+                final star = 5 - i;
+                final count = _ratingDist[star] ?? 0;
+                final pct = total > 0 ? count / total : 0.0;
+                return _ratingBar(star, pct, count);
+              }),
             ),
           ),
         ],
@@ -603,12 +1000,13 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     );
   }
 
-  Widget _ratingBar(int star, double value, String label) {
+  Widget _ratingBar(int star, double value, int count) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Row(
         children: [
-          Text('$star★', style: GoogleFonts.sarabun(fontSize: 11, color: AppTheme.textLight)),
+          Text('$star★',
+              style: GoogleFonts.sarabun(fontSize: 11, color: AppTheme.textLight)),
           const SizedBox(width: 6),
           Expanded(
             child: ClipRRect(
@@ -623,21 +1021,96 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
           ),
           const SizedBox(width: 6),
           SizedBox(
-            width: 28,
-            child: Text(label, textAlign: TextAlign.right, style: GoogleFonts.sarabun(fontSize: 11, color: AppTheme.textLight)),
+            width: 24,
+            child: Text('$count',
+                textAlign: TextAlign.right,
+                style: GoogleFonts.sarabun(fontSize: 11, color: AppTheme.textLight)),
           ),
         ],
       ),
     );
   }
 
-  Widget _reviewCard(_Review review) {
+  Widget _buildReviewForm() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 2))],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(_hasMyReview ? 'แก้ไขรีวิวของคุณ' : 'เขียนรีวิว',
+              style: GoogleFonts.sarabun(
+                  fontSize: 15, fontWeight: FontWeight.w800, color: AppTheme.textDark)),
+          const SizedBox(height: 12),
+          Row(
+            children: List.generate(5, (i) => GestureDetector(
+              onTap: () => setState(() => _myRating = i + 1),
+              child: Padding(
+                padding: const EdgeInsets.only(right: 6),
+                child: Icon(
+                  i < _myRating ? Icons.star_rounded : Icons.star_outline_rounded,
+                  color: const Color(0xFFFFB800), size: 34,
+                ),
+              ),
+            )),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _reviewCtrl,
+            maxLines: 3,
+            maxLength: 300,
+            decoration: InputDecoration(
+              hintText: 'เขียนรีวิวของคุณ... (อย่างน้อย 10 ตัวอักษร)',
+              hintStyle: GoogleFonts.sarabun(fontSize: 13, color: AppTheme.textLight),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+              contentPadding: const EdgeInsets.all(12),
+            ),
+            style: GoogleFonts.sarabun(fontSize: 13),
+          ),
+          const SizedBox(height: 8),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: _submittingReview ? null : _submitReview,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primary,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                elevation: 0,
+              ),
+              child: _submittingReview
+                  ? const SizedBox(
+                      height: 18, width: 18,
+                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                  : Text(_hasMyReview ? 'แก้ไขรีวิว' : 'ส่งรีวิว',
+                      style: GoogleFonts.sarabun(fontSize: 14, fontWeight: FontWeight.w700)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _reviewCardFromData(Map<String, dynamic> r) {
+    final name   = (r['name'] as String?) ?? 'ผู้ใช้';
+    final rating = (r['rating'] as num?)?.toInt() ?? 5;
+    final text   = (r['review_text'] as String?) ?? '';
+    final uid    = (r['user_id'] as num?)?.toInt() ?? 0;
+    final color  = _avatarColors[name.hashCode.abs() % _avatarColors.length];
+    final isMe   = uid == _currentUserId;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
+        border: isMe ? Border.all(color: AppTheme.primary.withOpacity(0.4)) : null,
         boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8, offset: const Offset(0, 2))],
       ),
       child: Row(
@@ -645,10 +1118,11 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
         children: [
           Container(
             width: 40, height: 40,
-            decoration: BoxDecoration(color: review.avatarColor, shape: BoxShape.circle),
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
             child: Center(
-              child: Text(review.name.substring(0, 1),
-                style: GoogleFonts.sarabun(fontSize: 16, fontWeight: FontWeight.w800, color: Colors.white)),
+              child: Text(name.isNotEmpty ? name.substring(0, 1) : '?',
+                  style: GoogleFonts.sarabun(
+                      fontSize: 16, fontWeight: FontWeight.w800, color: Colors.white)),
             ),
           ),
           const SizedBox(width: 12),
@@ -656,11 +1130,33 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(review.name, style: GoogleFonts.sarabun(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.textDark)),
+                Row(
+                  children: [
+                    Text(name,
+                        style: GoogleFonts.sarabun(
+                            fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.textDark)),
+                    if (isMe) ...[
+                      const SizedBox(width: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: AppTheme.primary.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text('คุณ',
+                            style: GoogleFonts.sarabun(
+                                fontSize: 10, color: AppTheme.primary, fontWeight: FontWeight.w700)),
+                      ),
+                    ],
+                  ],
+                ),
                 const SizedBox(height: 3),
-                Row(children: List.generate(review.rating, (_) => const Icon(Icons.star_rounded, size: 13, color: Color(0xFFFFB800)))),
+                Row(children: List.generate(rating,
+                    (_) => const Icon(Icons.star_rounded, size: 13, color: Color(0xFFFFB800)))),
                 const SizedBox(height: 6),
-                Text(review.text, style: GoogleFonts.sarabun(fontSize: 13, color: AppTheme.textMedium, height: 1.5)),
+                Text(text,
+                    style: GoogleFonts.sarabun(
+                        fontSize: 13, color: AppTheme.textMedium, height: 1.5)),
               ],
             ),
           ),
@@ -669,16 +1165,15 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     );
   }
 
-  // ─── Quiz Tab ──────────────────────────────────────────────────────────────
-
-  static const _quizSets = [
-    _QuizSet('แบบฝึกหัด บทที่ 1 は・です', 5, 'ง่าย', Color(0xFF4CAF50)),
-    _QuizSet('แบบฝึกหัด บทที่ 7 あげます・くれます', 5, 'ปานกลาง', Color(0xFFFF9800)),
-    _QuizSet('แบบฝึกหัด การผันกริยา กลุ่ม 1-3', 8, 'ยาก', Color(0xFFE8273D)),
-    _QuizSet('ทบทวนรวม Minna บทที่ 1-7', 10, 'ปานกลาง', Color(0xFFFF9800)),
-  ];
+  // ── Quiz Tab ───────────────────────────────────────────────────────────────
 
   Widget _buildQuizContent() {
+    if (!_exercisesLoaded) {
+      return const Padding(
+        padding: EdgeInsets.all(40),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -711,12 +1206,10 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                     children: [
                       Text('แบบฝึกหัดทั้งหมด',
                           style: GoogleFonts.sarabun(
-                              fontSize: 15, color: Colors.white,
-                              fontWeight: FontWeight.w800)),
-                      Text('${_quizSets.length} ชุด · ทำได้ไม่จำกัดครั้ง',
+                              fontSize: 15, color: Colors.white, fontWeight: FontWeight.w800)),
+                      Text('${_exercises.length} ชุด · ทำได้ไม่จำกัดครั้ง',
                           style: GoogleFonts.sarabun(
-                              fontSize: 12, color: Colors.white70,
-                              fontWeight: FontWeight.w600)),
+                              fontSize: 12, color: Colors.white70, fontWeight: FontWeight.w600)),
                     ],
                   ),
                 ),
@@ -724,73 +1217,88 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
             ),
           ),
           const SizedBox(height: 14),
-          ..._quizSets.map((q) => _quizSetCard(q, context)),
+          if (_exercises.isEmpty)
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Text('ยังไม่มีแบบฝึกหัดสำหรับคอร์สนี้',
+                    style: GoogleFonts.sarabun(
+                        fontSize: 14, color: AppTheme.textLight, fontWeight: FontWeight.w600)),
+              ),
+            )
+          else
+            ..._exercises.map((ex) => _exerciseCard(ex as Map<String, dynamic>)),
         ],
       ),
     );
   }
 
-  Widget _quizSetCard(_QuizSet quiz, BuildContext context) {
+  Widget _exerciseCard(Map<String, dynamic> ex) {
+    final id    = (ex['id'] as num).toInt();
+    final title = ex['title'] as String? ?? 'แบบฝึกหัด';
+    final qCount  = (ex['question_count'] as num?)?.toInt() ?? 0;
+    final passScore = (ex['pass_score'] as num?)?.toDouble() ?? 70.0;
+    final timeLimit = (ex['time_limit'] as num?)?.toInt();
+
     return GestureDetector(
-      onTap: () => context.push('/quiz', extra: quiz.title),
+      onTap: () => context.push('/exam-v2', extra: {
+        'exerciseId':    id,
+        'exerciseTitle': title,
+        'saveAttempt':   false,
+      }),
       child: Container(
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(14),
-          boxShadow: [
-            BoxShadow(
+          boxShadow: [BoxShadow(
               color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 3),
-            ),
-          ],
+              blurRadius: 10, offset: const Offset(0, 3))],
         ),
         child: Row(
           children: [
             Container(
-              width: 48,
-              height: 48,
+              width: 48, height: 48,
               decoration: BoxDecoration(
-                color: AppTheme.primaryLight,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Icon(Icons.assignment_rounded,
-                  color: AppTheme.primary, size: 24),
+                  color: AppTheme.primaryLight, borderRadius: BorderRadius.circular(12)),
+              child: const Icon(Icons.assignment_rounded, color: AppTheme.primary, size: 24),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(quiz.title,
+                  Text(title,
                       style: GoogleFonts.sarabun(
-                          fontSize: 14, fontWeight: FontWeight.w700,
-                          color: AppTheme.textDark)),
+                          fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.textDark)),
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      const Icon(Icons.help_outline_rounded,
-                          size: 13, color: AppTheme.textLight),
+                      const Icon(Icons.help_outline_rounded, size: 13, color: AppTheme.textLight),
                       const SizedBox(width: 3),
-                      Text('${quiz.questionCount} ข้อ',
+                      Text('$qCount ข้อ',
                           style: GoogleFonts.sarabun(
-                              fontSize: 12, color: AppTheme.textLight,
-                              fontWeight: FontWeight.w600)),
-                      const SizedBox(width: 10),
+                              fontSize: 12, color: AppTheme.textLight, fontWeight: FontWeight.w600)),
+                      const SizedBox(width: 8),
                       Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 7, vertical: 2),
+                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                         decoration: BoxDecoration(
-                          color: quiz.diffColor.withOpacity(0.1),
+                          color: AppTheme.primary.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(20),
                         ),
-                        child: Text(quiz.difficulty,
+                        child: Text('ผ่าน $passScore%',
                             style: GoogleFonts.sarabun(
-                                fontSize: 11, color: quiz.diffColor,
-                                fontWeight: FontWeight.w700)),
+                                fontSize: 11, color: AppTheme.primary, fontWeight: FontWeight.w700)),
                       ),
+                      if (timeLimit != null) ...[
+                        const SizedBox(width: 8),
+                        const Icon(Icons.timer_outlined, size: 13, color: AppTheme.textLight),
+                        const SizedBox(width: 2),
+                        Text('$timeLimit น.',
+                            style: GoogleFonts.sarabun(
+                                fontSize: 12, color: AppTheme.textLight, fontWeight: FontWeight.w600)),
+                      ],
                     ],
                   ),
                 ],
@@ -799,11 +1307,8 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: AppTheme.primaryLight,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Icon(Icons.play_arrow_rounded,
-                  color: AppTheme.primary, size: 18),
+                  color: AppTheme.primaryLight, borderRadius: BorderRadius.circular(10)),
+              child: const Icon(Icons.play_arrow_rounded, color: AppTheme.primary, size: 18),
             ),
           ],
         ),
@@ -811,43 +1316,59 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     );
   }
 
-  // ─── Bottom Bar ────────────────────────────────────────────────────────────
+  // ── Bottom Bar ─────────────────────────────────────────────────────────────
 
   Widget _buildBottomBar(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
         border: Border(top: BorderSide(color: AppTheme.border)),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 12, offset: const Offset(0, -4))],
+        boxShadow: [BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 12,
+            offset: const Offset(0, -4))],
       ),
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
       child: Row(
         children: [
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('฿5,530',
-                style: GoogleFonts.sarabun(fontSize: 13, color: AppTheme.textLight, decoration: TextDecoration.lineThrough)),
-              Text('฿3,950',
-                style: GoogleFonts.sarabun(fontSize: 22, fontWeight: FontWeight.w900, color: AppTheme.textDark, height: 1.1)),
-            ],
-          ),
-          const SizedBox(width: 16),
+          if (!_isOwned) ...[
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _price > 0 ? '฿${_fmtPrice(_price)}' : 'ราคา',
+                  style: GoogleFonts.sarabun(
+                      fontSize: 22, fontWeight: FontWeight.w900, color: AppTheme.textDark, height: 1.1),
+                ),
+              ],
+            ),
+            const SizedBox(width: 16),
+          ],
           Expanded(
             child: ElevatedButton(
-              onPressed: () => context.push('/payment', extra: {
-                'title': 'ติวโค้งสุดท้าย A-Level ญี่ปุ่น',
-                'price': 3950,
-              }),
+              onPressed: _isOwned
+                  ? () => context.push('/video', extra: {
+                        'courseId': _courseId,
+                        'title': _title,
+                      })
+                  : () => context.push('/payment', extra: {
+                        'title': _title,
+                        'price': _price,
+                        'id': _courseId,
+                        'type': 'course',
+                      }),
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primary,
+                backgroundColor: _isOwned ? const Color(0xFF388E3C) : AppTheme.primary,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                 elevation: 0,
               ),
-              child: Text('จองคอร์สเรียน', style: GoogleFonts.sarabun(fontSize: 16, fontWeight: FontWeight.w800)),
+              child: Text(
+                _isOwned ? 'เข้าเรียน' : 'จองคอร์สเรียน',
+                style: GoogleFonts.sarabun(fontSize: 16, fontWeight: FontWeight.w800),
+              ),
             ),
           ),
         ],
@@ -855,23 +1376,30 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     );
   }
 
-  // ─── Helpers ───────────────────────────────────────────────────────────────
+  // ── Helpers ────────────────────────────────────────────────────────────────
+
+  String _fmtPrice(int n) => n
+      .toString()
+      .replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]},');
 
   Widget _sectionTitle(String title) {
     return Row(
       children: [
         Container(
           width: 4, height: 18,
-          decoration: BoxDecoration(color: AppTheme.primary, borderRadius: BorderRadius.circular(2)),
+          decoration: BoxDecoration(
+              color: AppTheme.primary, borderRadius: BorderRadius.circular(2)),
         ),
         const SizedBox(width: 8),
-        Text(title, style: GoogleFonts.sarabun(fontSize: 16, fontWeight: FontWeight.w800, color: AppTheme.textDark)),
+        Text(title,
+            style: GoogleFonts.sarabun(
+                fontSize: 16, fontWeight: FontWeight.w800, color: AppTheme.textDark)),
       ],
     );
   }
 }
 
-// ─── Sticky Tab Bar ───────────────────────────────────────────────────────────
+// ── Sticky Tab Bar ────────────────────────────────────────────────────────────
 
 class _StickyTabBar extends SliverPersistentHeaderDelegate {
   final int tabIndex;
@@ -879,12 +1407,10 @@ class _StickyTabBar extends SliverPersistentHeaderDelegate {
 
   const _StickyTabBar({required this.tabIndex, required this.onChanged});
 
-  static const _tabs = ['Overview', 'Lessons (38)', 'รีวิว (248)', 'แบบฝึกหัด'];
+  static const _tabs = ['Overview', 'Lessons', 'รีวิว', 'แบบฝึกหัด'];
 
-  @override
-  double get minExtent => 48;
-  @override
-  double get maxExtent => 48;
+  @override double get minExtent => 48;
+  @override double get maxExtent => 48;
 
   @override
   Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
@@ -916,7 +1442,7 @@ class _StickyTabBar extends SliverPersistentHeaderDelegate {
                 child: Text(
                   _tabs[i],
                   style: GoogleFonts.sarabun(
-                    fontSize: 11.5,
+                    fontSize: 12,
                     fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
                     color: selected ? AppTheme.primary : AppTheme.textLight,
                   ),
@@ -930,18 +1456,10 @@ class _StickyTabBar extends SliverPersistentHeaderDelegate {
   }
 
   @override
-  bool shouldRebuild(covariant _StickyTabBar old) =>
-      old.tabIndex != tabIndex;
+  bool shouldRebuild(covariant _StickyTabBar old) => old.tabIndex != tabIndex;
 }
 
-// ─── Data Classes ─────────────────────────────────────────────────────────────
-
-class _LessonItem {
-  final String title, duration;
-  final Color color;
-  final IconData icon;
-  const _LessonItem(this.title, this.duration, this.color, this.icon);
-}
+// ── Data classes ──────────────────────────────────────────────────────────────
 
 class _Review {
   final String name, text;

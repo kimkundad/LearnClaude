@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_theme.dart';
+import '../services/api_service.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -12,6 +13,13 @@ class ForgotPasswordScreen extends StatefulWidget {
 
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final _emailCtrl = TextEditingController();
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _emailCtrl.addListener(() => setState(() {}));
+  }
 
   @override
   void dispose() {
@@ -19,9 +27,30 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     super.dispose();
   }
 
-  void _onSend() {
-    if (_emailCtrl.text.isEmpty) return;
-    context.push('/otp', extra: _emailCtrl.text);
+  Future<void> _onSend() async {
+    final email = _emailCtrl.text.trim();
+    if (email.isEmpty) return;
+    setState(() => _isLoading = true);
+    try {
+      await ApiService.instance.forgotPassword(email);
+      if (mounted) context.push('/otp', extra: email);
+    } on ApiException catch (e) {
+      _showError(e.message);
+    } catch (_) {
+      _showError('ไม่สามารถเชื่อมต่อได้ กรุณาตรวจสอบเครือข่าย');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  void _showError(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(msg, style: GoogleFonts.sarabun()),
+      backgroundColor: AppTheme.priceRed,
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      margin: const EdgeInsets.all(16),
+    ));
   }
 
   @override
@@ -91,7 +120,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               const SizedBox(height: 8),
               TextField(
                 controller: _emailCtrl,
-                onChanged: (_) => setState(() {}),
                 keyboardType: TextInputType.emailAddress,
                 decoration: const InputDecoration(
                   hintText: 'you@example.com',
@@ -100,8 +128,14 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               ),
               const SizedBox(height: 28),
               ElevatedButton(
-                onPressed: _emailCtrl.text.isNotEmpty ? _onSend : null,
-                child: const Text('ส่งรหัสยืนยัน →'),
+                onPressed: (_emailCtrl.text.isNotEmpty && !_isLoading) ? _onSend : null,
+                child: _isLoading
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      )
+                    : const Text('ส่งรหัสยืนยัน →'),
               ),
               const SizedBox(height: 24),
               Center(

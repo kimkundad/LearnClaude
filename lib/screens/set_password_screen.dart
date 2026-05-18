@@ -2,9 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_theme.dart';
+import '../services/api_service.dart';
 
 class SetPasswordScreen extends StatefulWidget {
-  const SetPasswordScreen({super.key});
+  final String email;
+  final String resetToken;
+
+  const SetPasswordScreen({
+    super.key,
+    required this.email,
+    required this.resetToken,
+  });
 
   @override
   State<SetPasswordScreen> createState() => _SetPasswordScreenState();
@@ -15,6 +23,7 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
   final _confirmCtrl = TextEditingController();
   bool _obscurePassword = true;
   bool _obscureConfirm = true;
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -53,24 +62,43 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
       _confirmCtrl.text.isNotEmpty &&
       _passwordCtrl.text == _confirmCtrl.text;
 
-  bool get _canSave =>
-      _passwordCtrl.text.length >= 6 && _passwordsMatch;
+  bool get _canSave => _passwordCtrl.text.length >= 6 && _passwordsMatch;
 
-  void _onSave() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'ตั้งรหัสผ่านใหม่สำเร็จ!',
-          style: GoogleFonts.sarabun(),
-        ),
+  Future<void> _onSave() async {
+    setState(() => _isLoading = true);
+    try {
+      await ApiService.instance.resetPassword(
+        widget.email,
+        widget.resetToken,
+        _passwordCtrl.text,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('ตั้งรหัสผ่านใหม่สำเร็จ!', style: GoogleFonts.sarabun()),
         backgroundColor: AppTheme.primary,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      ),
-    );
-    Future.delayed(const Duration(seconds: 1), () {
+        margin: const EdgeInsets.all(16),
+      ));
+      await Future.delayed(const Duration(milliseconds: 1200));
       if (mounted) context.go('/login');
-    });
+    } on ApiException catch (e) {
+      _showError(e.message);
+    } catch (_) {
+      _showError('ไม่สามารถเชื่อมต่อได้ กรุณาตรวจสอบเครือข่าย');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  void _showError(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(msg, style: GoogleFonts.sarabun()),
+      backgroundColor: AppTheme.priceRed,
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      margin: const EdgeInsets.all(16),
+    ));
   }
 
   @override
@@ -124,7 +152,9 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
                   suffixIcon: GestureDetector(
                     onTap: () => setState(() => _obscurePassword = !_obscurePassword),
                     child: Icon(
-                      _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                      _obscurePassword
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
                       color: AppTheme.textLight,
                     ),
                   ),
@@ -152,10 +182,21 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
                   hintText: 'พิมพ์รหัสผ่านอีกครั้ง',
                   prefixIcon: const Icon(Icons.lock_outline, color: AppTheme.textLight),
                   suffixIcon: _confirmCtrl.text.isEmpty
-                      ? null
+                      ? GestureDetector(
+                          onTap: () =>
+                              setState(() => _obscureConfirm = !_obscureConfirm),
+                          child: Icon(
+                            _obscureConfirm
+                                ? Icons.visibility_off_outlined
+                                : Icons.visibility_outlined,
+                            color: AppTheme.textLight,
+                          ),
+                        )
                       : Icon(
                           _passwordsMatch ? Icons.check_circle : Icons.cancel,
-                          color: _passwordsMatch ? AppTheme.primary : AppTheme.priceRed,
+                          color: _passwordsMatch
+                              ? AppTheme.primary
+                              : AppTheme.priceRed,
                         ),
                 ),
               ),
@@ -188,21 +229,14 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              '• ',
-                              style: GoogleFonts.sarabun(
-                                fontSize: 13,
-                                color: AppTheme.textMedium,
-                              ),
-                            ),
-                            Expanded(
-                              child: Text(
-                                tip,
+                            Text('• ',
                                 style: GoogleFonts.sarabun(
-                                  fontSize: 13,
-                                  color: AppTheme.textMedium,
-                                ),
-                              ),
+                                    fontSize: 13, color: AppTheme.textMedium)),
+                            Expanded(
+                              child: Text(tip,
+                                  style: GoogleFonts.sarabun(
+                                      fontSize: 13,
+                                      color: AppTheme.textMedium)),
                             ),
                           ],
                         ),
@@ -213,8 +247,15 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
               ),
               const SizedBox(height: 28),
               ElevatedButton(
-                onPressed: _canSave ? _onSave : null,
-                child: const Text('บันทึกรหัสผ่านใหม่ →'),
+                onPressed: (_canSave && !_isLoading) ? _onSave : null,
+                child: _isLoading
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                            strokeWidth: 2, color: Colors.white),
+                      )
+                    : const Text('บันทึกรหัสผ่านใหม่ →'),
               ),
               const SizedBox(height: 24),
             ],

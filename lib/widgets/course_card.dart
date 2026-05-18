@@ -13,6 +13,7 @@ class CourseModel {
   final Color bgEnd;
   final IconData icon;
   final List<String> tags;
+  final String? imageUrl;
 
   const CourseModel({
     required this.flashLabel,
@@ -24,6 +25,7 @@ class CourseModel {
     required this.bgEnd,
     required this.icon,
     this.tags = const [],
+    this.imageUrl,
   });
 }
 
@@ -65,21 +67,21 @@ class CourseCard extends StatelessWidget {
   }
 
   Widget _buildThumbnail() {
+    final hasImage = course.imageUrl != null && course.imageUrl!.isNotEmpty;
     return AspectRatio(
       aspectRatio: 4 / 3,
       child: Stack(
-          children: [
-            Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [course.bgStart, course.bgEnd],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-              ),
-              width: double.infinity,
-              height: double.infinity,
-            ),
+        fit: StackFit.expand,
+        children: [
+          if (hasImage)
+            Image.network(
+              course.imageUrl!,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => _gradientBg(),
+            )
+          else
+            _gradientBg(),
+          if (!hasImage) ...[
             Padding(
               padding: const EdgeInsets.all(12),
               child: Text(
@@ -95,49 +97,63 @@ class CourseCard extends StatelessWidget {
             Center(
               child: Icon(course.icon, color: Colors.white.withOpacity(0.3), size: 64),
             ),
-            Positioned(
-              top: 8,
-              right: 8,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: AppTheme.priceRed,
-                  borderRadius: BorderRadius.circular(8),
+          ],
+          Positioned(
+            top: 8,
+            right: 8,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: AppTheme.priceRed,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                course.price.toString().replaceAllMapped(
+                    RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]},'),
+                style: GoogleFonts.sarabun(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
                 ),
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: 8,
+            right: 8,
+            child: Container(
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                color: AppTheme.primary,
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Center(
                 child: Text(
-                  '${course.price.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]},')}',
+                  'ホ',
                   style: GoogleFonts.sarabun(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w900,
                     color: Colors.white,
                   ),
                 ),
               ),
             ),
-            Positioned(
-              bottom: 8,
-              right: 8,
-              child: Container(
-                width: 28,
-                height: 28,
-                decoration: BoxDecoration(
-                  color: AppTheme.primary,
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Center(
-                  child: Text(
-                    'ホ',
-                    style: GoogleFonts.sarabun(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _gradientBg() {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [course.bgStart, course.bgEnd],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
+      ),
     );
   }
 

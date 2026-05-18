@@ -1,14 +1,42 @@
 import 'dart:async';
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:webview_flutter/webview_flutter.dart';
+
+import '../config/app_config.dart';
+import '../services/api_service.dart';
 import '../theme/app_theme.dart';
 
 const _securityChannel = MethodChannel('com.learnsbuy/security');
 
+// ── How point deduction works ────────────────────────────────────────────────
+// • Fetch current point on screen open via POST /api/get_point_v2
+// • Track actual play seconds with a 1-second periodic ticker
+// • Every 60 actual play seconds → deduct 1 point via /api/del_point_v4
+// • Seeking forward does NOT count — only real watch time accumulates
+// • Ticker pauses (skips increment) when video is paused
+// • Accumulated seconds preserved across pause/resume within same video
+// • Switching video resets accumulated seconds to 0
+// • If point reaches 0 → pause video & show "no points" dialog
+// ── Video resume (YouTube-style) ─────────────────────────────────────────────
+// • Save current time to SharedPreferences key "vp_{videoId}" every ~10 s
+// • On load: if saved time > 30 s, inject JS to seek to that position
+// ─────────────────────────────────────────────────────────────────────────────
+
 class VideoPlayerScreen extends StatefulWidget {
-  const VideoPlayerScreen({super.key});
+  final int courseId;
+  final String courseTitle;
+
+  const VideoPlayerScreen({
+    super.key,
+    required this.courseId,
+    required this.courseTitle,
+  });
 
   @override
   State<VideoPlayerScreen> createState() => _VideoPlayerScreenState();
@@ -16,102 +44,409 @@ class VideoPlayerScreen extends StatefulWidget {
 
 class _VideoPlayerScreenState extends State<VideoPlayerScreen>
     with WidgetsBindingObserver {
-  bool _isPlaying = true;
-  bool _showControls = true;
-  bool _isMuted = false;
-  double _progress = 0.013; // ~30s of 40min demo
-  int _currentLesson = 0;
   bool _isFullscreen = false;
+  bool _loading = true;
 
-  Timer? _controlsTimer;
-  Timer? _progressTimer;
+  List<Map<String, dynamic>> _videos = [];
+  int _currentIndex = 0;
+  WebViewController? _webCtrl;
 
-  static const _totalSeconds = 40 * 60; // 40 minutes demo
+  // watermark
+  String _userName = '';
+  int _userId = 0;
 
-  static const List<_LessonData> _lessons = [
-    _LessonData('Hiragana ตอนที่ 1', '20 min', [Color(0xFF2C3E7A), Color(0xFF1A2460)], Icons.text_fields),
-    _LessonData('Hiragana ตอนที่ 2', '20 min', [Color(0xFF2C3E7A), Color(0xFF1A2460)], Icons.text_fields),
-    _LessonData('การออกเสียง Hiragana พื้นฐาน', '20 min', [Color(0xFFB8860B), Color(0xFF8B6914)], Icons.record_voice_over_rounded),
-    _LessonData('Akiko บทที่ 1 การแนะนำตัวและการเรียกขาน', '20 min', [Color(0xFF1565C0), Color(0xFF0D47A1)], Icons.people_rounded),
-    _LessonData('Hiragana ตอนที่ 3', '20 min', [Color(0xFF2C3E7A), Color(0xFF1A2460)], Icons.text_fields),
-    _LessonData('Hiragana ตอนที่ 1 (เพิ่มเติม)', '20 min', [Color(0xFFE65100), Color(0xFFBF360C)], Icons.add_circle_outline),
-    _LessonData('Katakana ตอนที่ 1', '20 min', [Color(0xFF6A1B9A), Color(0xFF4A148C)], Icons.font_download_rounded),
-    _LessonData('Katakana ตอนที่ 2', '20 min', [Color(0xFF6A1B9A), Color(0xFF4A148C)], Icons.font_download_rounded),
-    _LessonData('คำศัพท์พื้นฐาน บทที่ 1', '25 min', [Color(0xFF00695C), Color(0xFF004D40)], Icons.book_rounded),
-    _LessonData('ไวยากรณ์ は・が・を', '30 min', [Color(0xFFC62828), Color(0xFFB71C1C)], Icons.menu_book_rounded),
-  ];
+  // point
+  int _point = 0;
+  bool _pointLoaded = false;
 
-  // ─── Lifecycle ─────────────────────────────────────────────────────────────
+  // point deduction — accumulator-based (1 point per 60 real play seconds)
+  bool _isVideoPlaying = false;
+  bool _deductInFlight = false;
+  Timer? _watchTicker;
+  int _watchedSeconds = 0;
+
+  // video id of current video (for resume key)
+  int? _currentVideoId;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _enableSecurity();
-    _startControlsTimer();
-    _startProgressTimer();
+    _loadUserProfile();
+    _loadInitialData();
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _controlsTimer?.cancel();
-    _progressTimer?.cancel();
+    _stopWatchTicker();
     _disableSecurity();
     if (_isFullscreen) _exitFullscreen();
     super.dispose();
   }
 
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) {
+      setState(() => _isVideoPlaying = false);
+    }
+  }
+
+  // ── Security ───────────────────────────────────────────────────────────────
+
   Future<void> _enableSecurity() async {
-    try {
-      await _securityChannel.invokeMethod('enableSecure');
-    } catch (_) {}
+    try { await _securityChannel.invokeMethod('enableSecure'); } catch (_) {}
   }
 
   Future<void> _disableSecurity() async {
+    try { await _securityChannel.invokeMethod('disableSecure'); } catch (_) {}
+  }
+
+  // ── User profile (watermark) ───────────────────────────────────────────────
+
+  Future<void> _loadUserProfile() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString('user_profile');
+    if (raw == null || !mounted) return;
     try {
-      await _securityChannel.invokeMethod('disableSecure');
+      final profile = jsonDecode(raw) as Map<String, dynamic>;
+      setState(() {
+        _userName = (profile['name'] as String?) ?? '';
+        _userId   = (profile['id'] as num?)?.toInt() ?? 0;
+      });
     } catch (_) {}
   }
 
-  // ─── Controls & Progress ───────────────────────────────────────────────────
+  // ── Init ───────────────────────────────────────────────────────────────────
 
-  void _startControlsTimer() {
-    _controlsTimer?.cancel();
-    if (_isPlaying) {
-      _controlsTimer = Timer(const Duration(seconds: 3), () {
-        if (mounted) setState(() => _showControls = false);
+  Future<void> _loadInitialData() async {
+    await Future.wait([_fetchPoint(), _loadVideos()]);
+  }
+
+  Future<void> _fetchPoint() async {
+    try {
+      final p = await ApiService.instance.getPoint();
+      if (!mounted) return;
+      if (p == 0) {
+        setState(() { _point = 0; _pointLoaded = true; });
+        _showNoPointDialog();
+        return;
+      }
+      setState(() { _point = p; _pointLoaded = true; });
+    } catch (_) {
+      if (mounted) setState(() => _pointLoaded = true);
+    }
+  }
+
+  Future<void> _loadVideos() async {
+    try {
+      final data = await ApiService.instance.getFileApp(widget.courseId);
+      final videos = (data['video'] as List? ?? [])
+          .map((e) => Map<String, dynamic>.from(e as Map))
+          .toList();
+      if (!mounted) return;
+      setState(() {
+        _videos = videos;
+        _loading = false;
+      });
+      if (videos.isNotEmpty) _playVideo(0);
+    } catch (_) {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  // ── Point deduction ────────────────────────────────────────────────────────
+
+  void _stopWatchTicker() {
+    _watchTicker?.cancel();
+    _watchTicker = null;
+  }
+
+  // Start a 1-second tick; only increments when video is actually playing.
+  // Preserved across pause/resume so 45s watched + pause + 15s = 1 point.
+  void _startWatchTicker() {
+    _watchTicker ??= Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!_isVideoPlaying || !mounted) return;
+      _watchedSeconds++;
+      if (_watchedSeconds >= 60) {
+        _watchedSeconds = 0;
+        _doDeductPoint();
+      }
+      setState(() {}); // rebuild progress ring every second
+    });
+  }
+
+  Future<void> _doDeductPoint() async {
+    if (_deductInFlight || !mounted) return;
+    _deductInFlight = true;
+    try {
+      final newPoint = await ApiService.instance.deductPoint();
+      if (!mounted) return;
+      setState(() => _point = newPoint);
+      if (newPoint == 0) {
+        _stopWatchTicker();
+        setState(() => _isVideoPlaying = false);
+        _webCtrl?.runJavaScript('document.querySelector("video").pause()');
+        _showNoPointDialog();
+      }
+    } catch (_) {
+      // network error — pause video until connection is restored
+      if (!mounted) return;
+      _stopWatchTicker();
+      setState(() => _isVideoPlaying = false);
+      _webCtrl?.runJavaScript('document.querySelector("video").pause()');
+      _showNoNetworkDialog();
+    } finally {
+      _deductInFlight = false;
+    }
+  }
+
+  void _showNoNetworkDialog() {
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          'ไม่มีการเชื่อมต่อ',
+          textAlign: TextAlign.center,
+          style: GoogleFonts.sarabun(
+              fontWeight: FontWeight.w900,
+              fontSize: 17,
+              color: AppTheme.textDark),
+        ),
+        content: Text(
+          'กรุณาตรวจสอบอินเทอร์เน็ตแล้วกด "ดูต่อ"\nระบบจะหัก Point เมื่อเชื่อมต่อได้แล้ว',
+          textAlign: TextAlign.center,
+          style: GoogleFonts.sarabun(
+              fontSize: 14, color: AppTheme.textMedium, height: 1.5),
+        ),
+        actionsAlignment: MainAxisAlignment.center,
+        actions: [
+          TextButton(
+            onPressed: () async {
+              Navigator.of(context).pop();
+              // ลอง deduct ทันที ถ้าสำเร็จค่อย resume
+              _deductInFlight = false;
+              await _doDeductPoint();
+              if (mounted && _point > 0) {
+                _webCtrl?.runJavaScript('document.querySelector("video").play()');
+                setState(() => _isVideoPlaying = true);
+                _startWatchTicker();
+              }
+            },
+            child: Text('ดูต่อ',
+                style: GoogleFonts.sarabun(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.primary)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _onVideoPlay() {
+    if (!mounted) return;
+    setState(() => _isVideoPlaying = true);
+    _startWatchTicker();
+  }
+
+  void _onVideoPause() {
+    if (!mounted) return;
+    setState(() => _isVideoPlaying = false);
+    // ticker keeps running but skips increments while _isVideoPlaying is false
+  }
+
+  // ── Video progress (resume) ────────────────────────────────────────────────
+
+  String _progressKey(int videoId) => 'vp_$videoId';
+
+  Future<double> _getSavedPosition(int videoId) async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getDouble(_progressKey(videoId)) ?? 0.0;
+  }
+
+  Future<void> _savePosition(int videoId, double seconds) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble(_progressKey(videoId), seconds);
+  }
+
+  void _onTimeUpdate(int videoId, double seconds) {
+    _savePosition(videoId, seconds);
+  }
+
+  Future<void> _markVideoCompleted(int videoId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final key = 'cdone_${widget.courseId}';
+    final done = prefs.getStringList(key) ?? [];
+    if (!done.contains('$videoId')) {
+      done.add('$videoId');
+      await prefs.setStringList(key, done);
+    }
+  }
+
+  // ── Video playback ─────────────────────────────────────────────────────────
+
+  Future<void> _playVideo(int index) async {
+    if (index < 0 || index >= _videos.length) return;
+    _stopWatchTicker();
+    _watchedSeconds = 0;
+    setState(() {
+      _isVideoPlaying = false;
+      _currentIndex = index;
+      _webCtrl = null;
+    });
+
+    final v       = _videos[index];
+    final videoId = (v['id'] as num?)?.toInt() ?? index;
+    final thumb   = (v['thumbnail_img'] as String?) ?? '';
+    final poster  = thumb.isNotEmpty ? '${AppConfig.uploadsBase}$thumb' : '';
+
+    _currentVideoId = videoId;
+
+    String videoUrl;
+    try {
+      videoUrl = await ApiService.instance.getSignedVideoUrl(videoId);
+    } catch (_) {
+      videoUrl = (v['course_video_url'] as String?) ?? '';
+    }
+    if (videoUrl.isEmpty || !mounted) return;
+
+    final ctrl = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setBackgroundColor(Colors.black)
+      ..addJavaScriptChannel(
+        'VideoChannel',
+        onMessageReceived: (msg) => _onJsMessage(videoId, msg.message),
+      )
+      ..loadHtmlString(_videoHtml(videoUrl, poster));
+
+    if (!mounted) return;
+    setState(() => _webCtrl = ctrl);
+  }
+
+  void _onJsMessage(int videoId, String msg) {
+    if (msg == 'play')  { _onVideoPlay();  return; }
+    if (msg == 'pause') { _onVideoPause(); return; }
+    if (msg == 'ended') {
+      _onVideoPause();
+      _savePosition(videoId, 0);
+      return;
+    }
+    if (msg == 'completed') {
+      _markVideoCompleted(videoId);
+      return;
+    }
+    if (msg.startsWith('time:')) {
+      final secs = double.tryParse(msg.substring(5)) ?? 0;
+      _onTimeUpdate(videoId, secs);
+      return;
+    }
+    if (msg == 'ready') {
+      // video metadata loaded → seek to saved position
+      _getSavedPosition(videoId).then((savedTime) {
+        if (savedTime > 30 && _webCtrl != null) {
+          _webCtrl!.runJavaScript(
+            'document.querySelector("video").currentTime = $savedTime;'
+          );
+        }
       });
     }
   }
 
-  void _startProgressTimer() {
-    _progressTimer?.cancel();
-    _progressTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (_isPlaying && mounted) {
-        setState(() {
-          _progress = (_progress + 1 / _totalSeconds).clamp(0.0, 1.0);
-        });
+  String _videoHtml(String videoUrl, String poster) => '''
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    html,body{background:#000;width:100%;height:100%;overflow:hidden}
+    video{width:100%;height:100%;object-fit:contain;display:block}
+  </style>
+</head>
+<body>
+  <video controls playsinline preload="metadata"${poster.isNotEmpty ? ' poster="$poster"' : ''}>
+    <source src="$videoUrl" type="video/mp4">
+  </video>
+  <script>
+    var video = document.querySelector('video');
+    var lastT = -1;
+    video.addEventListener('loadedmetadata', function() {
+      window.VideoChannel.postMessage('ready');
+    });
+    video.addEventListener('play', function() {
+      window.VideoChannel.postMessage('play');
+    });
+    video.addEventListener('pause', function() {
+      window.VideoChannel.postMessage('pause');
+    });
+    video.addEventListener('ended', function() {
+      window.VideoChannel.postMessage('ended');
+    });
+    var completed = false;
+    video.addEventListener('timeupdate', function() {
+      var t = Math.floor(video.currentTime);
+      if (t !== lastT && t % 10 === 0) {
+        lastT = t;
+        window.VideoChannel.postMessage('time:' + video.currentTime);
+      }
+      if (!completed && video.duration > 0 &&
+          video.currentTime / video.duration >= 0.9) {
+        completed = true;
+        window.VideoChannel.postMessage('completed');
       }
     });
+  </script>
+</body>
+</html>
+''';
+
+  // ── Dialogs ────────────────────────────────────────────────────────────────
+
+  void _showNoPointDialog() {
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          'Point หมดแล้ว',
+          textAlign: TextAlign.center,
+          style: GoogleFonts.sarabun(
+              fontWeight: FontWeight.w900,
+              fontSize: 17,
+              color: AppTheme.textDark),
+        ),
+        content: Text(
+          'กรุณาติดต่อเจ้าหน้าที่ LINE : @ZA-SHI\nเพื่อเติม Point',
+          textAlign: TextAlign.center,
+          style: GoogleFonts.sarabun(
+              fontSize: 14, color: AppTheme.textMedium, height: 1.5),
+        ),
+        actionsAlignment: MainAxisAlignment.center,
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              if (context.canPop()) context.pop();
+            },
+            child: Text('OK',
+                style: GoogleFonts.sarabun(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.primary)),
+          ),
+        ],
+      ),
+    );
   }
 
-  void _tapVideo() {
-    setState(() => _showControls = !_showControls);
-    if (_showControls) _startControlsTimer();
-  }
-
-  void _togglePlay() {
-    setState(() => _isPlaying = !_isPlaying);
-    _startControlsTimer();
-  }
-
-  void _seek(double delta) {
-    setState(() {
-      _progress = (_progress + delta / _totalSeconds).clamp(0.0, 1.0);
-    });
-    _startControlsTimer();
-  }
+  // ── Fullscreen ─────────────────────────────────────────────────────────────
 
   void _enterFullscreen() {
     setState(() => _isFullscreen = true);
@@ -128,23 +463,11 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen>
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   }
 
-  // ─── Time helpers ──────────────────────────────────────────────────────────
-
-  String _fmtTime(double progress, {bool remaining = false}) {
-    final cur = (progress * _totalSeconds).round();
-    final secs = remaining ? _totalSeconds - cur : cur;
-    final m = secs ~/ 60;
-    final s = secs % 60;
-    final str = '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
-    return remaining ? '-$str' : str;
-  }
-
-  // ─── Build ─────────────────────────────────────────────────────────────────
+  // ── Build ──────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
-    if (_isFullscreen) return _buildFullscreenPlayer();
-
+    if (_isFullscreen) return _buildFullscreen();
     return Scaffold(
       backgroundColor: Colors.black,
       body: Column(
@@ -161,7 +484,9 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen>
           Expanded(
             child: Container(
               color: const Color(0xFFF5F7FA),
-              child: _buildLessonList(),
+              child: _loading
+                  ? const Center(child: CircularProgressIndicator())
+                  : _buildLessonList(),
             ),
           ),
         ],
@@ -169,26 +494,36 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen>
     );
   }
 
-  Widget _buildFullscreenPlayer() {
+  Widget _buildFullscreen() {
     return Scaffold(
       backgroundColor: Colors.black,
-      body: GestureDetector(
-        onTap: _tapVideo,
-        child: Stack(
-          children: [
-            _buildVideoBackground(),
-            AnimatedOpacity(
-              opacity: _showControls ? 1.0 : 0.0,
-              duration: const Duration(milliseconds: 300),
-              child: _buildControlsOverlay(fullscreen: true),
+      body: Stack(
+        children: [
+          _webCtrl != null
+              ? WebViewWidget(controller: _webCtrl!)
+              : const SizedBox.expand(),
+          _buildWatermark(),
+          Positioned(
+            top: 16, left: 16,
+            child: SafeArea(
+              child: GestureDetector(
+                onTap: _exitFullscreen,
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.black54,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.fullscreen_exit_rounded,
+                      color: Colors.white, size: 22),
+                ),
+              ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
-
-  // ─── App Bar ───────────────────────────────────────────────────────────────
 
   Widget _buildAppBar() {
     return Container(
@@ -197,288 +532,167 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen>
       child: Row(
         children: [
           IconButton(
-            icon: const Icon(Icons.chevron_left_rounded, color: Colors.white, size: 28),
-            onPressed: () => context.canPop() ? context.pop() : context.go('/home'),
+            icon: const Icon(Icons.chevron_left_rounded,
+                color: Colors.white, size: 28),
+            onPressed: () =>
+                context.canPop() ? context.pop() : context.go('/home'),
           ),
-          const SizedBox(width: 4),
-          const Icon(Icons.stars_rounded, color: Colors.white, size: 16),
-          const SizedBox(width: 6),
           Expanded(
             child: Text(
-              'Point - 509,849.1',
-              style: GoogleFonts.sarabun(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white),
+              widget.courseTitle,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.sarabun(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white),
             ),
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(20),
+          // Point badge with progress ring
+          if (_pointLoaded)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.18),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    width: 18, height: 18,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        CircularProgressIndicator(
+                          value: _isVideoPlaying
+                              ? _watchedSeconds / 60.0
+                              : 0,
+                          strokeWidth: 2,
+                          backgroundColor: Colors.white24,
+                          valueColor: const AlwaysStoppedAnimation<Color>(
+                              Colors.white),
+                        ),
+                        const Icon(Icons.stars_rounded,
+                            color: Colors.white, size: 10),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    '$_point',
+                    style: GoogleFonts.sarabun(
+                        fontSize: 13,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800),
+                  ),
+                  const SizedBox(width: 2),
+                  Text(
+                    'point',
+                    style: GoogleFonts.sarabun(
+                        fontSize: 10,
+                        color: Colors.white70,
+                        fontWeight: FontWeight.w500),
+                  ),
+                ],
+              ),
             ),
-            child: Text(
-              'kim kundad.',
-              style: GoogleFonts.sarabun(fontSize: 11, color: Colors.white, fontWeight: FontWeight.w600),
-            ),
-          ),
         ],
       ),
     );
   }
 
-  // ─── Video Area ────────────────────────────────────────────────────────────
+  Widget _buildWatermark() {
+    if (_userName.isEmpty && _userId == 0) return const SizedBox.shrink();
+    return Positioned.fill(
+      child: IgnorePointer(
+        child: Center(
+          child: Transform.rotate(
+            angle: -0.25,
+            child: Opacity(
+              opacity: 0.22,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    _userName,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      shadows: [Shadow(color: Colors.black, blurRadius: 6)],
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'ID: $_userId',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 13,
+                      shadows: [Shadow(color: Colors.black, blurRadius: 6)],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 
   Widget _buildVideoArea() {
     return AspectRatio(
       aspectRatio: 16 / 9,
-      child: GestureDetector(
-        onTap: _tapVideo,
-        child: Stack(
-          children: [
-            _buildVideoBackground(),
-            // Watermark (semi-transparent, harder to remove from recording)
-            Positioned(
-              bottom: 44,
-              left: 0,
-              right: 0,
-              child: Center(
-                child: Text(
-                  'kim kundad.  ·  ID:509849  ·  learnsbuy',
-                  style: GoogleFonts.sarabun(
-                    fontSize: 10,
-                    color: Colors.white.withOpacity(0.1),
-                    letterSpacing: 1.5,
-                  ),
-                ),
-              ),
-            ),
-            AnimatedOpacity(
-              opacity: _showControls ? 1.0 : 0.0,
-              duration: const Duration(milliseconds: 300),
-              child: _buildControlsOverlay(),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildVideoBackground() {
-    return Container(
-      color: const Color(0xFF0D0D1A),
       child: Stack(
         children: [
-          // Subtle gradient background
-          Container(
-            decoration: const BoxDecoration(
-              gradient: RadialGradient(
-                center: Alignment(0, -0.2),
-                radius: 1.2,
-                colors: [Color(0xFF1A1A3E), Color(0xFF050510)],
+          _webCtrl != null
+              ? WebViewWidget(controller: _webCtrl!)
+              : Container(
+                  color: const Color(0xFF0D0D1A),
+                  child: Center(
+                    child: _loading
+                        ? const CircularProgressIndicator(color: Colors.white)
+                        : Text('เลือกบทเรียน',
+                            style: GoogleFonts.sarabun(
+                                color: Colors.white54, fontSize: 16)),
+                  ),
+                ),
+          _buildWatermark(),
+          if (_isVideoPlaying)
+            const Positioned(
+              top: 8, right: 8,
+              child: _PulsingDot(),
+            ),
+          Positioned(
+            bottom: 10, right: 10,
+            child: GestureDetector(
+              onTap: _enterFullscreen,
+              child: Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.5),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.open_in_full_rounded,
+                    color: Colors.white, size: 18),
               ),
             ),
           ),
-          // ZA-SHI logo center (dim)
-          Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 60,
-                  height: 60,
-                  decoration: BoxDecoration(
-                    color: AppTheme.primary.withOpacity(0.08),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: AppTheme.primary.withOpacity(0.15)),
-                  ),
-                  child: Center(
-                    child: Text('ホ',
-                      style: GoogleFonts.sarabun(
-                        fontSize: 28,
-                        fontWeight: FontWeight.w900,
-                        color: AppTheme.primary.withOpacity(0.25),
-                      )),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text('ZA-SHI',
-                  style: GoogleFonts.sarabun(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w900,
-                    color: Colors.white.withOpacity(0.08),
-                    letterSpacing: 4,
-                  )),
-              ],
-            ),
-          ),
-          // Playing indicator pulse
-          if (_isPlaying)
-            const Positioned(
-              top: 8,
-              right: 8,
-              child: _PulsingDot(),
-            ),
         ],
       ),
     );
   }
 
-  // ─── Controls Overlay ──────────────────────────────────────────────────────
-
-  Widget _buildControlsOverlay({bool fullscreen = false}) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Colors.black.withOpacity(0.75),
-            Colors.transparent,
-            Colors.transparent,
-            Colors.black.withOpacity(0.85),
-          ],
-          stops: const [0.0, 0.25, 0.65, 1.0],
-        ),
-      ),
-      child: Column(
-        children: [
-          // Top row
-          Padding(
-            padding: const EdgeInsets.fromLTRB(14, 10, 14, 0),
-            child: Row(
-              children: [
-                GestureDetector(
-                  onTap: fullscreen ? _exitFullscreen : _enterFullscreen,
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    child: Icon(
-                      fullscreen ? Icons.fullscreen_exit_rounded : Icons.open_in_full_rounded,
-                      color: Colors.white,
-                      size: 20,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: AppTheme.primary.withOpacity(0.85),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Text('ZA-SHI',
-                    style: GoogleFonts.sarabun(
-                      fontSize: 10, fontWeight: FontWeight.w900,
-                      color: Colors.white, letterSpacing: 1,
-                    )),
-                ),
-                const Spacer(),
-                GestureDetector(
-                  onTap: () => setState(() => _isMuted = !_isMuted),
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    child: Icon(
-                      _isMuted ? Icons.volume_off_rounded : Icons.volume_up_rounded,
-                      color: Colors.white, size: 20,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          // Center play controls
-          Expanded(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                _controlBtn(Icons.replay_10_rounded, size: 44, onTap: () => _seek(-10)),
-                const SizedBox(width: 28),
-                _controlBtn(
-                  _isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
-                  size: 60,
-                  primary: true,
-                  onTap: _togglePlay,
-                ),
-                const SizedBox(width: 28),
-                _controlBtn(Icons.forward_10_rounded, size: 44, onTap: () => _seek(10)),
-              ],
-            ),
-          ),
-          // Bottom progress + time
-          Padding(
-            padding: const EdgeInsets.fromLTRB(14, 0, 14, 8),
-            child: Column(
-              children: [
-                SliderTheme(
-                  data: SliderThemeData(
-                    trackHeight: 3,
-                    thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 5),
-                    overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
-                    activeTrackColor: AppTheme.primary,
-                    inactiveTrackColor: Colors.white.withOpacity(0.25),
-                    thumbColor: Colors.white,
-                    overlayColor: AppTheme.primary.withOpacity(0.3),
-                  ),
-                  child: Slider(
-                    value: _progress,
-                    onChanged: (v) => setState(() => _progress = v),
-                    onChangeStart: (_) => _controlsTimer?.cancel(),
-                    onChangeEnd: (_) => _startControlsTimer(),
-                  ),
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(_fmtTime(_progress),
-                      style: GoogleFonts.sarabun(fontSize: 11, color: Colors.white, fontWeight: FontWeight.w600)),
-                    GestureDetector(
-                      onTap: () {},
-                      child: Container(
-                        padding: const EdgeInsets.all(4),
-                        child: const Icon(Icons.more_horiz_rounded, color: Colors.white, size: 18),
-                      ),
-                    ),
-                    Text(_fmtTime(_progress, remaining: true),
-                      style: GoogleFonts.sarabun(fontSize: 11, color: Colors.white.withOpacity(0.7))),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _controlBtn(IconData icon, {double size = 44, bool primary = false, VoidCallback? onTap}) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          color: primary
-              ? AppTheme.primary.withOpacity(0.9)
-              : Colors.white.withOpacity(0.15),
-          shape: BoxShape.circle,
-          border: primary ? Border.all(color: Colors.white.withOpacity(0.3), width: 1.5) : null,
-          boxShadow: primary
-              ? [BoxShadow(color: AppTheme.primary.withOpacity(0.4), blurRadius: 16, spreadRadius: 2)]
-              : null,
-        ),
-        child: Icon(icon, color: Colors.white, size: size * 0.55),
-      ),
-    );
-  }
-
-  // ─── Lesson List ───────────────────────────────────────────────────────────
+  // ── Lesson list ────────────────────────────────────────────────────────────
 
   Widget _buildLessonList() {
     return ListView.builder(
       padding: EdgeInsets.zero,
-      itemCount: _lessons.length + 1,
+      itemCount: _videos.length + 1,
       itemBuilder: (ctx, i) {
         if (i == 0) return _buildListHeader();
-        return _buildLessonRow(_lessons[i - 1], i - 1);
+        return _buildLessonRow(_videos[i - 1], i - 1);
       },
     );
   }
@@ -497,30 +711,46 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen>
             ),
           ),
           const SizedBox(width: 10),
-          Text('${_lessons.length} Lessons',
-            style: GoogleFonts.sarabun(fontSize: 16, fontWeight: FontWeight.w800, color: AppTheme.textDark)),
+          Text('${_videos.length} บทเรียน',
+              style: GoogleFonts.sarabun(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: AppTheme.textDark)),
           const Spacer(),
-          Text('ทั้งหมด ${_lessons.length * 20} นาที',
-            style: GoogleFonts.sarabun(fontSize: 12, color: AppTheme.textLight)),
+          // hint about resume feature
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.history_rounded,
+                  size: 13, color: AppTheme.textLight),
+              const SizedBox(width: 3),
+              Text('บันทึกตำแหน่งอัตโนมัติ',
+                  style: GoogleFonts.sarabun(
+                      fontSize: 11, color: AppTheme.textLight)),
+            ],
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildLessonRow(_LessonData lesson, int index) {
-    final isActive = index == _currentLesson;
+  Widget _buildLessonRow(Map<String, dynamic> v, int index) {
+    final isActive  = index == _currentIndex;
+    final name      = (v['course_video_name'] as String?) ?? 'บทเรียนที่ ${index + 1}';
+    final duration  = (v['time_video'] as String?) ?? '';
+    final thumbFile = (v['thumbnail_img'] as String?) ?? '';
+    final thumbUrl  = thumbFile.isNotEmpty
+        ? '${AppConfig.uploadsBase}$thumbFile'
+        : '';
+
     return GestureDetector(
-      onTap: () => setState(() {
-        _currentLesson = index;
-        _progress = 0;
-        _isPlaying = true;
-        _showControls = true;
-        _startControlsTimer();
-      }),
+      onTap: () => _playVideo(index),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         decoration: BoxDecoration(
-          color: isActive ? AppTheme.primaryLight.withOpacity(0.6) : Colors.white,
+          color: isActive
+              ? AppTheme.primaryLight.withOpacity(0.6)
+              : Colors.white,
           border: Border(
             left: BorderSide(
               color: isActive ? AppTheme.primary : Colors.transparent,
@@ -535,65 +765,64 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen>
             // Thumbnail
             Stack(
               children: [
-                Container(
-                  width: 104,
-                  height: 66,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: lesson.gradient,
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Stack(
-                    children: [
-                      // Course ID overlay
-                      Positioned(
-                        top: 6, left: 6,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.45),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text('ZA-SHI',
-                            style: GoogleFonts.sarabun(
-                              fontSize: 8, fontWeight: FontWeight.w900, color: Colors.white)),
-                        ),
-                      ),
-                      Center(
-                        child: Icon(lesson.icon, color: Colors.white.withOpacity(0.3), size: 28),
-                      ),
-                    ],
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: SizedBox(
+                    width: 104, height: 66,
+                    child: thumbUrl.isNotEmpty
+                        ? Image.network(
+                            thumbUrl,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) =>
+                                _thumbPlaceholder(index),
+                          )
+                        : _thumbPlaceholder(index),
                   ),
                 ),
-                // Active overlay
                 if (isActive)
                   Positioned.fill(
-                    child: Container(
-                      decoration: BoxDecoration(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Container(
                         color: Colors.black.withOpacity(0.35),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Center(
-                        child: Icon(Icons.pause_circle_filled_rounded, color: Colors.white, size: 26),
+                        child: const Center(
+                          child: Icon(Icons.pause_circle_filled_rounded,
+                              color: Colors.white, size: 26),
+                        ),
                       ),
                     ),
                   ),
-                // Episode number badge
-                Positioned(
-                  bottom: 5, right: 6,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.6),
-                      borderRadius: BorderRadius.circular(4),
+                if (duration.isNotEmpty)
+                  Positioned(
+                    bottom: 5, right: 6,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 5, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.6),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(duration,
+                          style: GoogleFonts.sarabun(
+                              fontSize: 9,
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600)),
                     ),
-                    child: Text(lesson.duration,
-                      style: GoogleFonts.sarabun(fontSize: 9, color: Colors.white, fontWeight: FontWeight.w600)),
                   ),
-                ),
+                if (!isActive)
+                  Positioned.fill(
+                    child: Center(
+                      child: Container(
+                        width: 28, height: 28,
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.4),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.play_arrow_rounded,
+                            color: Colors.white, size: 18),
+                      ),
+                    ),
+                  ),
               ],
             ),
             const SizedBox(width: 12),
@@ -602,37 +831,44 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    lesson.title,
+                    name,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: GoogleFonts.sarabun(
                       fontSize: 13,
-                      fontWeight: isActive ? FontWeight.w700 : FontWeight.w600,
+                      fontWeight:
+                          isActive ? FontWeight.w700 : FontWeight.w600,
                       color: isActive ? AppTheme.primary : AppTheme.textDark,
                       height: 1.4,
                     ),
                   ),
-                  const SizedBox(height: 5),
-                  Row(
-                    children: [
-                      const Icon(Icons.access_time_rounded, size: 11, color: AppTheme.textLight),
-                      const SizedBox(width: 3),
-                      Text(lesson.duration,
-                        style: GoogleFonts.sarabun(fontSize: 11, color: AppTheme.textLight)),
-                    ],
-                  ),
+                  if (duration.isNotEmpty) ...[
+                    const SizedBox(height: 5),
+                    Row(
+                      children: [
+                        const Icon(Icons.access_time_rounded,
+                            size: 11, color: AppTheme.textLight),
+                        const SizedBox(width: 3),
+                        Text(duration,
+                            style: GoogleFonts.sarabun(
+                                fontSize: 11, color: AppTheme.textLight)),
+                      ],
+                    ),
+                  ],
                 ],
               ),
             ),
             const SizedBox(width: 8),
             Container(
-              width: 34,
-              height: 34,
+              width: 34, height: 34,
               decoration: BoxDecoration(
                 color: isActive ? AppTheme.primary : AppTheme.primaryLight,
                 shape: BoxShape.circle,
                 boxShadow: isActive
-                    ? [BoxShadow(color: AppTheme.primary.withOpacity(0.35), blurRadius: 8, offset: const Offset(0, 3))]
+                    ? [BoxShadow(
+                        color: AppTheme.primary.withOpacity(0.35),
+                        blurRadius: 8,
+                        offset: const Offset(0, 3))]
                     : null,
               ),
               child: Icon(
@@ -646,9 +882,32 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen>
       ),
     );
   }
+
+  Widget _thumbPlaceholder(int index) {
+    const colors = [
+      Color(0xFF2C3E7A), Color(0xFFB8860B), Color(0xFF1565C0),
+      Color(0xFFE65100), Color(0xFF6A1B9A), Color(0xFF00695C),
+    ];
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            colors[index % colors.length],
+            colors[index % colors.length].withOpacity(0.7)
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: const Center(
+        child: Icon(Icons.play_circle_outline,
+            color: Colors.white38, size: 28),
+      ),
+    );
+  }
 }
 
-// ─── Pulsing Live Dot ─────────────────────────────────────────────────────────
+// ── Pulsing "live" dot ─────────────────────────────────────────────────────────
 
 class _PulsingDot extends StatefulWidget {
   const _PulsingDot();
@@ -657,13 +916,15 @@ class _PulsingDot extends StatefulWidget {
   State<_PulsingDot> createState() => _PulsingDotState();
 }
 
-class _PulsingDotState extends State<_PulsingDot> with SingleTickerProviderStateMixin {
+class _PulsingDotState extends State<_PulsingDot>
+    with SingleTickerProviderStateMixin {
   late AnimationController _ctrl;
 
   @override
   void initState() {
     super.initState();
-    _ctrl = AnimationController(vsync: this, duration: const Duration(seconds: 1))
+    _ctrl = AnimationController(
+        vsync: this, duration: const Duration(seconds: 1))
       ..repeat(reverse: true);
   }
 
@@ -679,18 +940,9 @@ class _PulsingDotState extends State<_PulsingDot> with SingleTickerProviderState
       opacity: _ctrl,
       child: Container(
         width: 8, height: 8,
-        decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+        decoration: const BoxDecoration(
+            color: Colors.red, shape: BoxShape.circle),
       ),
     );
   }
-}
-
-// ─── Data ─────────────────────────────────────────────────────────────────────
-
-class _LessonData {
-  final String title, duration;
-  final List<Color> gradient;
-  final IconData icon;
-
-  const _LessonData(this.title, this.duration, this.gradient, this.icon);
 }

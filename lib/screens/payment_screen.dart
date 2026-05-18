@@ -6,15 +6,20 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../theme/app_theme.dart';
+import '../services/api_service.dart';
 
 class PaymentScreen extends StatefulWidget {
   final String courseTitle;
   final int price;
+  final int itemId;       // course_id or package_id
+  final String itemType;  // 'course' | 'package'
 
   const PaymentScreen({
     super.key,
     this.courseTitle = 'ติวโค้งสุดท้าย A-Level ญี่ปุ่น',
     this.price = 3950,
+    this.itemId = 0,
+    this.itemType = 'package',
   });
 
   @override
@@ -27,33 +32,96 @@ class _PaymentScreenState extends State<PaymentScreen> {
   TimeOfDay _transferTime = TimeOfDay.now();
   File? _slipImage;
   bool _isSubmitting = false;
+  bool _loadingBanks = true;
+  List<_AccountInfo> _accounts = [];
 
-  static const _accounts = [
-    _AccountInfo(
-      bankName: 'ธนาคารไทยพาณิชย์',
-      shortName: 'SCB',
-      accountNumber: '111-2-34567-8',
-      accountName: 'บริษัท ลีนส์บาย จำกัด',
-      color: Color(0xFF4A148C),
-      gradientColors: [Color(0xFF7B1FA2), Color(0xFF4A148C)],
-    ),
-    _AccountInfo(
-      bankName: 'ธนาคารกสิกรไทย',
-      shortName: 'KBank',
-      accountNumber: '098-7-65432-1',
-      accountName: 'บริษัท ลีนส์บาย จำกัด',
-      color: Color(0xFF1B5E20),
-      gradientColors: [Color(0xFF2E7D32), Color(0xFF1B5E20)],
-    ),
-    _AccountInfo(
-      bankName: 'ธนาคารกรุงไทย',
-      shortName: 'KTB',
-      accountNumber: '222-3-45678-9',
-      accountName: 'บริษัท ลีนส์บาย จำกัด',
-      color: Color(0xFF0D47A1),
-      gradientColors: [Color(0xFF1565C0), Color(0xFF0D47A1)],
-    ),
-  ];
+  // Coupon (course only)
+  final _couponCtrl = TextEditingController();
+  int? _couponId;
+  int _discountAmount = 0;
+  bool _couponChecking = false;
+  String? _couponMsg;
+  bool _couponValid = false;
+
+  int get _finalPrice => widget.price - _discountAmount;
+
+  static _AccountInfo _bankToAccount(Map<String, dynamic> b) {
+    final name = (b['bank_name'] as String?) ?? '';
+    Color c1, c2;
+    if (name.contains('ไทยพาณิชย์') || name.contains('SCB')) {
+      c1 = const Color(0xFF7B1FA2); c2 = const Color(0xFF4A148C);
+    } else if (name.contains('กสิกร') || name.contains('KBank')) {
+      c1 = const Color(0xFF2E7D32); c2 = const Color(0xFF1B5E20);
+    } else if (name.contains('กรุงไทย') || name.contains('KTB')) {
+      c1 = const Color(0xFF1565C0); c2 = const Color(0xFF0D47A1);
+    } else if (name.contains('กรุงเทพ') || name.contains('BBL')) {
+      c1 = const Color(0xFF1A237E); c2 = const Color(0xFF0D1472);
+    } else {
+      c1 = const Color(0xFF37474F); c2 = const Color(0xFF263238);
+    }
+    return _AccountInfo(
+      id: (b['id'] as int?) ?? 0,
+      bankName: name,
+      accountNumber: (b['bank_number'] as String?) ?? '',
+      accountName: (b['bank_owner'] as String?) ?? '',
+      color: c2,
+      gradientColors: [c1, c2],
+    );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadBanks();
+  }
+
+  @override
+  void dispose() {
+    _couponCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _checkCoupon() async {
+    final code = _couponCtrl.text.trim();
+    if (code.isEmpty) return;
+    setState(() { _couponChecking = true; _couponMsg = null; _couponValid = false; });
+    try {
+      final result = await ApiService.instance.checkCoupon(code, widget.itemId);
+      final discount = (result['coupon_price'] as num?)?.toInt() ?? 0;
+      setState(() {
+        _couponId = result['coupon_id'] as int?;
+        _discountAmount = discount;
+        _couponValid = true;
+        _couponMsg = 'ส่วนลด ฿${discount.toString().replaceAllMapped(RegExp(r"(\d{1,3})(?=(\d{3})+(?!\d))"), (m) => "${m[1]},")}';
+      });
+    } on ApiException catch (e) {
+      setState(() {
+        _couponMsg = e.message;
+        _couponValid = false;
+        _discountAmount = 0;
+        _couponId = null;
+      });
+    } catch (_) {
+      setState(() {
+        _couponMsg = 'ไม่สามารถตรวจสอบคูปองได้';
+        _couponValid = false;
+      });
+    } finally {
+      setState(() => _couponChecking = false);
+    }
+  }
+
+  Future<void> _loadBanks() async {
+    try {
+      final list = await ApiService.instance.getBanks();
+      setState(() {
+        _accounts = list.map((b) => _bankToAccount(b as Map<String, dynamic>)).toList();
+        _loadingBanks = false;
+      });
+    } catch (_) {
+      setState(() => _loadingBanks = false);
+    }
+  }
 
   static const _thMonths = [
     'ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.',
@@ -115,6 +183,10 @@ class _PaymentScreenState extends State<PaymentScreen> {
   }
 
   Future<void> _submit() async {
+    if (_accounts.isEmpty) {
+      _showDebug('accounts ว่าง — getBanks() ล้มเหลว');
+      return;
+    }
     if (_slipImage == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -128,9 +200,57 @@ class _PaymentScreenState extends State<PaymentScreen> {
       return;
     }
     setState(() => _isSubmitting = true);
-    await Future.delayed(const Duration(milliseconds: 1500));
-    if (!mounted) return;
-    context.pushReplacement('/payment-success', extra: widget.courseTitle);
+    try {
+      final d = _transferDate;
+      final t = _transferTime;
+      final dateStr = '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+      final timeStr = '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
+      final bankId  = _accounts[_selectedAccount].id;
+
+      debugPrint('[SUBMIT] type=${widget.itemType} id=${widget.itemId} bank=$bankId amount=$_finalPrice date=$dateStr time=$timeStr coupon=$_couponId');
+
+      if (widget.itemType == 'package') {
+        await ApiService.instance.submitPackagePayment(
+          packId: widget.itemId,
+          bankId: bankId,
+          amount: widget.price,
+          date: dateStr,
+          time: timeStr,
+          slipImage: _slipImage!,
+        );
+      } else {
+        await ApiService.instance.submitCoursePayment(
+          courseId: widget.itemId,
+          bankId: bankId,
+          amount: _finalPrice,
+          date: dateStr,
+          time: timeStr,
+          slipImage: _slipImage!,
+          couponId: _couponId,
+        );
+      }
+      if (mounted) context.pushReplacement('/payment-success', extra: widget.courseTitle);
+    } on ApiException catch (e) {
+      debugPrint('[SUBMIT] ApiException: ${e.message}');
+      if (mounted) _showDebug('API: ${e.message}');
+    } catch (e, st) {
+      debugPrint('[SUBMIT] Error: $e\n$st');
+      if (mounted) _showDebug(e.toString());
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
+    }
+  }
+
+  void _showDebug(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: SelectableText(msg,
+            style: GoogleFonts.sarabun(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white)),
+        backgroundColor: AppTheme.priceRed,
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 15),
+      ),
+    );
   }
 
   @override
@@ -151,30 +271,36 @@ class _PaymentScreenState extends State<PaymentScreen> {
           child: Container(color: AppTheme.border, height: 1),
         ),
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  _CourseCard(title: widget.courseTitle, price: widget.price),
-                  const SizedBox(height: 16),
-                  _buildAccountSelector(),
-                  const SizedBox(height: 16),
-                  _buildSelectedAccountCard(),
-                  const SizedBox(height: 16),
-                  _buildDateTime(),
-                  const SizedBox(height: 16),
-                  _buildSlipUpload(),
-                  const SizedBox(height: 8),
-                ],
-              ),
+      body: _loadingBanks
+          ? const Center(child: CircularProgressIndicator())
+          : Column(
+              children: [
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      children: [
+                        _CourseCard(title: widget.courseTitle, price: widget.price, isPackage: widget.itemType == 'package'),
+                        if (widget.itemType == 'course') ...[
+                          const SizedBox(height: 16),
+                          _buildCoupon(),
+                        ],
+                        const SizedBox(height: 16),
+                        _buildAccountSelector(),
+                        const SizedBox(height: 16),
+                        if (_accounts.isNotEmpty) _buildSelectedAccountCard(),
+                        const SizedBox(height: 16),
+                        _buildDateTime(),
+                        const SizedBox(height: 16),
+                        _buildSlipUpload(),
+                        const SizedBox(height: 8),
+                      ],
+                    ),
+                  ),
+                ),
+                _buildSubmitBar(),
+              ],
             ),
-          ),
-          _buildSubmitBar(),
-        ],
-      ),
     );
   }
 
@@ -245,7 +371,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                       ),
                       child: Center(
                         child: Text(
-                          acc.shortName.substring(0, 1),
+                          acc.bankName.isNotEmpty ? acc.bankName.substring(0, 1) : 'B',
                           style: GoogleFonts.sarabun(
                               fontSize: 16, color: Colors.white,
                               fontWeight: FontWeight.w900),
@@ -598,6 +724,143 @@ class _PaymentScreenState extends State<PaymentScreen> {
     );
   }
 
+  Widget _buildCoupon() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: _cardDecoration(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFF8E1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.local_offer_rounded,
+                    color: Color(0xFFF9A825), size: 20),
+              ),
+              const SizedBox(width: 10),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('คูปองส่วนลด',
+                      style: GoogleFonts.sarabun(
+                          fontSize: 15, fontWeight: FontWeight.w800,
+                          color: AppTheme.textDark)),
+                  Text('ใส่รหัสคูปองเพื่อรับส่วนลด',
+                      style: GoogleFonts.sarabun(
+                          fontSize: 12, color: AppTheme.textLight,
+                          fontWeight: FontWeight.w600)),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _couponCtrl,
+                  textCapitalization: TextCapitalization.characters,
+                  onChanged: (_) {
+                    if (_couponValid) {
+                      setState(() {
+                        _couponValid = false;
+                        _couponId = null;
+                        _discountAmount = 0;
+                        _couponMsg = null;
+                      });
+                    }
+                  },
+                  decoration: InputDecoration(
+                    hintText: 'รหัสคูปอง',
+                    hintStyle: GoogleFonts.sarabun(
+                        fontSize: 14, color: AppTheme.textLight),
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 12),
+                    filled: true,
+                    fillColor: const Color(0xFFF6F8FA),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: AppTheme.border),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: AppTheme.border),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: AppTheme.primary, width: 1.5),
+                    ),
+                    suffixIcon: _couponValid
+                        ? const Icon(Icons.check_circle_rounded,
+                            color: Color(0xFF388E3C), size: 20)
+                        : null,
+                  ),
+                  style: GoogleFonts.sarabun(
+                      fontSize: 14, fontWeight: FontWeight.w700),
+                ),
+              ),
+              const SizedBox(width: 10),
+              SizedBox(
+                height: 48,
+                child: ElevatedButton(
+                  onPressed: _couponChecking ? null : _checkCoupon,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFF9A825),
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size(80, 48),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    elevation: 0,
+                  ),
+                  child: _couponChecking
+                      ? const SizedBox(
+                          width: 18, height: 18,
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2, color: Colors.white))
+                      : Text('ตรวจสอบ',
+                          style: GoogleFonts.sarabun(
+                              fontSize: 14, fontWeight: FontWeight.w800)),
+                ),
+              ),
+            ],
+          ),
+          if (_couponMsg != null) ...[
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Icon(
+                  _couponValid
+                      ? Icons.check_circle_outline_rounded
+                      : Icons.cancel_outlined,
+                  size: 16,
+                  color: _couponValid
+                      ? const Color(0xFF388E3C)
+                      : AppTheme.priceRed,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  _couponMsg!,
+                  style: GoogleFonts.sarabun(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: _couponValid
+                          ? const Color(0xFF388E3C)
+                          : AppTheme.priceRed),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
   Widget _buildSubmitBar() {
     return Container(
       padding: EdgeInsets.fromLTRB(
@@ -624,8 +887,17 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   style: GoogleFonts.sarabun(
                       fontSize: 12, color: AppTheme.textLight,
                       fontWeight: FontWeight.w600)),
+              if (_discountAmount > 0)
+                Text(
+                  '฿${widget.price.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]},')}',
+                  style: GoogleFonts.sarabun(
+                      fontSize: 13,
+                      color: AppTheme.textLight,
+                      fontWeight: FontWeight.w600,
+                      decoration: TextDecoration.lineThrough),
+                ),
               Text(
-                '฿${widget.price.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]},')}',
+                '฿${_finalPrice.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]},')}',
                 style: GoogleFonts.sarabun(
                     fontSize: 22,
                     color: AppTheme.primary,
@@ -684,7 +956,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
 class _CourseCard extends StatelessWidget {
   final String title;
   final int price;
-  const _CourseCard({required this.title, required this.price});
+  final bool isPackage;
+  const _CourseCard({required this.title, required this.price, this.isPackage = false});
 
   @override
   Widget build(BuildContext context) {
@@ -714,14 +987,17 @@ class _CourseCard extends StatelessWidget {
               color: Colors.white.withOpacity(0.2),
               borderRadius: BorderRadius.circular(14),
             ),
-            child: const Icon(Icons.school_rounded, color: Colors.white, size: 28),
+            child: Icon(
+              isPackage ? Icons.card_giftcard_rounded : Icons.school_rounded,
+              color: Colors.white, size: 28,
+            ),
           ),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('รายการสั่งซื้อ',
+                Text(isPackage ? 'แพ็กเกจสุดคุ้ม' : 'คอร์สเรียน',
                     style: GoogleFonts.sarabun(
                         fontSize: 11, color: Colors.white70,
                         fontWeight: FontWeight.w600)),
@@ -906,16 +1182,16 @@ class _SourceSheet extends StatelessWidget {
 // ─── Data Classes ─────────────────────────────────────────────────────────────
 
 class _AccountInfo {
+  final int id;
   final String bankName;
-  final String shortName;
   final String accountNumber;
   final String accountName;
   final Color color;
   final List<Color> gradientColors;
 
   const _AccountInfo({
+    required this.id,
     required this.bankName,
-    required this.shortName,
     required this.accountNumber,
     required this.accountName,
     required this.color,

@@ -1,21 +1,52 @@
+import 'dart:io';
+
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:open_file/open_file.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import '../config/app_config.dart';
 import '../theme/app_theme.dart';
+import '../services/api_service.dart';
 
 class MyCourseScreen extends StatefulWidget {
   const MyCourseScreen({super.key});
 
   @override
-  State<MyCourseScreen> createState() => _MyCourseScreenState();
+  State<MyCourseScreen> createState() => MyCourseScreenState();
 }
 
-class _MyCourseScreenState extends State<MyCourseScreen>
+class MyCourseScreenState extends State<MyCourseScreen>
     with SingleTickerProviderStateMixin {
   int _tab = 0;
   late final AnimationController _slideController;
   late final Animation<Offset> _slideIn;
+
+  List<_OwnedCourse> _courses = [];
+  List<_PendingOrder> _pendingOrders = [];
+  bool _loading = true;
+  int _userPoint = 0;
+
+  static const _gradients = [
+    [Color(0xFFFF7B8A), Color(0xFFE8273D)],
+    [Color(0xFF34D399), Color(0xFF047857)],
+    [Color(0xFF60A5FA), Color(0xFF2563EB)],
+    [Color(0xFFFBBF24), Color(0xFFD97706)],
+    [Color(0xFFA78BFA), Color(0xFF6D28D9)],
+  ];
+  static const _icons = [
+    Icons.track_changes_rounded, Icons.menu_book_rounded,
+    Icons.translate_rounded, Icons.bolt_rounded, Icons.star_rounded,
+  ];
+  static const _pendingGradients = [
+    [Color(0xFF7C3AED), Color(0xFF4C1D95)],
+    [Color(0xFFFF7B8A), Color(0xFFE8273D)],
+    [Color(0xFF34D399), Color(0xFF047857)],
+    [Color(0xFF60A5FA), Color(0xFF2563EB)],
+  ];
 
   @override
   void initState() {
@@ -29,6 +60,90 @@ class _MyCourseScreenState extends State<MyCourseScreen>
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: _slideController, curve: Curves.easeOut));
     _slideController.forward();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    try {
+      final results = await Future.wait([
+        ApiService.instance.getMyCourses(),
+        ApiService.instance.getPendingOrders(),
+      ]);
+      final rawCourses  = results[0];
+      final rawPending  = results[1];
+
+      final prefs = await SharedPreferences.getInstance();
+      int userPoint = 0;
+      try { userPoint = await ApiService.instance.getPoint(); } catch (_) {}
+
+      setState(() {
+        _userPoint = userPoint;
+        _courses = List.generate(rawCourses.length, (i) {
+          final c = rawCourses[i] as Map<String, dynamic>;
+          final total = (c['videocount'] as int?) ?? 0;
+          final cid = (c['course_id'] ?? c['id'] ?? c['c_id'] as Object?);
+          final courseId = (cid as num?)?.toInt() ?? 0;
+          final done = prefs.getStringList('cdone_$courseId')?.length ?? 0;
+          return _OwnedCourse(
+            courseId: courseId,
+            title: (c['title_course'] as String?) ?? 'คอร์ส',
+            teacher: 'ครูพี่โฮม',
+            progress: total > 0 ? done / total : 0.0,
+            expiresAt: (c['end_day'] as String?) ?? '',
+            daysLeft: _daysLeft(c['end_day'] as String?),
+            lessonsDone: done,
+            lessonsTotal: total,
+            gradient: _gradients[i % _gradients.length],
+            icon: _icons[i % _icons.length],
+            imageFile: c['image_course'] as String?,
+          );
+        });
+        _pendingOrders = List.generate(rawPending.length, (i) {
+          final o = rawPending[i] as Map<String, dynamic>;
+          final statusInt = (o['order_status'] as num?)?.toInt() ?? 1;
+          final rawCode = (o['code_order'] ?? o['order_code'])?.toString() ?? '${o['order_id']}';
+          final isPackage = o['type'] == 'package';
+          final coursesList = (o['courses'] as List?)?.map((e) => e.toString()).toList();
+          return _PendingOrder(
+            orderNumber: rawCode,
+            title: (o['title'] as String?) ?? 'รายการสั่งซื้อ',
+            price: int.tryParse('${o['amount'] ?? 0}') ?? 0,
+            bankName: 'ธนาคาร',
+            submittedAt: _formatDate(o['order_date'] as String?),
+            status: statusInt >= 2 ? _OrderStatus.confirmed : _OrderStatus.reviewing,
+            gradient: isPackage ? _pendingGradients[0] : _pendingGradients[i % _pendingGradients.length],
+            icon: isPackage ? Icons.card_giftcard_rounded : Icons.workspace_premium_rounded,
+            packageName: o['package_name'] as String?,
+            courses: coursesList,
+          );
+        });
+        _loading = false;
+      });
+    } catch (_) {
+      setState(() => _loading = false);
+    }
+  }
+
+  void reload() => _loadData();
+
+  static int _daysLeft(String? endDay) {
+    if (endDay == null || endDay.isEmpty) return 0;
+    try {
+      final end = DateTime.parse(endDay);
+      return end.difference(DateTime.now()).inDays;
+    } catch (_) {
+      return 0;
+    }
+  }
+
+  static String _formatDate(String? raw) {
+    if (raw == null) return '';
+    try {
+      final dt = DateTime.parse(raw);
+      return '${dt.day}/${dt.month}/${dt.year + 543}';
+    } catch (_) {
+      return raw;
+    }
   }
 
   @override
@@ -45,64 +160,50 @@ class _MyCourseScreenState extends State<MyCourseScreen>
       ..forward();
   }
 
-  static const _courses = [
-    _OwnedCourse(
-      title: 'ติวโค้งสุดท้าย A-Level ญี่ปุ่น',
-      teacher: 'ครูพี่โฮม',
-      progress: 0.68,
-      expiresAt: '31 ธ.ค. 2569',
-      daysLeft: 242,
-      lessonsDone: 26,
-      lessonsTotal: 38,
-      gradient: [Color(0xFFFF7B8A), Color(0xFFE8273D)],
-      icon: Icons.track_changes_rounded,
-    ),
-    _OwnedCourse(
-      title: 'Minna no Nihongo เล่ม 1-2 จาก 0 สู่ N5',
-      teacher: 'ครูพี่โฮม',
-      progress: 0.34,
-      expiresAt: '15 ก.ย. 2569',
-      daysLeft: 135,
-      lessonsDone: 18,
-      lessonsTotal: 54,
-      gradient: [Color(0xFF34D399), Color(0xFF047857)],
-      icon: Icons.menu_book_rounded,
-    ),
-    _OwnedCourse(
-      title: 'Reading คันจิ ศัพท์ A-Level ญี่ปุ่น N4 N5',
-      teacher: 'ครูพี่โฮม',
-      progress: 0.12,
-      expiresAt: '20 ส.ค. 2569',
-      daysLeft: 109,
-      lessonsDone: 4,
-      lessonsTotal: 32,
-      gradient: [Color(0xFF60A5FA), Color(0xFF2563EB)],
-      icon: Icons.translate_rounded,
-    ),
-  ];
+  void _onEnterCourse(BuildContext context, _OwnedCourse course) {
+    if (course.daysLeft < 0) {
+      showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16)),
+          title: Text(
+            'คอร์สนี้หมดอายุแล้ว',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.sarabun(
+                fontWeight: FontWeight.w900,
+                fontSize: 17,
+                color: AppTheme.textDark),
+          ),
+          content: Text(
+            'กรุณาติดต่อเจ้าหน้าที่ LINE : @ZA-SHI',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.sarabun(
+                fontSize: 14, color: AppTheme.textMedium),
+          ),
+          actionsAlignment: MainAxisAlignment.center,
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(
+                'OK',
+                style: GoogleFonts.sarabun(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.primary),
+              ),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+    context.push('/video', extra: {
+      'courseId': course.courseId,
+      'title':    course.title,
+    });
+  }
 
-  static const _pendingOrders = [
-    _PendingOrder(
-      orderNumber: 'ORD202605041823',
-      title: 'แพ็กเกจสุดคุ้ม ครูพี่โฮม All-in-One',
-      price: 8990,
-      bankName: 'ธนาคารกสิกรไทย',
-      submittedAt: 'วันนี้ 18:23 น.',
-      status: _OrderStatus.reviewing,
-      gradient: [Color(0xFF7C3AED), Color(0xFF4C1D95)],
-      icon: Icons.workspace_premium_rounded,
-    ),
-    _PendingOrder(
-      orderNumber: 'ORD202605031140',
-      title: 'ติวโค้งสุดท้าย A-Level ญี่ปุ่น',
-      price: 3950,
-      bankName: 'ธนาคารไทยพาณิชย์',
-      submittedAt: 'เมื่อวาน 11:40 น.',
-      status: _OrderStatus.confirmed,
-      gradient: [Color(0xFFFF7B8A), Color(0xFFE8273D)],
-      icon: Icons.track_changes_rounded,
-    ),
-  ];
 
   @override
   Widget build(BuildContext context) {
@@ -112,13 +213,15 @@ class _MyCourseScreenState extends State<MyCourseScreen>
           _buildHeader(),
           _buildTabBar(),
           Expanded(
-            child: SlideTransition(
-              position: _slideIn,
-              child: FadeTransition(
-                opacity: _slideController,
-                child: _tab == 0 ? _buildActiveTab() : _buildPendingTab(),
-              ),
-            ),
+            child: _loading
+                ? const Center(child: CircularProgressIndicator())
+                : SlideTransition(
+                    position: _slideIn,
+                    child: FadeTransition(
+                      opacity: _slideController,
+                      child: _tab == 0 ? _buildActiveTab() : _buildPendingTab(),
+                    ),
+                  ),
           ),
         ],
       ),
@@ -290,24 +393,59 @@ class _MyCourseScreenState extends State<MyCourseScreen>
   // ─── Tab 0: กำลังเรียน ──────────────────────────────────────────────────────
 
   Widget _buildActiveTab() {
-    return CustomScrollView(
-      slivers: [
-        SliverToBoxAdapter(child: _buildSummary()),
-        SliverPadding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-          sliver: SliverList(
-            delegate: SliverChildBuilderDelegate(
-              (context, i) => Padding(
-                padding: EdgeInsets.only(
-                  bottom: i == _courses.length - 1 ? 0 : 14,
-                ),
-                child: _courseCard(_courses[i], context),
+    if (_courses.isEmpty) {
+      return RefreshIndicator(
+        onRefresh: _loadData,
+        color: AppTheme.primary,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: SizedBox(
+            height: 400,
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: const BoxDecoration(
+                        color: AppTheme.primaryLight, shape: BoxShape.circle),
+                    child: const Icon(Icons.school_rounded, color: AppTheme.primary, size: 48),
+                  ),
+                  const SizedBox(height: 16),
+                  Text('ยังไม่มีคอร์สที่ซื้อ',
+                      style: GoogleFonts.sarabun(
+                          fontSize: 17, fontWeight: FontWeight.w800, color: AppTheme.textDark)),
+                  const SizedBox(height: 6),
+                  Text('เลือกซื้อคอร์สและเริ่มเรียนได้เลย!',
+                      style: GoogleFonts.sarabun(
+                          fontSize: 13, color: AppTheme.textLight, fontWeight: FontWeight.w600)),
+                ],
               ),
-              childCount: _courses.length,
             ),
           ),
         ),
-      ],
+      );
+    }
+    return RefreshIndicator(
+      onRefresh: _loadData,
+      color: AppTheme.primary,
+      child: CustomScrollView(
+        slivers: [
+          SliverToBoxAdapter(child: _buildSummary()),
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+            sliver: SliverList(
+              delegate: SliverChildBuilderDelegate(
+                (context, i) => Padding(
+                  padding: EdgeInsets.only(bottom: i == _courses.length - 1 ? 0 : 14),
+                  child: _courseCard(_courses[i], context),
+                ),
+                childCount: _courses.length,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -328,11 +466,11 @@ class _MyCourseScreenState extends State<MyCourseScreen>
       ),
       child: Row(
         children: [
-          _summaryItem('3', 'คอร์สที่มี'),
+          _summaryItem('${_courses.length}', 'คอร์สที่มี'),
           _divider(),
-          _summaryItem('48', 'บทเรียนแล้ว'),
+          _summaryItem('${_courses.fold(0, (s, c) => s + c.lessonsTotal)}', 'บทเรียนทั้งหมด'),
           _divider(),
-          _summaryItem('109', 'วันขั้นต่ำ'),
+          _summaryItem('$_userPoint', 'Point'),
         ],
       ),
     );
@@ -373,7 +511,11 @@ class _MyCourseScreenState extends State<MyCourseScreen>
 
   Widget _courseCard(_OwnedCourse course, BuildContext context) {
     return GestureDetector(
-      onTap: () => context.push('/course'),
+      onTap: () => context.push('/course', extra: {
+        'course_id': course.courseId,
+        'title_course': course.title,
+        'image_course': course.imageFile,
+      }),
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
@@ -469,7 +611,14 @@ class _MyCourseScreenState extends State<MyCourseScreen>
                           ),
                         ),
                       ),
-                      _expiryBadge(course.daysLeft),
+                      Text(
+                        'หมดอายุ ${course.expiresAt}',
+                        style: GoogleFonts.sarabun(
+                          fontSize: 11,
+                          color: AppTheme.textLight,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 12),
@@ -483,35 +632,77 @@ class _MyCourseScreenState extends State<MyCourseScreen>
                           const AlwaysStoppedAnimation(AppTheme.primary),
                     ),
                   ),
-                  const SizedBox(height: 9),
+                  const SizedBox(height: 7),
                   Row(
                     children: [
                       Text(
-                        '${(course.progress * 100).round()}% completed',
+                        '${(course.progress * 100).round()}% สำเร็จ',
                         style: GoogleFonts.sarabun(
                           fontSize: 12,
-                          color: AppTheme.textLight,
+                          color: AppTheme.primary,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
                       const Spacer(),
                       Text(
-                        'หมดอายุ ${course.expiresAt}',
+                        '${course.lessonsDone}/${course.lessonsTotal} บทเรียน',
                         style: GoogleFonts.sarabun(
                           fontSize: 12,
-                          color: AppTheme.textMedium,
-                          fontWeight: FontWeight.w800,
+                          color: AppTheme.textLight,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 14),
-                  ElevatedButton.icon(
-                    onPressed: () => context.push('/video'),
-                    icon: const Icon(Icons.play_arrow_rounded, size: 20),
-                    label: Text(
-                      'เรียนต่อ',
-                      style: GoogleFonts.sarabun(fontWeight: FontWeight.w900),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: () => _onEnterCourse(context, course),
+                          icon: const Icon(Icons.play_arrow_rounded, size: 20),
+                          label: Text(
+                            'เข้าเรียน',
+                            style: GoogleFonts.sarabun(fontWeight: FontWeight.w900),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      OutlinedButton.icon(
+                        onPressed: () => _showFilesSheet(context, course),
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(color: AppTheme.primary),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 12),
+                        ),
+                        icon: const Icon(Icons.folder_open_rounded,
+                            size: 18, color: AppTheme.primary),
+                        label: Text(
+                          'ไฟล์',
+                          style: GoogleFonts.sarabun(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: AppTheme.primary),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () => _onExam(context, course),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFF0FB5A6),
+                        side: const BorderSide(color: Color(0xFF0FB5A6)),
+                        padding: const EdgeInsets.symmetric(vertical: 11),
+                      ),
+                      icon: const Icon(Icons.assignment_turned_in_rounded, size: 18),
+                      label: Text(
+                        'แบบทดสอบ',
+                        style: GoogleFonts.sarabun(
+                            fontSize: 14, fontWeight: FontWeight.w800),
+                      ),
                     ),
                   ),
                 ],
@@ -523,22 +714,21 @@ class _MyCourseScreenState extends State<MyCourseScreen>
     );
   }
 
-  Widget _expiryBadge(int daysLeft) {
-    final isSoon = daysLeft <= 120;
-    final color = isSoon ? AppTheme.priceRed : AppTheme.primary;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        'เหลือ $daysLeft วัน',
-        style: GoogleFonts.sarabun(
-          fontSize: 12,
-          color: color,
-          fontWeight: FontWeight.w900,
-        ),
+  void _onExam(BuildContext context, _OwnedCourse course) {
+    context.push('/exam-v2-list', extra: {
+      'courseId':    course.courseId,
+      'courseTitle': course.title,
+    });
+  }
+
+  void _showFilesSheet(BuildContext context, _OwnedCourse course) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _FilesSheet(
+        courseId: course.courseId,
+        courseTitle: course.title,
       ),
     );
   }
@@ -547,18 +737,29 @@ class _MyCourseScreenState extends State<MyCourseScreen>
 
   Widget _buildPendingTab() {
     if (_pendingOrders.isEmpty) {
-      return _buildEmptyPending();
+      return RefreshIndicator(
+        onRefresh: _loadData,
+        color: AppTheme.primary,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: SizedBox(height: 400, child: _buildEmptyPending()),
+        ),
+      );
     }
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-      children: [
-        _buildPendingBanner(),
-        const SizedBox(height: 16),
-        ..._pendingOrders.map((o) => Padding(
-              padding: const EdgeInsets.only(bottom: 14),
-              child: _pendingOrderCard(o),
-            )),
-      ],
+    return RefreshIndicator(
+      onRefresh: _loadData,
+      color: AppTheme.primary,
+      child: ListView(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+        children: [
+          _buildPendingBanner(),
+          const SizedBox(height: 16),
+          ..._pendingOrders.map((o) => Padding(
+                padding: const EdgeInsets.only(bottom: 14),
+                child: _pendingOrderCard(o),
+              )),
+        ],
+      ),
     );
   }
 
@@ -643,7 +844,7 @@ class _MyCourseScreenState extends State<MyCourseScreen>
                           _statusPill(order.status),
                           const Spacer(),
                           Text(
-                            '#${order.orderNumber.substring(order.orderNumber.length - 6)}',
+                            '#${order.orderNumber.length > 6 ? order.orderNumber.substring(order.orderNumber.length - 6) : order.orderNumber}',
                             style: GoogleFonts.sarabun(
                               fontSize: 11,
                               color: Colors.white70,
@@ -705,6 +906,44 @@ class _MyCourseScreenState extends State<MyCourseScreen>
                     ),
                   ],
                 ),
+                if (order.courses != null && order.courses!.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF5F0FF),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(Icons.library_books_rounded, size: 13, color: Color(0xFF6D28D9)),
+                            const SizedBox(width: 5),
+                            Text(
+                              'คอร์สในแพ็กเกจ (${order.courses!.length} คอร์ส)',
+                              style: GoogleFonts.sarabun(fontSize: 11, fontWeight: FontWeight.w700, color: const Color(0xFF6D28D9)),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        ...order.courses!.map((c) => Padding(
+                          padding: const EdgeInsets.only(bottom: 3),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.circle, size: 5, color: Color(0xFF6D28D9)),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Text(c, style: GoogleFonts.sarabun(fontSize: 12, color: const Color(0xFF4C1D95)), maxLines: 1, overflow: TextOverflow.ellipsis),
+                              ),
+                            ],
+                          ),
+                        )),
+                      ],
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 16),
                 // Timeline
                 _buildTimeline(order.status),
@@ -940,6 +1179,7 @@ class _MyCourseScreenState extends State<MyCourseScreen>
 // ─── Data Classes ─────────────────────────────────────────────────────────────
 
 class _OwnedCourse {
+  final int courseId;
   final String title;
   final String teacher;
   final double progress;
@@ -949,8 +1189,10 @@ class _OwnedCourse {
   final int lessonsTotal;
   final List<Color> gradient;
   final IconData icon;
+  final String? imageFile;
 
   const _OwnedCourse({
+    required this.courseId,
     required this.title,
     required this.teacher,
     required this.progress,
@@ -960,6 +1202,7 @@ class _OwnedCourse {
     required this.lessonsTotal,
     required this.gradient,
     required this.icon,
+    this.imageFile,
   });
 }
 
@@ -974,6 +1217,8 @@ class _PendingOrder {
   final _OrderStatus status;
   final List<Color> gradient;
   final IconData icon;
+  final String? packageName;
+  final List<String>? courses;
 
   const _PendingOrder({
     required this.orderNumber,
@@ -984,6 +1229,8 @@ class _PendingOrder {
     required this.status,
     required this.gradient,
     required this.icon,
+    this.packageName,
+    this.courses,
   });
 }
 
@@ -1003,4 +1250,336 @@ class _StatusInfo {
   final String label;
   final Color dotColor;
   const _StatusInfo(this.label, this.dotColor);
+}
+
+// ─── Files Bottom Sheet ───────────────────────────────────────────────────────
+
+class _FilesSheet extends StatefulWidget {
+  final int courseId;
+  final String courseTitle;
+  const _FilesSheet({required this.courseId, required this.courseTitle});
+
+  @override
+  State<_FilesSheet> createState() => _FilesSheetState();
+}
+
+class _FilesSheetState extends State<_FilesSheet> {
+  List<Map<String, dynamic>> _files = [];
+  bool _loading = true;
+  final Map<int, double> _progress = {};
+  final Map<int, String> _localPath = {};
+  final Map<int, bool> _downloading = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _loadFiles();
+  }
+
+  // external storage → visible in file manager; falls back to app docs dir
+  Future<Directory> _getSaveDir() async {
+    final ext = await getExternalStorageDirectory();
+    if (ext != null) {
+      final folder = Directory('${ext.path}/LearnSbuy');
+      if (!folder.existsSync()) folder.createSync(recursive: true);
+      return folder;
+    }
+    return getApplicationDocumentsDirectory();
+  }
+
+  Future<void> _loadFiles() async {
+    try {
+      final data = await ApiService.instance.getFileApp(widget.courseId);
+      final files = (data['file'] as List? ?? [])
+          .map((e) => Map<String, dynamic>.from(e as Map))
+          .toList();
+      final dir = await _getSaveDir();
+      final localPaths = <int, String>{};
+      for (int i = 0; i < files.length; i++) {
+        final fn = files[i]['file_of_course'] as String? ?? '';
+        if (fn.isEmpty) continue;
+        final path = '${dir.path}/$fn';
+        if (File(path).existsSync()) localPaths[i] = path;
+      }
+      if (mounted) {
+        setState(() {
+          _files = files;
+          _localPath.addAll(localPaths);
+          _loading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _download(int index) async {
+    final file = _files[index];
+    final fileName = file['file_of_course'] as String? ?? '';
+    if (fileName.isEmpty) return;
+    final url = '${AppConfig.fileCoursesBase}$fileName';
+
+    setState(() {
+      _downloading[index] = true;
+      _progress[index] = 0;
+    });
+
+    try {
+      final dir = await _getSaveDir();
+      final savePath = '${dir.path}/$fileName';
+
+      await Dio().download(
+        url,
+        savePath,
+        deleteOnError: true,
+        onReceiveProgress: (received, total) {
+          if (total > 0 && mounted) {
+            setState(() => _progress[index] = received / total);
+          }
+        },
+      );
+
+      if (!mounted) return;
+      setState(() {
+        _downloading[index] = false;
+        _localPath[index] = savePath;
+      });
+
+      // auto-open after download
+      final result = await OpenFile.open(savePath);
+      if (mounted && result.type != ResultType.done) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('บันทึกแล้วที่: $savePath',
+                style: GoogleFonts.sarabun(fontSize: 12)),
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _downloading[index] = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.red.shade700,
+          content: Text('ดาวน์โหลดล้มเหลว: $e',
+              style: GoogleFonts.sarabun(fontSize: 12, color: Colors.white)),
+        ),
+      );
+    }
+  }
+
+  Future<void> _open(int index) async {
+    final path = _localPath[index];
+    if (path == null) return;
+    final result = await OpenFile.open(path);
+    if (mounted && result.type != ResultType.done) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('ไม่พบแอปสำหรับเปิดไฟล์ PDF',
+              style: GoogleFonts.sarabun(fontSize: 13)),
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox(height: 12),
+          Container(
+            width: 40, height: 4,
+            decoration: BoxDecoration(
+              color: Colors.black12,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primaryLight,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.folder_rounded,
+                      color: AppTheme.primary, size: 20),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('ไฟล์ประกอบการเรียน',
+                          style: GoogleFonts.sarabun(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w900,
+                              color: AppTheme.textDark)),
+                      Text(widget.courseTitle,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.sarabun(
+                              fontSize: 12,
+                              color: AppTheme.textLight,
+                              fontWeight: FontWeight.w600)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          const Divider(height: 1),
+          if (_loading)
+            const Padding(
+              padding: EdgeInsets.all(32),
+              child: CircularProgressIndicator(),
+            )
+          else if (_files.isEmpty)
+            Padding(
+              padding: const EdgeInsets.all(32),
+              child: Column(
+                children: [
+                  const Icon(Icons.inbox_rounded,
+                      size: 40, color: AppTheme.textLight),
+                  const SizedBox(height: 8),
+                  Text('ไม่มีไฟล์ประกอบการเรียน',
+                      style: GoogleFonts.sarabun(
+                          color: AppTheme.textLight,
+                          fontWeight: FontWeight.w600)),
+                ],
+              ),
+            )
+          else
+            ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.55,
+              ),
+              child: ListView.separated(
+                shrinkWrap: true,
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                itemCount: _files.length,
+                separatorBuilder: (_, __) =>
+                    const Divider(height: 1, indent: 20, endIndent: 20),
+                itemBuilder: (_, i) => _fileRow(i),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _fileRow(int i) {
+    final name = _files[i]['file_of_name'] as String? ??
+        (_files[i]['file_of_course'] as String? ?? 'ไฟล์ ${i + 1}');
+    final isDownloading = _downloading[i] == true;
+    final isDownloaded = _localPath.containsKey(i);
+    final prog = _progress[i] ?? 0.0;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      child: Row(
+        children: [
+          Container(
+            width: 44, height: 44,
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFF3E0),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Icon(Icons.picture_as_pdf_rounded,
+                color: Color(0xFFE65100), size: 22),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(name,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.sarabun(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.textDark)),
+                if (isDownloading) ...[
+                  const SizedBox(height: 4),
+                  LinearProgressIndicator(
+                    value: prog,
+                    backgroundColor: AppTheme.border,
+                    valueColor:
+                        const AlwaysStoppedAnimation(AppTheme.primary),
+                    minHeight: 3,
+                  ),
+                  const SizedBox(height: 2),
+                  Text('${(prog * 100).round()}%',
+                      style: GoogleFonts.sarabun(
+                          fontSize: 10, color: AppTheme.textLight)),
+                ] else if (isDownloaded) ...[
+                  const SizedBox(height: 3),
+                  Text('ดาวน์โหลดแล้ว',
+                      style: GoogleFonts.sarabun(
+                          fontSize: 11,
+                          color: AppTheme.primary,
+                          fontWeight: FontWeight.w600)),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          _actionButton(i, isDownloading, isDownloaded),
+        ],
+      ),
+    );
+  }
+
+  Widget _actionButton(int i, bool isDownloading, bool isDownloaded) {
+    if (isDownloading) {
+      return const SizedBox(
+        width: 22, height: 22,
+        child: CircularProgressIndicator(strokeWidth: 2),
+      );
+    }
+    if (isDownloaded) {
+      return ElevatedButton.icon(
+        onPressed: () => _open(i),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppTheme.primary,
+          minimumSize: const Size(0, 36),
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+        ),
+        icon: const Icon(Icons.open_in_new_rounded, size: 14),
+        label: Text('เปิด',
+            style: GoogleFonts.sarabun(
+                fontSize: 12, fontWeight: FontWeight.w700)),
+      );
+    }
+    return OutlinedButton.icon(
+      onPressed: () => _download(i),
+      style: OutlinedButton.styleFrom(
+        side: const BorderSide(color: AppTheme.primary),
+        minimumSize: const Size(0, 36),
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+      ),
+      icon: const Icon(Icons.download_rounded,
+          size: 14, color: AppTheme.primary),
+      label: Text('โหลด',
+          style: GoogleFonts.sarabun(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: AppTheme.primary)),
+    );
+  }
 }

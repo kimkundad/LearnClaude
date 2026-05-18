@@ -127,28 +127,33 @@ class HelpScreen extends StatelessWidget {
 
   Widget _quickActions(BuildContext context) {
     final items = [
-      _HelpAction(Icons.play_circle_outline_rounded, 'ดูคอร์สไม่ได้', 'ตรวจสิทธิ์และอุปกรณ์'),
-      _HelpAction(Icons.receipt_long_rounded, 'ใบเสร็จ/ชำระเงิน', 'ส่งหลักฐานหรือขอเอกสาร'),
-      _HelpAction(Icons.local_shipping_rounded, 'จัดส่งหนังสือ', 'ตรวจที่อยู่และสถานะ'),
-      _HelpAction(Icons.lock_reset_rounded, 'รหัสผ่าน/บัญชี', 'กู้คืนและตั้งค่าใหม่'),
+      _HelpAction(Icons.play_circle_outline_rounded, 'ดูคอร์สไม่ได้', 'ตรวจสิทธิ์และอุปกรณ์', 'ดูคอร์สไม่ได้'),
+      _HelpAction(Icons.receipt_long_rounded, 'ใบเสร็จ/ชำระเงิน', 'ส่งหลักฐานหรือขอเอกสาร', 'ใบเสร็จ/ชำระเงิน'),
+      _HelpAction(Icons.local_shipping_rounded, 'จัดส่งหนังสือ', 'ตรวจที่อยู่และสถานะ', 'จัดส่งหนังสือ'),
+      _HelpAction(Icons.lock_reset_rounded, 'รหัสผ่าน/บัญชี', 'กู้คืนและตั้งค่าใหม่', 'รหัสผ่าน/บัญชี'),
+      _HelpAction(Icons.quiz_rounded, 'แบบทดสอบ', 'วิธีทำและดูผลคะแนน', 'แบบทดสอบ'),
+      _HelpAction(Icons.local_offer_rounded, 'คูปองส่วนลด', 'วิธีกรอกและเงื่อนไข', 'คูปองส่วนลด'),
+      _HelpAction(Icons.stars_rounded, 'คะแนน (Point)', 'การรับและใช้คะแนน', 'คะแนน (Point)'),
+      _HelpAction(Icons.card_giftcard_rounded, 'แพ็กเกจสุดคุ้ม', 'คอร์สรวมและราคาพิเศษ', 'แพ็กเกจสุดคุ้ม'),
     ];
 
+    final isTablet = MediaQuery.of(context).size.width > 600;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 18, 16, 0),
       child: GridView.builder(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         itemCount: items.length,
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: isTablet ? 4 : 2,
           crossAxisSpacing: 12,
           mainAxisSpacing: 12,
-          childAspectRatio: 1.35,
+          childAspectRatio: isTablet ? 1.2 : 1.35,
         ),
         itemBuilder: (_, i) {
           final item = items[i];
           return GestureDetector(
-            onTap: () => _openChat(context),
+            onTap: () => _openChat(context, item.message),
             child: Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
@@ -206,10 +211,14 @@ class HelpScreen extends StatelessWidget {
 
   Widget _faqList() {
     final faqs = [
-      ['ซื้อแล้วคอร์สอยู่ตรงไหน?', 'ไปที่แท็บ My Course แล้วกดเรียนต่อได้ทันที'],
-      ['ดูได้กี่อุปกรณ์?', 'สามารถใช้งานได้บนมือถือ แท็บเล็ต และเว็บ ตามเงื่อนไขบัญชีเดียว'],
+      ['ซื้อแล้วคอร์สอยู่ตรงไหน?', 'ไปที่แท็บ My Course กดปุ่ม "เข้าเรียน" เพื่อเริ่มดูวิดีโอได้ทันที'],
+      ['ดูได้กี่อุปกรณ์?', 'สามารถใช้งานได้บนมือถือ แท็บเล็ต และเว็บ ภายใต้บัญชีเดิม'],
       ['ขอเปลี่ยนที่อยู่จัดส่งหนังสือได้ไหม?', 'แก้ไขได้ที่ Edit Profile ก่อนเข้าสู่รอบจัดส่ง'],
       ['มีแบบฝึกหัดและ PDF ไหม?', 'คอร์สที่รองรับจะแสดงไฟล์ประกอบในหน้าบทเรียน'],
+      ['ใช้คูปองส่วนลดได้ยังไง?', 'กรอกรหัสคูปองในหน้าชำระเงิน (เฉพาะคอร์สเดี่ยว) แล้วกด "ตรวจสอบ" ก่อนส่งสลิป'],
+      ['คะแนน (Point) ได้มาจากไหน?', 'คะแนนจะถูกเพิ่มเข้าบัญชีโดยอัตโนมัติเมื่อแอดมินอนุมัติคำสั่งซื้อ ดูยอดคงเหลือได้ที่หน้า Settings'],
+      ['แบบทดสอบใช้งานอย่างไร?', 'เปิดหน้า My Course เลือกคอร์ส แล้วไปที่แท็บ "แบบทดสอบ" เพื่อทำข้อสอบ ดูผลคะแนนได้ทันทีหลังส่ง'],
+      ['แพ็กเกจสุดคุ้มต่างจากคอร์สเดี่ยวอย่างไร?', 'แพ็กเกจรวมหลายคอร์สในราคาเดียว เมื่ออนุมัติแล้วจะได้รับสิทธิ์ทุกคอร์สในแพ็กเกจพร้อมกัน'],
     ];
 
     return Padding(
@@ -273,9 +282,9 @@ class HelpScreen extends StatelessWidget {
     );
   }
 
-  void _openChat(BuildContext context) {
+  void _openChat(BuildContext context, [String? message]) {
     Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const ChatScreen()),
+      MaterialPageRoute(builder: (_) => ChatScreen(initialMessage: message)),
     );
   }
 }
@@ -284,6 +293,7 @@ class _HelpAction {
   final IconData icon;
   final String title;
   final String subtitle;
+  final String message;
 
-  const _HelpAction(this.icon, this.title, this.subtitle);
+  const _HelpAction(this.icon, this.title, this.subtitle, this.message);
 }
