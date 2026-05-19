@@ -94,7 +94,7 @@ class _ExamV2ListScreenState extends State<ExamV2ListScreen> {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF0FB5A6), Color(0xFF0A8C80)],
+          colors: [Color(0xFF32D191), Color(0xFF0A8C80)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -231,11 +231,11 @@ class _ExerciseCardState extends State<_ExerciseCard> {
                     Container(
                       width: 48, height: 48,
                       decoration: BoxDecoration(
-                        color: const Color(0xFF0FB5A6).withOpacity(0.1),
+                        color: const Color(0xFF32D191).withOpacity(0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Icon(Icons.assignment_turned_in_rounded,
-                          color: Color(0xFF0FB5A6), size: 24),
+                          color: Color(0xFF32D191), size: 24),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -336,7 +336,7 @@ class _ExerciseCardState extends State<_ExerciseCard> {
                           widget.onRefresh?.call();
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF0FB5A6),
+                          backgroundColor: const Color(0xFF32D191),
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 11),
                           shape: RoundedRectangleBorder(

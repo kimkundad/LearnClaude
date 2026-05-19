@@ -24,7 +24,7 @@ class _PackageDetailScreenState extends State<PackageDetailScreen> {
   static const _courseColors = <List<Color>>[
     [Color(0xFFFF6B8A), Color(0xFFFF4757)],
     [Color(0xFF9B59B6), Color(0xFF6C3483)],
-    [Color(0xFF0FB5A6), Color(0xFF0A8A7E)],
+    [Color(0xFF32D191), Color(0xFF28A874)],
     [Color(0xFFFF9F43), Color(0xFFEE5A24)],
     [Color(0xFF3498DB), Color(0xFF1A73C7)],
     [Color(0xFF2ECC71), Color(0xFF1A9B5F)],

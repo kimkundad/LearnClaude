@@ -693,8 +693,8 @@ class MyCourseScreenState extends State<MyCourseScreen>
                     child: OutlinedButton.icon(
                       onPressed: () => _onExam(context, course),
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: const Color(0xFF0FB5A6),
-                        side: const BorderSide(color: Color(0xFF0FB5A6)),
+                        foregroundColor: const Color(0xFF32D191),
+                        side: const BorderSide(color: Color(0xFF32D191)),
                         padding: const EdgeInsets.symmetric(vertical: 11),
                       ),
                       icon: const Icon(Icons.assignment_turned_in_rounded, size: 18),

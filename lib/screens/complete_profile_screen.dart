@@ -312,7 +312,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                   title: 'เบอร์ติดต่อนักเรียน',
                   subtitle: 'เบอร์จริงของนักเรียนหรือผู้ปกครอง\nต้องยืนยัน OTP ในขั้นตอนถัดไป',
                   icon: Icons.phone_iphone_rounded,
-                  color: const Color(0xFF0FB5A6),
+                  color: const Color(0xFF32D191),
                   children: [
                     _textField('เบอร์โทรศัพท์ *', _studentPhoneCtrl, Icons.phone_outlined,
                         hint: 'เบอร์มือถือสำหรับติดต่อนักเรียน',
@@ -357,7 +357,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
-          colors: [AppTheme.primary, Color(0xFF0A8A7E)],
+          colors: [AppTheme.primary, Color(0xFF28A874)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),

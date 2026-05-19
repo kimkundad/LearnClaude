@@ -628,7 +628,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: const LinearGradient(
-                    colors: [AppTheme.primary, Color(0xFF0A8A7E)],
+                    colors: [AppTheme.primary, Color(0xFF28A874)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -1183,7 +1183,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
-                colors: [Color(0xFF0FB5A6), Color(0xFF0A8C80)],
+                colors: [Color(0xFF32D191), Color(0xFF0A8C80)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),

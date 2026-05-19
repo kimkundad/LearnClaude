@@ -54,7 +54,7 @@ class AboutUsScreen extends StatelessWidget {
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
-          colors: [AppTheme.primary, Color(0xFF0A8A7E)],
+          colors: [AppTheme.primary, Color(0xFF28A874)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -116,7 +116,7 @@ class AboutUsScreen extends StatelessWidget {
           Container(
             height: 6,
             decoration: const BoxDecoration(
-              gradient: LinearGradient(colors: [AppTheme.primary, Color(0xFF0A8A7E)]),
+              gradient: LinearGradient(colors: [AppTheme.primary, Color(0xFF28A874)]),
               borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
             ),
           ),
@@ -132,7 +132,7 @@ class AboutUsScreen extends StatelessWidget {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     gradient: const LinearGradient(
-                      colors: [AppTheme.primary, Color(0xFF0A8A7E)],
+                      colors: [AppTheme.primary, Color(0xFF28A874)],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
@@ -338,7 +338,7 @@ class AboutUsScreen extends StatelessWidget {
       margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [AppTheme.primary, Color(0xFF0A8A7E)],
+          colors: [AppTheme.primary, Color(0xFF28A874)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),

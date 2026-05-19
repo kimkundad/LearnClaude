@@ -29,7 +29,7 @@ class HelpScreen extends StatelessWidget {
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [AppTheme.primary, Color(0xFF0A8A7E)],
+          colors: [AppTheme.primary, Color(0xFF28A874)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),

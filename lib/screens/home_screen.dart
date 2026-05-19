@@ -47,7 +47,7 @@ class _HomeScreenState extends State<HomeScreen> {
   static const _courseColors = <List<Color>>[
     [Color(0xFFFF6B8A), Color(0xFFFF4757)],
     [Color(0xFF9B59B6), Color(0xFF6C3483)],
-    [Color(0xFF0FB5A6), Color(0xFF0A8A7E)],
+    [Color(0xFF32D191), Color(0xFF28A874)],
     [Color(0xFFFF9F43), Color(0xFFEE5A24)],
     [Color(0xFF3498DB), Color(0xFF1A73C7)],
     [Color(0xFF2ECC71), Color(0xFF1A9B5F)],
@@ -62,7 +62,7 @@ class _HomeScreenState extends State<HomeScreen> {
     [Color(0xFF6A0572), Color(0xFF9B59B6)],
     [Color(0xFF1B4332), Color(0xFF2D6A4F)],
     [Color(0xFFCC0000), Color(0xFFFF4444)],
-    [Color(0xFF0FB5A6), Color(0xFF0A8A7E)],
+    [Color(0xFF32D191), Color(0xFF28A874)],
     [Color(0xFFE67E22), Color(0xFFD35400)],
   ];
 
