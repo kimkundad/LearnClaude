@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_theme.dart';
@@ -151,7 +151,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     const SizedBox(height: 32),
                     Text(
                       'ครูพี่โฮม · เวอร์ชัน 1.0.0',
-                      style: GoogleFonts.sarabun(
+                      style: GoogleFonts.notoSansThai(
                         fontSize: 12,
                         color: AppTheme.textLight,
                       ),
@@ -179,7 +179,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       child: Center(
         child: Text(
           _initial,
-          style: GoogleFonts.sarabun(
+          style: GoogleFonts.notoSansThai(
             fontSize: 36,
             fontWeight: FontWeight.w900,
             color: Colors.white,
@@ -247,7 +247,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: 14),
           Text(
             _name,
-            style: GoogleFonts.sarabun(
+            style: GoogleFonts.notoSansThai(
               fontSize: 20,
               fontWeight: FontWeight.w800,
               color: AppTheme.textDark,
@@ -267,7 +267,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const SizedBox(width: 4),
                 Text(
                   'POINT $_points',
-                  style: GoogleFonts.sarabun(
+                  style: GoogleFonts.notoSansThai(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
                     color: AppTheme.primary,
@@ -343,7 +343,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 children: [
                   Text(
                     item.label,
-                    style: GoogleFonts.sarabun(
+                    style: GoogleFonts.notoSansThai(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
                       color: textColor,
@@ -351,7 +351,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   Text(
                     item.labelTh,
-                    style: GoogleFonts.sarabun(
+                    style: GoogleFonts.notoSansThai(
                       fontSize: 11,
                       color: item.isDestructive
                           ? AppTheme.priceRed.withOpacity(0.7)
@@ -408,7 +408,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(width: 10),
             Text(
               'Delete Account',
-              style: GoogleFonts.sarabun(
+              style: GoogleFonts.notoSansThai(
                 fontSize: 15,
                 fontWeight: FontWeight.w700,
                 color: AppTheme.priceRed,
@@ -427,18 +427,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
           'ออกจากระบบ',
-          style: GoogleFonts.sarabun(fontWeight: FontWeight.w800),
+          style: GoogleFonts.notoSansThai(fontWeight: FontWeight.w800),
         ),
         content: Text(
           'คุณต้องการออกจากระบบใช่หรือไม่?',
-          style: GoogleFonts.sarabun(color: AppTheme.textMedium),
+          style: GoogleFonts.notoSansThai(color: AppTheme.textMedium),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: Text(
               'ยกเลิก',
-              style: GoogleFonts.sarabun(color: AppTheme.textLight),
+              style: GoogleFonts.notoSansThai(color: AppTheme.textLight),
             ),
           ),
           ElevatedButton(
@@ -452,7 +452,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
-            child: Text('ออกจากระบบ', style: GoogleFonts.sarabun(fontWeight: FontWeight.w700)),
+            child: Text('ออกจากระบบ', style: GoogleFonts.notoSansThai(fontWeight: FontWeight.w700)),
           ),
         ],
       ),
@@ -466,18 +466,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
           'ลบบัญชี',
-          style: GoogleFonts.sarabun(fontWeight: FontWeight.w800, color: AppTheme.priceRed),
+          style: GoogleFonts.notoSansThai(fontWeight: FontWeight.w800, color: AppTheme.priceRed),
         ),
         content: Text(
           'การลบบัญชีจะไม่สามารถกู้คืนได้ คุณแน่ใจหรือไม่?',
-          style: GoogleFonts.sarabun(color: AppTheme.textMedium),
+          style: GoogleFonts.notoSansThai(color: AppTheme.textMedium),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: Text(
               'ยกเลิก',
-              style: GoogleFonts.sarabun(color: AppTheme.textLight),
+              style: GoogleFonts.notoSansThai(color: AppTheme.textLight),
             ),
           ),
           ElevatedButton(
@@ -487,7 +487,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
-            child: Text('ลบบัญชี', style: GoogleFonts.sarabun(fontWeight: FontWeight.w700)),
+            child: Text('ลบบัญชี', style: GoogleFonts.notoSansThai(fontWeight: FontWeight.w700)),
           ),
         ],
       ),

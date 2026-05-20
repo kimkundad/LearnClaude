@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -109,7 +109,7 @@ class _PhoneOtpScreenState extends State<PhoneOtpScreen> {
 
   void _showSnack(String msg, {bool isError = false}) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(msg, style: GoogleFonts.sarabun()),
+      content: Text(msg, style: GoogleFonts.notoSansThai()),
       backgroundColor: isError ? Colors.red : AppTheme.primary,
       behavior: SnackBarBehavior.floating,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -169,7 +169,7 @@ class _PhoneOtpScreenState extends State<PhoneOtpScreen> {
         const SizedBox(height: 24),
         Text(
           'ยืนยันเบอร์โทรศัพท์',
-          style: GoogleFonts.sarabun(
+          style: GoogleFonts.notoSansThai(
             fontSize: 26,
             fontWeight: FontWeight.w900,
             color: AppTheme.textDark,
@@ -178,7 +178,7 @@ class _PhoneOtpScreenState extends State<PhoneOtpScreen> {
         const SizedBox(height: 10),
         Text(
           'กรุณากรอกรหัส OTP 6 หลัก\nที่ส่งไปยังเบอร์',
-          style: GoogleFonts.sarabun(
+          style: GoogleFonts.notoSansThai(
             fontSize: 14,
             color: AppTheme.textLight,
             height: 1.6,
@@ -194,7 +194,7 @@ class _PhoneOtpScreenState extends State<PhoneOtpScreen> {
           ),
           child: Text(
             widget.phone,
-            style: GoogleFonts.sarabun(
+            style: GoogleFonts.notoSansThai(
               fontSize: 18,
               fontWeight: FontWeight.w900,
               color: AppTheme.primary,
@@ -215,7 +215,7 @@ class _PhoneOtpScreenState extends State<PhoneOtpScreen> {
               const SizedBox(width: 10),
               Text(
                 'กำลังส่ง OTP...',
-                style: GoogleFonts.sarabun(fontSize: 13, color: AppTheme.textLight),
+                style: GoogleFonts.notoSansThai(fontSize: 13, color: AppTheme.textLight),
               ),
             ],
           ),
@@ -248,7 +248,7 @@ class _PhoneOtpScreenState extends State<PhoneOtpScreen> {
         maxLength: 1,
         inputFormatters: [FilteringTextInputFormatter.digitsOnly],
         onChanged: (v) => _onDigitChanged(i, v),
-        style: GoogleFonts.sarabun(
+        style: GoogleFonts.notoSansThai(
           fontSize: 22,
           fontWeight: FontWeight.w900,
           color: AppTheme.textDark,
@@ -286,7 +286,7 @@ class _PhoneOtpScreenState extends State<PhoneOtpScreen> {
           : const Icon(Icons.verified_outlined, size: 20),
       label: Text(
         _verifying ? 'กำลังยืนยัน...' : 'ยืนยัน OTP',
-        style: GoogleFonts.sarabun(fontSize: 16, fontWeight: FontWeight.w800),
+        style: GoogleFonts.notoSansThai(fontSize: 16, fontWeight: FontWeight.w800),
       ),
     );
   }
@@ -300,7 +300,7 @@ class _PhoneOtpScreenState extends State<PhoneOtpScreen> {
               const SizedBox(width: 6),
               Text(
                 'ส่งรหัสใหม่ได้ใน $_countdown วินาที',
-                style: GoogleFonts.sarabun(fontSize: 13, color: AppTheme.textLight),
+                style: GoogleFonts.notoSansThai(fontSize: 13, color: AppTheme.textLight),
               ),
             ],
           )
@@ -309,7 +309,7 @@ class _PhoneOtpScreenState extends State<PhoneOtpScreen> {
             icon: const Icon(Icons.refresh_rounded, size: 18),
             label: Text(
               'ส่งรหัส OTP ใหม่',
-              style: GoogleFonts.sarabun(
+              style: GoogleFonts.notoSansThai(
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
                 color: AppTheme.primary,
@@ -323,7 +323,7 @@ class _PhoneOtpScreenState extends State<PhoneOtpScreen> {
       onTap: () => context.go('/home'),
       child: Text(
         'ข้ามขั้นตอนนี้ก่อน (ยืนยันภายหลังใน Settings)',
-        style: GoogleFonts.sarabun(
+        style: GoogleFonts.notoSansThai(
           fontSize: 13,
           color: AppTheme.textLight,
           decoration: TextDecoration.underline,

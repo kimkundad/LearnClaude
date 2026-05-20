@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -212,7 +212,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen>
         title: Text(
           'ไม่มีการเชื่อมต่อ',
           textAlign: TextAlign.center,
-          style: GoogleFonts.sarabun(
+          style: GoogleFonts.notoSansThai(
               fontWeight: FontWeight.w900,
               fontSize: 17,
               color: AppTheme.textDark),
@@ -220,7 +220,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen>
         content: Text(
           'กรุณาตรวจสอบอินเทอร์เน็ตแล้วกด "ดูต่อ"\nระบบจะหัก Point เมื่อเชื่อมต่อได้แล้ว',
           textAlign: TextAlign.center,
-          style: GoogleFonts.sarabun(
+          style: GoogleFonts.notoSansThai(
               fontSize: 14, color: AppTheme.textMedium, height: 1.5),
         ),
         actionsAlignment: MainAxisAlignment.center,
@@ -238,7 +238,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen>
               }
             },
             child: Text('ดูต่อ',
-                style: GoogleFonts.sarabun(
+                style: GoogleFonts.notoSansThai(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
                     color: AppTheme.primary)),
@@ -417,7 +417,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen>
         title: Text(
           'Point หมดแล้ว',
           textAlign: TextAlign.center,
-          style: GoogleFonts.sarabun(
+          style: GoogleFonts.notoSansThai(
               fontWeight: FontWeight.w900,
               fontSize: 17,
               color: AppTheme.textDark),
@@ -425,7 +425,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen>
         content: Text(
           'กรุณาติดต่อเจ้าหน้าที่ LINE : @ZA-SHI\nเพื่อเติม Point',
           textAlign: TextAlign.center,
-          style: GoogleFonts.sarabun(
+          style: GoogleFonts.notoSansThai(
               fontSize: 14, color: AppTheme.textMedium, height: 1.5),
         ),
         actionsAlignment: MainAxisAlignment.center,
@@ -436,7 +436,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen>
               if (context.canPop()) context.pop();
             },
             child: Text('OK',
-                style: GoogleFonts.sarabun(
+                style: GoogleFonts.notoSansThai(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
                     color: AppTheme.primary)),
@@ -542,7 +542,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen>
               widget.courseTitle,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: GoogleFonts.sarabun(
+              style: GoogleFonts.notoSansThai(
                   fontSize: 15,
                   fontWeight: FontWeight.w700,
                   color: Colors.white),
@@ -581,7 +581,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen>
                   const SizedBox(width: 6),
                   Text(
                     '$_point',
-                    style: GoogleFonts.sarabun(
+                    style: GoogleFonts.notoSansThai(
                         fontSize: 13,
                         color: Colors.white,
                         fontWeight: FontWeight.w800),
@@ -589,7 +589,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen>
                   const SizedBox(width: 2),
                   Text(
                     'point',
-                    style: GoogleFonts.sarabun(
+                    style: GoogleFonts.notoSansThai(
                         fontSize: 10,
                         color: Colors.white70,
                         fontWeight: FontWeight.w500),
@@ -654,7 +654,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen>
                     child: _loading
                         ? const CircularProgressIndicator(color: Colors.white)
                         : Text('เลือกบทเรียน',
-                            style: GoogleFonts.sarabun(
+                            style: GoogleFonts.notoSansThai(
                                 color: Colors.white54, fontSize: 16)),
                   ),
                 ),
@@ -712,7 +712,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen>
           ),
           const SizedBox(width: 10),
           Text('${_videos.length} บทเรียน',
-              style: GoogleFonts.sarabun(
+              style: GoogleFonts.notoSansThai(
                   fontSize: 16,
                   fontWeight: FontWeight.w800,
                   color: AppTheme.textDark)),
@@ -725,7 +725,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen>
                   size: 13, color: AppTheme.textLight),
               const SizedBox(width: 3),
               Text('บันทึกตำแหน่งอัตโนมัติ',
-                  style: GoogleFonts.sarabun(
+                  style: GoogleFonts.notoSansThai(
                       fontSize: 11, color: AppTheme.textLight)),
             ],
           ),
@@ -803,7 +803,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen>
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(duration,
-                          style: GoogleFonts.sarabun(
+                          style: GoogleFonts.notoSansThai(
                               fontSize: 9,
                               color: Colors.white,
                               fontWeight: FontWeight.w600)),
@@ -834,7 +834,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen>
                     name,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.sarabun(
+                    style: GoogleFonts.notoSansThai(
                       fontSize: 13,
                       fontWeight:
                           isActive ? FontWeight.w700 : FontWeight.w600,
@@ -850,7 +850,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen>
                             size: 11, color: AppTheme.textLight),
                         const SizedBox(width: 3),
                         Text(duration,
-                            style: GoogleFonts.sarabun(
+                            style: GoogleFonts.notoSansThai(
                                 fontSize: 11, color: AppTheme.textLight)),
                       ],
                     ),

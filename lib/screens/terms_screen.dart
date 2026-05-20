@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_theme.dart';
@@ -53,7 +53,7 @@ class TermsScreen extends StatelessWidget {
         children: [
           Text(
             'ข้อกำหนดการใช้บริการ',
-            style: GoogleFonts.sarabun(
+            style: GoogleFonts.notoSansThai(
               fontSize: 16,
               fontWeight: FontWeight.w800,
               color: AppTheme.textDark,
@@ -61,7 +61,7 @@ class TermsScreen extends StatelessWidget {
           ),
           Text(
             'learnsbuy.com · อัปเดตล่าสุด เม.ย. 2026',
-            style: GoogleFonts.sarabun(fontSize: 11, color: AppTheme.textLight),
+            style: GoogleFonts.notoSansThai(fontSize: 11, color: AppTheme.textLight),
           ),
         ],
       ),
@@ -88,7 +88,7 @@ class TermsScreen extends StatelessWidget {
           const SizedBox(height: 10),
           Text(
             'ยินดีต้อนรับสู่ LearnsBuy',
-            style: GoogleFonts.sarabun(
+            style: GoogleFonts.notoSansThai(
               fontSize: 18,
               fontWeight: FontWeight.w800,
               color: Colors.white,
@@ -97,7 +97,7 @@ class TermsScreen extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             'เราปลูกฝนคณะและสร้างแรงบันดาลใจทางการเรียนรู้ให้เด็กไทยก้าวทันโลก โปรดอ่านข้อกำหนดด้านล่างก่อนใช้บริการ',
-            style: GoogleFonts.sarabun(
+            style: GoogleFonts.notoSansThai(
               fontSize: 13,
               color: Colors.white.withOpacity(0.9),
               height: 1.5,
@@ -140,7 +140,7 @@ class TermsScreen extends StatelessWidget {
                 child: Center(
                   child: Text(
                     '${s.number}',
-                    style: GoogleFonts.sarabun(
+                    style: GoogleFonts.notoSansThai(
                       fontSize: 13,
                       fontWeight: FontWeight.w800,
                       color: AppTheme.primary,
@@ -152,7 +152,7 @@ class TermsScreen extends StatelessWidget {
               Expanded(
                 child: Text(
                   s.title,
-                  style: GoogleFonts.sarabun(
+                  style: GoogleFonts.notoSansThai(
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
                     color: AppTheme.textDark,
@@ -165,7 +165,7 @@ class TermsScreen extends StatelessWidget {
             const SizedBox(height: 10),
             Text(
               s.body!,
-              style: GoogleFonts.sarabun(
+              style: GoogleFonts.notoSansThai(
                 fontSize: 13,
                 color: AppTheme.textMedium,
                 height: 1.6,
@@ -193,7 +193,7 @@ class TermsScreen extends StatelessWidget {
                     Expanded(
                       child: Text(
                         b,
-                        style: GoogleFonts.sarabun(
+                        style: GoogleFonts.notoSansThai(
                           fontSize: 13,
                           color: AppTheme.textMedium,
                           height: 1.5,
@@ -223,7 +223,7 @@ class TermsScreen extends StatelessWidget {
         children: [
           Text(
             'ติดต่อเรา:',
-            style: GoogleFonts.sarabun(
+            style: GoogleFonts.notoSansThai(
               fontSize: 13,
               fontWeight: FontWeight.w700,
               color: AppTheme.primary,
@@ -232,7 +232,7 @@ class TermsScreen extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             'learnsbuy@gmail.com · 02-658-3819\nLINE: @learnsbuy, @za-shi',
-            style: GoogleFonts.sarabun(
+            style: GoogleFonts.notoSansThai(
               fontSize: 13,
               color: AppTheme.primary,
               height: 1.6,

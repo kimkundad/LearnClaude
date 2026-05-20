@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -45,7 +45,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('เปลี่ยนรหัสผ่านสำเร็จ', style: GoogleFonts.sarabun(color: Colors.white)),
+        content: Text('เปลี่ยนรหัสผ่านสำเร็จ', style: GoogleFonts.notoSansThai(color: Colors.white)),
         backgroundColor: AppTheme.primary,
         behavior: SnackBarBehavior.floating,
       ));
@@ -53,7 +53,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(e.toString(), style: GoogleFonts.sarabun(color: Colors.white)),
+        content: Text(e.toString(), style: GoogleFonts.notoSansThai(color: Colors.white)),
         backgroundColor: AppTheme.priceRed,
         behavior: SnackBarBehavior.floating,
       ));
@@ -75,7 +75,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
         ),
         title: Text(
           'เปลี่ยนรหัสผ่าน',
-          style: GoogleFonts.sarabun(
+          style: GoogleFonts.notoSansThai(
             fontSize: 18,
             fontWeight: FontWeight.w800,
             color: AppTheme.textDark,
@@ -137,7 +137,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                     )
                   : Text(
                       'บันทึกรหัสผ่านใหม่',
-                      style: GoogleFonts.sarabun(
+                      style: GoogleFonts.notoSansThai(
                           fontSize: 16, fontWeight: FontWeight.w800),
                     ),
             ),
@@ -161,7 +161,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
           Expanded(
             child: Text(
               'รหัสผ่านใหม่ต้องมีอย่างน้อย 6 ตัวอักษร',
-              style: GoogleFonts.sarabun(
+              style: GoogleFonts.notoSansThai(
                 fontSize: 13,
                 color: AppTheme.primary,
                 fontWeight: FontWeight.w600,
@@ -176,7 +176,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   Widget _fieldLabel(String text) {
     return Text(
       text,
-      style: GoogleFonts.sarabun(
+      style: GoogleFonts.notoSansThai(
         fontSize: 14,
         fontWeight: FontWeight.w700,
         color: AppTheme.textDark,

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_theme.dart';
@@ -51,7 +51,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
         children: [
           Text(
             'นโยบายความเป็นส่วนตัว',
-            style: GoogleFonts.sarabun(
+            style: GoogleFonts.notoSansThai(
               fontSize: 16,
               fontWeight: FontWeight.w800,
               color: AppTheme.textDark,
@@ -59,7 +59,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
           ),
           Text(
             'learnsbuy.com · อัปเดตล่าสุด เม.ย. 2026',
-            style: GoogleFonts.sarabun(fontSize: 11, color: AppTheme.textLight),
+            style: GoogleFonts.notoSansThai(fontSize: 11, color: AppTheme.textLight),
           ),
         ],
       ),
@@ -94,7 +94,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             'ความเป็นส่วนตัวของคุณสำคัญกับเรา',
-            style: GoogleFonts.sarabun(
+            style: GoogleFonts.notoSansThai(
               fontSize: 17,
               fontWeight: FontWeight.w800,
               color: Colors.white,
@@ -103,7 +103,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             'เรารักษาข้อมูลของผู้เรียนอย่างรัดกุม โปรดอ่านเพื่อทราบสิทธิและข้อกำหนดในการใช้เว็บไซต์',
-            style: GoogleFonts.sarabun(
+            style: GoogleFonts.notoSansThai(
               fontSize: 13,
               color: Colors.white.withOpacity(0.9),
               height: 1.5,
@@ -146,7 +146,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
                 child: Center(
                   child: Text(
                     '${s.number}',
-                    style: GoogleFonts.sarabun(
+                    style: GoogleFonts.notoSansThai(
                       fontSize: 13,
                       fontWeight: FontWeight.w800,
                       color: AppTheme.primary,
@@ -158,7 +158,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
               Expanded(
                 child: Text(
                   s.title,
-                  style: GoogleFonts.sarabun(
+                  style: GoogleFonts.notoSansThai(
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
                     color: AppTheme.textDark,
@@ -171,7 +171,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
             const SizedBox(height: 10),
             Text(
               s.body!,
-              style: GoogleFonts.sarabun(
+              style: GoogleFonts.notoSansThai(
                 fontSize: 13,
                 color: AppTheme.textMedium,
                 height: 1.6,
@@ -199,7 +199,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
                     Expanded(
                       child: Text(
                         b,
-                        style: GoogleFonts.sarabun(
+                        style: GoogleFonts.notoSansThai(
                           fontSize: 13,
                           color: AppTheme.textMedium,
                           height: 1.5,

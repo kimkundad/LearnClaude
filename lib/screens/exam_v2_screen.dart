@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -233,7 +233,7 @@ class _ExamV2ScreenState extends State<ExamV2Screen>
             onPressed: () => context.pop(),
           ),
           title: Text(widget.exerciseTitle,
-              style: GoogleFonts.sarabun(fontSize: 15, fontWeight: FontWeight.w800),
+              style: GoogleFonts.notoSansThai(fontSize: 15, fontWeight: FontWeight.w800),
               overflow: TextOverflow.ellipsis),
         ),
         body: const Center(child: CircularProgressIndicator()),
@@ -257,10 +257,10 @@ class _ExamV2ScreenState extends State<ExamV2Screen>
             children: [
               const Icon(Icons.error_outline_rounded, size: 48, color: AppTheme.priceRed),
               const SizedBox(height: 12),
-              Text(_error!, style: GoogleFonts.sarabun(fontSize: 16, color: AppTheme.textDark)),
+              Text(_error!, style: GoogleFonts.notoSansThai(fontSize: 16, color: AppTheme.textDark)),
               const SizedBox(height: 16),
               ElevatedButton(onPressed: () { setState(() { _loading = true; _error = null; }); _loadExam(); },
-                  child: Text('ลองใหม่', style: GoogleFonts.sarabun())),
+                  child: Text('ลองใหม่', style: GoogleFonts.notoSansThai())),
             ],
           ),
         ),
@@ -316,21 +316,21 @@ class _ExamV2ScreenState extends State<ExamV2Screen>
             builder: (_) => AlertDialog(
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               title: Text('ออกจากแบบทดสอบ?',
-                  style: GoogleFonts.sarabun(fontWeight: FontWeight.w900, fontSize: 16)),
+                  style: GoogleFonts.notoSansThai(fontWeight: FontWeight.w900, fontSize: 16)),
               content: Text('ความคืบหน้าจะหายไป',
-                  style: GoogleFonts.sarabun(fontSize: 14, color: AppTheme.textMedium)),
+                  style: GoogleFonts.notoSansThai(fontSize: 14, color: AppTheme.textMedium)),
               actions: [
                 TextButton(onPressed: () => Navigator.pop(context),
-                    child: Text('ยกเลิก', style: GoogleFonts.sarabun(color: AppTheme.textMedium))),
+                    child: Text('ยกเลิก', style: GoogleFonts.notoSansThai(color: AppTheme.textMedium))),
                 TextButton(onPressed: () { Navigator.pop(context); context.pop(); },
-                    child: Text('ออก', style: GoogleFonts.sarabun(color: AppTheme.priceRed, fontWeight: FontWeight.w800))),
+                    child: Text('ออก', style: GoogleFonts.notoSansThai(color: AppTheme.priceRed, fontWeight: FontWeight.w800))),
               ],
             ),
           );
         },
       ),
       title: Text(widget.exerciseTitle,
-          style: GoogleFonts.sarabun(fontSize: 15, fontWeight: FontWeight.w800),
+          style: GoogleFonts.notoSansThai(fontSize: 15, fontWeight: FontWeight.w800),
           overflow: TextOverflow.ellipsis),
       actions: [
         Container(
@@ -345,7 +345,7 @@ class _ExamV2ScreenState extends State<ExamV2Screen>
               const Icon(Icons.edit_note_rounded, size: 14, color: AppTheme.primary),
               const SizedBox(width: 4),
               Text('$answeredCount/${_questions.length}',
-                  style: GoogleFonts.sarabun(
+                  style: GoogleFonts.notoSansThai(
                       fontSize: 13, color: AppTheme.primary, fontWeight: FontWeight.w800)),
             ],
           ),
@@ -376,7 +376,7 @@ class _ExamV2ScreenState extends State<ExamV2Screen>
                 ),
                 child: Text(
                   _timerText,
-                  style: GoogleFonts.sarabun(
+                  style: GoogleFonts.notoSansThai(
                     fontSize: 28, fontWeight: FontWeight.w900,
                     color: _timerColor, letterSpacing: 2,
                   ),
@@ -388,11 +388,11 @@ class _ExamV2ScreenState extends State<ExamV2Screen>
           Row(
             children: [
               Text('${(_progress * 100).round()}% Complete',
-                  style: GoogleFonts.sarabun(
+                  style: GoogleFonts.notoSansThai(
                       fontSize: 12, color: AppTheme.primary, fontWeight: FontWeight.w700)),
               const Spacer(),
               Text('${_current + 1} of ${_questions.length}',
-                  style: GoogleFonts.sarabun(
+                  style: GoogleFonts.notoSansThai(
                       fontSize: 12, color: AppTheme.textLight, fontWeight: FontWeight.w600)),
             ],
           ),
@@ -457,7 +457,7 @@ class _ExamV2ScreenState extends State<ExamV2Screen>
                     ),
                     child: Center(
                       child: Text('${i + 1}',
-                          style: GoogleFonts.sarabun(
+                          style: GoogleFonts.notoSansThai(
                               fontSize: 13, fontWeight: FontWeight.w800,
                               color: isCurrent
                                   ? Colors.white
@@ -510,7 +510,7 @@ class _ExamV2ScreenState extends State<ExamV2Screen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(q.text,
-              style: GoogleFonts.sarabun(
+              style: GoogleFonts.notoSansThai(
                   fontSize: 16, fontWeight: FontWeight.w700,
                   color: AppTheme.textDark, height: 1.6)),
           if (q.image != null) ...[
@@ -573,14 +573,14 @@ class _ExamV2ScreenState extends State<ExamV2Screen>
               decoration: BoxDecoration(color: numBg, borderRadius: BorderRadius.circular(9)),
               child: Center(
                 child: Text('${index + 1}',
-                    style: GoogleFonts.sarabun(
+                    style: GoogleFonts.notoSansThai(
                         fontSize: 14, fontWeight: FontWeight.w800, color: numColor)),
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Text(opt.text,
-                  style: GoogleFonts.sarabun(
+                  style: GoogleFonts.notoSansThai(
                       fontSize: 15, fontWeight: FontWeight.w700, color: textColor)),
             ),
             if (isSelected)
@@ -607,7 +607,7 @@ class _ExamV2ScreenState extends State<ExamV2Screen>
               onPressed: _current > 0 ? _prevQuestion : null,
               icon: const Icon(Icons.chevron_left_rounded, size: 18),
               label: Text('ย้อนกลับ',
-                  style: GoogleFonts.sarabun(fontSize: 14, fontWeight: FontWeight.w700)),
+                  style: GoogleFonts.notoSansThai(fontSize: 14, fontWeight: FontWeight.w700)),
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppTheme.textMedium,
                 side: const BorderSide(color: AppTheme.border),
@@ -637,7 +637,7 @@ class _ExamV2ScreenState extends State<ExamV2Screen>
                       size: 18),
                     label: Text(
                       isLast ? 'ส่งคำตอบ' : 'ข้อต่อไป',
-                      style: GoogleFonts.sarabun(fontSize: 14, fontWeight: FontWeight.w800)),
+                      style: GoogleFonts.notoSansThai(fontSize: 14, fontWeight: FontWeight.w800)),
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
@@ -670,7 +670,7 @@ class _ExamV2ScreenState extends State<ExamV2Screen>
         elevation: 0,
         automaticallyImplyLeading: false,
         title: Text('ผลการทำแบบทดสอบ',
-            style: GoogleFonts.sarabun(fontSize: 16, fontWeight: FontWeight.w900)),
+            style: GoogleFonts.notoSansThai(fontSize: 16, fontWeight: FontWeight.w900)),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
           child: Container(color: AppTheme.border, height: 1),
@@ -704,7 +704,7 @@ class _ExamV2ScreenState extends State<ExamV2Screen>
                   const SizedBox(height: 14),
                   Text(
                     passed ? 'ยอดเยี่ยม! ผ่านแล้ว' : 'ยังไม่ผ่าน ลองใหม่ได้เลย',
-                    style: GoogleFonts.sarabun(
+                    style: GoogleFonts.notoSansThai(
                         fontSize: 20, fontWeight: FontWeight.w900, color: AppTheme.textDark)),
                   const SizedBox(height: 8),
                   Container(
@@ -713,21 +713,21 @@ class _ExamV2ScreenState extends State<ExamV2Screen>
                         color: color.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(24)),
                     child: Text('${pct.toStringAsFixed(1)}%',
-                        style: GoogleFonts.sarabun(
+                        style: GoogleFonts.notoSansThai(
                             fontSize: 32, color: color, fontWeight: FontWeight.w900)),
                   ),
                   const SizedBox(height: 12),
                   if (!isGuest) ...[
                     Text('$score / $total คะแนน',
-                        style: GoogleFonts.sarabun(
+                        style: GoogleFonts.notoSansThai(
                             fontSize: 16, color: AppTheme.textMedium, fontWeight: FontWeight.w700)),
                     const SizedBox(height: 6),
                     Text('เกณฑ์ผ่าน $passScore%  |  รอบที่ $attemptNo',
-                        style: GoogleFonts.sarabun(
+                        style: GoogleFonts.notoSansThai(
                             fontSize: 13, color: AppTheme.textLight, fontWeight: FontWeight.w600)),
                   ] else ...[
                     Text('$score / $total คะแนน',
-                        style: GoogleFonts.sarabun(
+                        style: GoogleFonts.notoSansThai(
                             fontSize: 16, color: AppTheme.textMedium, fontWeight: FontWeight.w700)),
                     const SizedBox(height: 6),
                     Container(
@@ -737,7 +737,7 @@ class _ExamV2ScreenState extends State<ExamV2Screen>
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(color: const Color(0xFFFFCC02))),
                       child: Text('ทดลองทำ — ไม่บันทึกคะแนน',
-                          style: GoogleFonts.sarabun(
+                          style: GoogleFonts.notoSansThai(
                               fontSize: 12, color: const Color(0xFF5D4037), fontWeight: FontWeight.w700)),
                     ),
                   ],
@@ -762,7 +762,7 @@ class _ExamV2ScreenState extends State<ExamV2Screen>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('เฉลยคำตอบ',
-                        style: GoogleFonts.sarabun(
+                        style: GoogleFonts.notoSansThai(
                             fontSize: 15, fontWeight: FontWeight.w900, color: AppTheme.textDark)),
                     const SizedBox(height: 12),
                     ...review.asMap().entries.map((e) {
@@ -792,7 +792,7 @@ class _ExamV2ScreenState extends State<ExamV2Screen>
                                 const SizedBox(width: 6),
                                 Expanded(
                                   child: Text('ข้อ ${e.key + 1}: ${rv['question_text']}',
-                                      style: GoogleFonts.sarabun(
+                                      style: GoogleFonts.notoSansThai(
                                           fontSize: 13, fontWeight: FontWeight.w700,
                                           color: AppTheme.textDark)),
                                 ),
@@ -801,13 +801,13 @@ class _ExamV2ScreenState extends State<ExamV2Screen>
                             if (rv['selected_option'] != null) ...[
                               const SizedBox(height: 4),
                               Text('คำตอบของคุณ: ${rv['selected_option']}',
-                                  style: GoogleFonts.sarabun(
+                                  style: GoogleFonts.notoSansThai(
                                       fontSize: 12, color: AppTheme.textMedium)),
                             ],
                             if (!correct && rv['correct_option'] != null) ...[
                               const SizedBox(height: 2),
                               Text('เฉลย: ${rv['correct_option']}',
-                                  style: GoogleFonts.sarabun(
+                                  style: GoogleFonts.notoSansThai(
                                       fontSize: 12, color: AppTheme.primary,
                                       fontWeight: FontWeight.w700)),
                             ],
@@ -839,7 +839,7 @@ class _ExamV2ScreenState extends State<ExamV2Screen>
                     },
                     icon: const Icon(Icons.refresh_rounded, size: 16),
                     label: Text('ทำใหม่',
-                        style: GoogleFonts.sarabun(fontWeight: FontWeight.w700)),
+                        style: GoogleFonts.notoSansThai(fontWeight: FontWeight.w700)),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppTheme.primary,
                       side: const BorderSide(color: AppTheme.primary),
@@ -854,7 +854,7 @@ class _ExamV2ScreenState extends State<ExamV2Screen>
                     onPressed: () => context.pop(),
                     icon: const Icon(Icons.check_rounded, size: 16),
                     label: Text('เสร็จสิ้น',
-                        style: GoogleFonts.sarabun(fontWeight: FontWeight.w800)),
+                        style: GoogleFonts.notoSansThai(fontWeight: FontWeight.w800)),
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),

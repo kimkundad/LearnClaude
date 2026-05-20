@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:io';
 
 import 'package:audioplayers/audioplayers.dart';
@@ -152,7 +152,7 @@ class _TeacherChatScreenState extends State<TeacherChatScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('ส่งรูปไม่สำเร็จ: $e', style: GoogleFonts.sarabun())),
+          SnackBar(content: Text('ส่งรูปไม่สำเร็จ: $e', style: GoogleFonts.notoSansThai())),
         );
       }
     } finally {
@@ -169,7 +169,7 @@ class _TeacherChatScreenState extends State<TeacherChatScreen> {
     final ok = await _audioRecorder.hasPermission();
     if (!ok) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('ไม่สามารถใช้ไมโครโฟนได้', style: GoogleFonts.sarabun())),
+        SnackBar(content: Text('ไม่สามารถใช้ไมโครโฟนได้', style: GoogleFonts.notoSansThai())),
       );
       return;
     }
@@ -212,7 +212,7 @@ class _TeacherChatScreenState extends State<TeacherChatScreen> {
       await _load(markRead: true);
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('ส่งเสียงไม่สำเร็จ: $e', style: GoogleFonts.sarabun())),
+        SnackBar(content: Text('ส่งเสียงไม่สำเร็จ: $e', style: GoogleFonts.notoSansThai())),
       );
     } finally {
       if (mounted) setState(() => _isSending = false);
@@ -275,7 +275,7 @@ class _TeacherChatScreenState extends State<TeacherChatScreen> {
                 children: [
                   Text(
                     widget.studentName,
-                    style: GoogleFonts.sarabun(
+                    style: GoogleFonts.notoSansThai(
                       color: Colors.white,
                       fontWeight: FontWeight.w900,
                       fontSize: 16,
@@ -284,7 +284,7 @@ class _TeacherChatScreenState extends State<TeacherChatScreen> {
                   ),
                   Text(
                     _isRecording ? 'กำลังอัดเสียง...' : 'ออนไลน์',
-                    style: GoogleFonts.sarabun(
+                    style: GoogleFonts.notoSansThai(
                       color: Colors.white.withOpacity(0.78),
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
@@ -336,7 +336,7 @@ class _TeacherChatScreenState extends State<TeacherChatScreen> {
       backgroundImage: (url != null && url.isNotEmpty) ? NetworkImage(url) : null,
       child: (url == null || url.isEmpty)
           ? Text(initials,
-              style: GoogleFonts.sarabun(
+              style: GoogleFonts.notoSansThai(
                 fontSize: 14,
                 fontWeight: FontWeight.w900,
                 color: AppTheme.primary,
@@ -365,7 +365,7 @@ class _TeacherChatScreenState extends State<TeacherChatScreen> {
             recording
                 ? 'กำลังอัดข้อความเสียง... แตะปุ่มหยุดเพื่อส่ง'
                 : 'ออนไลน์ · ปกติตอบภายใน 5-15 นาที',
-            style: GoogleFonts.sarabun(
+            style: GoogleFonts.notoSansThai(
               fontSize: 12,
               color: AppTheme.textMedium,
               fontWeight: FontWeight.w700,
@@ -421,7 +421,7 @@ class _TeacherChatScreenState extends State<TeacherChatScreen> {
                           : EdgeInsets.zero,
                       child: Text(
                         senderName,
-                        style: GoogleFonts.sarabun(
+                        style: GoogleFonts.notoSansThai(
                           fontSize: 12,
                           color: AppTheme.textLight,
                           fontWeight: FontWeight.w900,
@@ -438,7 +438,7 @@ class _TeacherChatScreenState extends State<TeacherChatScreen> {
             const SizedBox(height: 3),
             Text(
               timeStr,
-              style: GoogleFonts.sarabun(fontSize: 10, color: AppTheme.textLight),
+              style: GoogleFonts.notoSansThai(fontSize: 10, color: AppTheme.textLight),
             ),
           ],
         ),
@@ -520,7 +520,7 @@ class _TeacherChatScreenState extends State<TeacherChatScreen> {
             const SizedBox(width: 8),
             Text(
               playing ? 'กำลังเล่น...' : 'เสียง ${_fmtDur(dur)}',
-              style: GoogleFonts.sarabun(
+              style: GoogleFonts.notoSansThai(
                 fontSize: 13,
                 color: textColor,
                 fontWeight: FontWeight.w800,
@@ -533,7 +533,7 @@ class _TeacherChatScreenState extends State<TeacherChatScreen> {
 
     return Text(
       text,
-      style: GoogleFonts.sarabun(
+      style: GoogleFonts.notoSansThai(
         fontSize: 15,
         color: textColor,
         height: 1.4,
@@ -618,7 +618,7 @@ class _TeacherChatScreenState extends State<TeacherChatScreen> {
                 onSubmitted: (_) => _sendText(),
                 decoration: InputDecoration(
                   hintText: _isRecording ? 'กำลังอัดเสียง...' : 'พิมพ์ข้อความ...',
-                  hintStyle: GoogleFonts.sarabun(color: Colors.grey.shade400),
+                  hintStyle: GoogleFonts.notoSansThai(color: Colors.grey.shade400),
                   contentPadding:
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   filled: true,
@@ -636,7 +636,7 @@ class _TeacherChatScreenState extends State<TeacherChatScreen> {
                     borderSide: const BorderSide(color: AppTheme.primary, width: 1.5),
                   ),
                 ),
-                style: GoogleFonts.sarabun(fontSize: 15),
+                style: GoogleFonts.notoSansThai(fontSize: 15),
               ),
             ),
             const SizedBox(width: 8),

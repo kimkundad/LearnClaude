@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -54,10 +54,10 @@ class _ExamV2ListScreenState extends State<ExamV2ListScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text('แบบทดสอบ',
-                style: GoogleFonts.sarabun(fontSize: 16, fontWeight: FontWeight.w900,
+                style: GoogleFonts.notoSansThai(fontSize: 16, fontWeight: FontWeight.w900,
                     color: AppTheme.textDark)),
             Text(widget.courseTitle,
-                style: GoogleFonts.sarabun(fontSize: 11, color: AppTheme.textLight,
+                style: GoogleFonts.notoSansThai(fontSize: 11, color: AppTheme.textLight,
                     fontWeight: FontWeight.w600),
                 overflow: TextOverflow.ellipsis),
           ],
@@ -117,10 +117,10 @@ class _ExamV2ListScreenState extends State<ExamV2ListScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('แบบทดสอบทั้งหมด',
-                    style: GoogleFonts.sarabun(
+                    style: GoogleFonts.notoSansThai(
                         fontSize: 15, color: Colors.white, fontWeight: FontWeight.w800)),
                 Text('${_exercises.length} ชุด · บันทึกคะแนนทุกครั้ง',
-                    style: GoogleFonts.sarabun(
+                    style: GoogleFonts.notoSansThai(
                         fontSize: 12, color: Colors.white70, fontWeight: FontWeight.w600)),
               ],
             ),
@@ -138,11 +138,11 @@ class _ExamV2ListScreenState extends State<ExamV2ListScreen> {
           const Icon(Icons.assignment_outlined, size: 64, color: AppTheme.border),
           const SizedBox(height: 12),
           Text('ยังไม่มีแบบทดสอบ',
-              style: GoogleFonts.sarabun(
+              style: GoogleFonts.notoSansThai(
                   fontSize: 16, fontWeight: FontWeight.w800, color: AppTheme.textDark)),
           const SizedBox(height: 6),
           Text('แบบทดสอบจะแสดงเมื่อผู้สอนเพิ่มเข้ามา',
-              style: GoogleFonts.sarabun(fontSize: 13, color: AppTheme.textLight)),
+              style: GoogleFonts.notoSansThai(fontSize: 13, color: AppTheme.textLight)),
         ],
       ),
     );
@@ -243,7 +243,7 @@ class _ExerciseCardState extends State<_ExerciseCard> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(title,
-                              style: GoogleFonts.sarabun(
+                              style: GoogleFonts.notoSansThai(
                                   fontSize: 14, fontWeight: FontWeight.w800,
                                   color: AppTheme.textDark)),
                           const SizedBox(height: 3),
@@ -253,7 +253,7 @@ class _ExerciseCardState extends State<_ExerciseCard> {
                                   size: 13, color: AppTheme.textLight),
                               const SizedBox(width: 3),
                               Text('$qCount ข้อ',
-                                  style: GoogleFonts.sarabun(
+                                  style: GoogleFonts.notoSansThai(
                                       fontSize: 12, color: AppTheme.textLight,
                                       fontWeight: FontWeight.w600)),
                               const SizedBox(width: 8),
@@ -261,7 +261,7 @@ class _ExerciseCardState extends State<_ExerciseCard> {
                                   size: 13, color: AppTheme.textLight),
                               const SizedBox(width: 3),
                               Text('ผ่าน $passScore%',
-                                  style: GoogleFonts.sarabun(
+                                  style: GoogleFonts.notoSansThai(
                                       fontSize: 12, color: AppTheme.textLight,
                                       fontWeight: FontWeight.w600)),
                               if (timeLimit != null) ...[
@@ -270,7 +270,7 @@ class _ExerciseCardState extends State<_ExerciseCard> {
                                     size: 13, color: AppTheme.textLight),
                                 const SizedBox(width: 2),
                                 Text('$timeLimit น.',
-                                    style: GoogleFonts.sarabun(
+                                    style: GoogleFonts.notoSansThai(
                                         fontSize: 12, color: AppTheme.textLight,
                                         fontWeight: FontWeight.w600)),
                               ],
@@ -306,7 +306,7 @@ class _ExerciseCardState extends State<_ExerciseCard> {
                             const SizedBox(width: 4),
                             Text(
                               'คะแนนสูงสุด ${bestScore!.toStringAsFixed(1)}%',
-                              style: GoogleFonts.sarabun(
+                              style: GoogleFonts.notoSansThai(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w800,
                                   color: passed ? AppTheme.primary : AppTheme.priceRed)),
@@ -315,7 +315,7 @@ class _ExerciseCardState extends State<_ExerciseCard> {
                       ),
                       const SizedBox(width: 8),
                       Text('$attemptCount ครั้ง',
-                          style: GoogleFonts.sarabun(
+                          style: GoogleFonts.notoSansThai(
                               fontSize: 12, color: AppTheme.textLight,
                               fontWeight: FontWeight.w600)),
                     ],
@@ -345,7 +345,7 @@ class _ExerciseCardState extends State<_ExerciseCard> {
                         icon: const Icon(Icons.play_arrow_rounded, size: 18),
                         label: Text(
                           hasBest ? 'ทำอีกครั้ง' : 'เริ่มทำ',
-                          style: GoogleFonts.sarabun(fontWeight: FontWeight.w800)),
+                          style: GoogleFonts.notoSansThai(fontWeight: FontWeight.w800)),
                       ),
                     ),
                     if (attemptCount > 0) ...[
@@ -366,7 +366,7 @@ class _ExerciseCardState extends State<_ExerciseCard> {
                               : Icons.history_rounded,
                           size: 18),
                         label: Text('ประวัติ',
-                            style: GoogleFonts.sarabun(
+                            style: GoogleFonts.notoSansThai(
                                 fontSize: 13, fontWeight: FontWeight.w700)),
                       ),
                     ],
@@ -397,7 +397,7 @@ class _ExerciseCardState extends State<_ExerciseCard> {
       return Padding(
         padding: const EdgeInsets.all(16),
         child: Text('ยังไม่มีประวัติ',
-            style: GoogleFonts.sarabun(fontSize: 13, color: AppTheme.textLight)),
+            style: GoogleFonts.notoSansThai(fontSize: 13, color: AppTheme.textLight)),
       );
     }
     return Padding(
@@ -406,7 +406,7 @@ class _ExerciseCardState extends State<_ExerciseCard> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('ประวัติการทำแบบทดสอบ',
-              style: GoogleFonts.sarabun(
+              style: GoogleFonts.notoSansThai(
                   fontSize: 13, fontWeight: FontWeight.w800, color: AppTheme.textDark)),
           const SizedBox(height: 8),
           ..._attempts.map((a) => _attemptRow(a as Map<String, dynamic>)),
@@ -441,7 +441,7 @@ class _ExerciseCardState extends State<_ExerciseCard> {
                 color: color.withOpacity(0.15), shape: BoxShape.circle),
             child: Center(
               child: Text('$attemptNo',
-                  style: GoogleFonts.sarabun(
+                  style: GoogleFonts.notoSansThai(
                       fontSize: 13, fontWeight: FontWeight.w900, color: color)),
             ),
           ),
@@ -453,7 +453,7 @@ class _ExerciseCardState extends State<_ExerciseCard> {
                 Row(
                   children: [
                     Text('$score/$total คะแนน',
-                        style: GoogleFonts.sarabun(
+                        style: GoogleFonts.notoSansThai(
                             fontSize: 13, fontWeight: FontWeight.w800,
                             color: AppTheme.textDark)),
                     const SizedBox(width: 8),
@@ -463,7 +463,7 @@ class _ExerciseCardState extends State<_ExerciseCard> {
                           color: color.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(20)),
                       child: Text(passed ? 'ผ่าน' : 'ไม่ผ่าน',
-                          style: GoogleFonts.sarabun(
+                          style: GoogleFonts.notoSansThai(
                               fontSize: 11, color: color, fontWeight: FontWeight.w800)),
                     ),
                   ],
@@ -471,7 +471,7 @@ class _ExerciseCardState extends State<_ExerciseCard> {
                 const SizedBox(height: 2),
                 Text(
                   '${pct.toStringAsFixed(1)}%  ·  ${_fmtTime(timeTaken)}  ·  ${_fmtDate(createdAt)}',
-                  style: GoogleFonts.sarabun(
+                  style: GoogleFonts.notoSansThai(
                       fontSize: 11, color: AppTheme.textLight, fontWeight: FontWeight.w600)),
               ],
             ),

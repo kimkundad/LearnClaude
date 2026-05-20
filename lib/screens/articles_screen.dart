@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+﻿import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -59,7 +59,7 @@ class _ArticlesScreenState extends State<ArticlesScreen> {
         ),
         title: Text(
           'ประชาสัมพันธ์',
-          style: GoogleFonts.sarabun(fontSize: 18, fontWeight: FontWeight.w800, color: AppTheme.textDark),
+          style: GoogleFonts.notoSansThai(fontSize: 18, fontWeight: FontWeight.w800, color: AppTheme.textDark),
         ),
         centerTitle: true,
         bottom: PreferredSize(
@@ -120,13 +120,13 @@ class _ArticlesScreenState extends State<ArticlesScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(title, maxLines: 2, overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.sarabun(fontSize: 15, fontWeight: FontWeight.w800, color: AppTheme.textDark, height: 1.4)),
+                      style: GoogleFonts.notoSansThai(fontSize: 15, fontWeight: FontWeight.w800, color: AppTheme.textDark, height: 1.4)),
                   if (date.isNotEmpty) ...[
                     const SizedBox(height: 6),
                     Row(children: [
                       const Icon(Icons.calendar_today_outlined, size: 12, color: AppTheme.textLight),
                       const SizedBox(width: 4),
-                      Text(date, style: GoogleFonts.sarabun(fontSize: 12, color: AppTheme.textLight, fontWeight: FontWeight.w600)),
+                      Text(date, style: GoogleFonts.notoSansThai(fontSize: 12, color: AppTheme.textLight, fontWeight: FontWeight.w600)),
                     ]),
                   ],
                 ],
@@ -146,9 +146,9 @@ class _ArticlesScreenState extends State<ArticlesScreen> {
         child: const Icon(Icons.newspaper_rounded, color: AppTheme.primary, size: 40),
       ),
       const SizedBox(height: 14),
-      Text('ยังไม่มีประกาศ', style: GoogleFonts.sarabun(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.textDark)),
+      Text('ยังไม่มีประกาศ', style: GoogleFonts.notoSansThai(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.textDark)),
       const SizedBox(height: 6),
-      Text('ติดตามข่าวสารได้ที่นี่', style: GoogleFonts.sarabun(fontSize: 13, color: AppTheme.textLight)),
+      Text('ติดตามข่าวสารได้ที่นี่', style: GoogleFonts.notoSansThai(fontSize: 13, color: AppTheme.textLight)),
     ]),
   );
 
@@ -156,12 +156,12 @@ class _ArticlesScreenState extends State<ArticlesScreen> {
     child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
       const Icon(Icons.wifi_off_rounded, size: 48, color: AppTheme.textLight),
       const SizedBox(height: 12),
-      Text('โหลดข้อมูลไม่สำเร็จ', style: GoogleFonts.sarabun(fontSize: 15, color: AppTheme.textMedium)),
+      Text('โหลดข้อมูลไม่สำเร็จ', style: GoogleFonts.notoSansThai(fontSize: 15, color: AppTheme.textMedium)),
       const SizedBox(height: 16),
       ElevatedButton(
         onPressed: () { setState(() { _loading = true; _error = null; }); _load(); },
         style: ElevatedButton.styleFrom(minimumSize: const Size(140, 44)),
-        child: Text('ลองใหม่', style: GoogleFonts.sarabun(fontWeight: FontWeight.w700)),
+        child: Text('ลองใหม่', style: GoogleFonts.notoSansThai(fontWeight: FontWeight.w700)),
       ),
     ]),
   );
@@ -254,7 +254,7 @@ class ArticleDetailScreen extends StatelessWidget {
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text('ประชาสัมพันธ์',
-            style: GoogleFonts.sarabun(fontSize: 18, fontWeight: FontWeight.w800, color: AppTheme.textDark)),
+            style: GoogleFonts.notoSansThai(fontSize: 18, fontWeight: FontWeight.w800, color: AppTheme.textDark)),
         centerTitle: true,
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
@@ -280,7 +280,7 @@ class ArticleDetailScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(title,
-                      style: GoogleFonts.sarabun(
+                      style: GoogleFonts.notoSansThai(
                           fontSize: 21, fontWeight: FontWeight.w900,
                           color: AppTheme.textDark, height: 1.35)),
                   if (date.isNotEmpty) ...[
@@ -288,7 +288,7 @@ class ArticleDetailScreen extends StatelessWidget {
                     Row(children: [
                       const Icon(Icons.calendar_today_outlined, size: 13, color: AppTheme.textLight),
                       const SizedBox(width: 4),
-                      Text(date, style: GoogleFonts.sarabun(
+                      Text(date, style: GoogleFonts.notoSansThai(
                           fontSize: 12, color: AppTheme.textLight, fontWeight: FontWeight.w600)),
                     ]),
                   ],
@@ -304,7 +304,7 @@ class ArticleDetailScreen extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: Text('ไม่มีเนื้อหา',
-                    style: GoogleFonts.sarabun(fontSize: 14, color: AppTheme.textLight)),
+                    style: GoogleFonts.notoSansThai(fontSize: 14, color: AppTheme.textLight)),
               )
             else if (segments.isEmpty)
               // fallback: แสดง raw stripped text
@@ -312,7 +312,7 @@ class ArticleDetailScreen extends StatelessWidget {
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                 child: Text(
                   _stripTags(detail),
-                  style: GoogleFonts.sarabun(fontSize: 15, color: AppTheme.textDark, height: 1.75),
+                  style: GoogleFonts.notoSansThai(fontSize: 15, color: AppTheme.textDark, height: 1.75),
                 ),
               )
             else
@@ -333,7 +333,7 @@ class ArticleDetailScreen extends StatelessWidget {
                 return Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
                   child: Text(seg['value']!,
-                      style: GoogleFonts.sarabun(
+                      style: GoogleFonts.notoSansThai(
                           fontSize: 15, color: AppTheme.textDark,
                           height: 1.75, fontWeight: FontWeight.w400)),
                 );

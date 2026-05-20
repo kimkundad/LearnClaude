@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -62,7 +62,7 @@ class _AllPackagesScreenState extends State<AllPackagesScreen> {
         ),
         title: Text(
           'แพ็กเกจสุดคุ้ม',
-          style: GoogleFonts.sarabun(
+          style: GoogleFonts.notoSansThai(
               color: Colors.white,
               fontWeight: FontWeight.w900,
               fontSize: 18),
@@ -113,13 +113,13 @@ class _AllPackagesScreenState extends State<AllPackagesScreen> {
             ),
             const SizedBox(height: 16),
             Text('ยังไม่มีแพ็กเกจ',
-                style: GoogleFonts.sarabun(
+                style: GoogleFonts.notoSansThai(
                     fontSize: 17,
                     fontWeight: FontWeight.w800,
                     color: AppTheme.textDark)),
             const SizedBox(height: 6),
             Text('กรุณาลองใหม่ภายหลัง',
-                style: GoogleFonts.sarabun(
+                style: GoogleFonts.notoSansThai(
                     fontSize: 13,
                     color: AppTheme.textLight,
                     fontWeight: FontWeight.w600)),
@@ -183,7 +183,7 @@ class _AllPackagesScreenState extends State<AllPackagesScreen> {
                           color: AppTheme.priceRed,
                           borderRadius: BorderRadius.circular(6)),
                       child: Text('แพ็กเกจ',
-                          style: GoogleFonts.sarabun(
+                          style: GoogleFonts.notoSansThai(
                               fontSize: 10,
                               fontWeight: FontWeight.w800,
                               color: Colors.white)),
@@ -199,7 +199,7 @@ class _AllPackagesScreenState extends State<AllPackagesScreen> {
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(6)),
                         child: Text('ฟรี',
-                            style: GoogleFonts.sarabun(
+                            style: GoogleFonts.notoSansThai(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w900,
                                 color: AppTheme.primary)),
@@ -216,7 +216,7 @@ class _AllPackagesScreenState extends State<AllPackagesScreen> {
                 children: [
                   Text(
                     title,
-                    style: GoogleFonts.sarabun(
+                    style: GoogleFonts.notoSansThai(
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
                         color: AppTheme.textDark,
@@ -225,19 +225,19 @@ class _AllPackagesScreenState extends State<AllPackagesScreen> {
                   const SizedBox(height: 8),
                   if (isFree)
                     Text('เรียนฟรี ไม่มีค่าใช้จ่าย',
-                        style: GoogleFonts.sarabun(
+                        style: GoogleFonts.notoSansThai(
                             fontSize: 11,
                             color: AppTheme.primary,
                             fontWeight: FontWeight.w700))
                   else ...[
                     if (hasDiscount)
                       Text('จาก ฿${_fmt(original)}',
-                          style: GoogleFonts.sarabun(
+                          style: GoogleFonts.notoSansThai(
                               fontSize: 10,
                               color: AppTheme.textLight,
                               decoration: TextDecoration.lineThrough)),
                     Text('฿${_fmt(sale)}',
-                        style: GoogleFonts.sarabun(
+                        style: GoogleFonts.notoSansThai(
                             fontSize: 14,
                             fontWeight: FontWeight.w900,
                             color: AppTheme.primary)),
@@ -252,7 +252,7 @@ class _AllPackagesScreenState extends State<AllPackagesScreen> {
                         minimumSize: const Size(0, 36),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8)),
-                        textStyle: GoogleFonts.sarabun(
+                        textStyle: GoogleFonts.notoSansThai(
                             fontSize: 12, fontWeight: FontWeight.w800),
                       ),
                       child: const Text('ดูรายละเอียด'),

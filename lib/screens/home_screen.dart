@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -213,11 +213,15 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   List<_PackageInfo> get _packageInfoList {
-    return _packageList.asMap().entries.map((entry) {
-      final i   = entry.key;
-      final p   = entry.value;
-      final original = (p['c_pack_price'] as num?)?.toInt() ?? 0;
-      final sale     = (p['c_pack_price_2'] as num?)?.toInt() ?? original;
+    final sorted = [..._packageList]..sort(
+        (a, b) => ((a['id'] as num?)?.toInt() ?? 0)
+            .compareTo((b['id'] as num?)?.toInt() ?? 0),
+      );
+    return sorted.asMap().entries.map((entry) {
+      final i    = entry.key;
+      final p    = entry.value;
+      final sale     = (p['c_pack_price']   as num?)?.toInt() ?? 0;   // ราคาที่ลดแล้ว
+      final original = (p['c_pack_price_2'] as num?)?.toInt() ?? sale; // ราคาเดิม
       final grad     = _pkgGradients[i % _pkgGradients.length];
       final img      = p['c_pack_image'] as String?;
       return _PackageInfo(
@@ -276,7 +280,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Center(
                   child: Text(
                     'ไม่พบคอร์สเรียน',
-                    style: GoogleFonts.sarabun(fontSize: 15, color: AppTheme.textLight),
+                    style: GoogleFonts.notoSansThai(fontSize: 15, color: AppTheme.textLight),
                   ),
                 ),
               ),
@@ -298,7 +302,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   crossAxisCount: isTablet ? 3 : 2,
                   crossAxisSpacing: 12,
                   mainAxisSpacing: 12,
-                  childAspectRatio: isTablet ? 0.85 : 0.68,
+                  childAspectRatio: isTablet ? 0.85 : 0.88,
                 ),
               ),
             ),
@@ -313,43 +317,14 @@ class _HomeScreenState extends State<HomeScreen> {
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 22,
-            backgroundColor: AppTheme.primaryLight,
-            backgroundImage: _avatarUrl != null ? NetworkImage(_avatarUrl!) : null,
-            child: _avatarUrl == null
-                ? Text(
-                    _userInitial,
-                    style: GoogleFonts.sarabun(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                      color: AppTheme.primary,
-                    ),
-                  )
-                : null,
-          ),
-          const SizedBox(width: 10),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'ครูพี่โฮม',
-                  style: GoogleFonts.sarabun(
-                    fontSize: 11,
-                    color: AppTheme.primary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                Text(
-                  _userName.isNotEmpty ? '$_userName,' : 'ยินดีต้อนรับ',
-                  style: GoogleFonts.sarabun(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
-                    color: AppTheme.textDark,
-                  ),
-                ),
-              ],
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Image.asset(
+                'assets/logo/logo.png',
+                height: 52,
+                fit: BoxFit.contain,
+              ),
             ),
           ),
           Material(
@@ -457,7 +432,7 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 Text(
                   'แพ็กเกจสุดคุ้ม',
-                  style: GoogleFonts.sarabun(
+                  style: GoogleFonts.notoSansThai(
                     fontSize: 18,
                     fontWeight: FontWeight.w800,
                     color: AppTheme.textDark,
@@ -467,7 +442,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   onTap: () => context.push('/packages'),
                   child: Text(
                     'ทั้งหมด ›',
-                    style: GoogleFonts.sarabun(
+                    style: GoogleFonts.notoSansThai(
                       fontSize: 14,
                       color: AppTheme.primary,
                       fontWeight: FontWeight.w600,
@@ -479,7 +454,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           const SizedBox(height: 12),
           SizedBox(
-            height: 210,
+            height: 185,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.only(right: 16),
@@ -517,7 +492,7 @@ class _HomeScreenState extends State<HomeScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             SizedBox(
-              height: 110,
+              height: 95,
               child: Stack(
                 children: [
                   if (p.imageUrl != null && p.imageUrl!.isNotEmpty)
@@ -541,7 +516,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       child: Text(
                         p.badge,
-                        style: GoogleFonts.sarabun(
+                        style: GoogleFonts.notoSansThai(
                           fontSize: 10,
                           fontWeight: FontWeight.w800,
                           color: Colors.white,
@@ -561,7 +536,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         child: Text(
                           'ฟรี',
-                          style: GoogleFonts.sarabun(
+                          style: GoogleFonts.notoSansThai(
                             fontSize: 14,
                             fontWeight: FontWeight.w900,
                             color: AppTheme.primary,
@@ -583,7 +558,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         p.title,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.sarabun(
+                        style: GoogleFonts.notoSansThai(
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
                           color: AppTheme.textDark,
@@ -595,29 +570,38 @@ class _HomeScreenState extends State<HomeScreen> {
                     if (isFree) ...[
                       Text(
                         'เรียนฟรี ไม่มีค่าใช้จ่าย',
-                        style: GoogleFonts.sarabun(
+                        style: GoogleFonts.notoSansThai(
                           fontSize: 11,
                           color: AppTheme.primary,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
                     ] else ...[
-                      if (hasDiscount)
-                        Text(
-                          'จากราคา ฿${_fmt(p.originalPrice!)}',
-                          style: GoogleFonts.sarabun(
-                            fontSize: 10,
-                            color: AppTheme.textLight,
-                            decoration: TextDecoration.lineThrough,
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.baseline,
+                        textBaseline: TextBaseline.alphabetic,
+                        children: [
+                          Text(
+                            '฿${_fmt(p.salePrice)}',
+                            style: GoogleFonts.notoSansThai(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w800,
+                              color: AppTheme.primary,
+                            ),
                           ),
-                        ),
-                      Text(
-                        'เหลือ ฿${_fmt(p.salePrice)}',
-                        style: GoogleFonts.sarabun(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w800,
-                          color: AppTheme.primary,
-                        ),
+                          if (hasDiscount) ...[
+                            const SizedBox(width: 4),
+                            Text(
+                              '฿${_fmt(p.originalPrice!)}',
+                              style: GoogleFonts.notoSansThai(
+                                fontSize: 10,
+                                color: AppTheme.textLight,
+                                decoration: TextDecoration.lineThrough,
+                                decorationColor: AppTheme.textLight,
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
                     ],
                   ],
@@ -658,7 +642,7 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           Text(
             'คอร์สเรียนทั้งหมด',
-            style: GoogleFonts.sarabun(
+            style: GoogleFonts.notoSansThai(
               fontSize: 18,
               fontWeight: FontWeight.w800,
               color: AppTheme.textDark,
@@ -697,7 +681,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         child: Text(
           label,
-          style: GoogleFonts.sarabun(
+          style: GoogleFonts.notoSansThai(
             fontSize: 13,
             fontWeight: FontWeight.w600,
             color: selected ? Colors.white : AppTheme.textMedium,
@@ -748,7 +732,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       const SizedBox(height: 4),
                       Text(
                         item.label,
-                        style: GoogleFonts.sarabun(
+                        style: GoogleFonts.notoSansThai(
                           fontSize: 11,
                           color: selected ? AppTheme.primary : AppTheme.textLight,
                           fontWeight: selected ? FontWeight.w700 : FontWeight.w400,

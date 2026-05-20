@@ -1,4 +1,4 @@
-import 'dart:io';
+﻿import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -170,7 +170,7 @@ class MyCourseScreenState extends State<MyCourseScreen>
           title: Text(
             'คอร์สนี้หมดอายุแล้ว',
             textAlign: TextAlign.center,
-            style: GoogleFonts.sarabun(
+            style: GoogleFonts.notoSansThai(
                 fontWeight: FontWeight.w900,
                 fontSize: 17,
                 color: AppTheme.textDark),
@@ -178,7 +178,7 @@ class MyCourseScreenState extends State<MyCourseScreen>
           content: Text(
             'กรุณาติดต่อเจ้าหน้าที่ LINE : @ZA-SHI',
             textAlign: TextAlign.center,
-            style: GoogleFonts.sarabun(
+            style: GoogleFonts.notoSansThai(
                 fontSize: 14, color: AppTheme.textMedium),
           ),
           actionsAlignment: MainAxisAlignment.center,
@@ -187,7 +187,7 @@ class MyCourseScreenState extends State<MyCourseScreen>
               onPressed: () => Navigator.of(context).pop(),
               child: Text(
                 'OK',
-                style: GoogleFonts.sarabun(
+                style: GoogleFonts.notoSansThai(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
                     color: AppTheme.primary),
@@ -242,7 +242,7 @@ class MyCourseScreenState extends State<MyCourseScreen>
               children: [
                 Text(
                   'My Course',
-                  style: GoogleFonts.sarabun(
+                  style: GoogleFonts.notoSansThai(
                     fontSize: 26,
                     fontWeight: FontWeight.w900,
                     color: AppTheme.textDark,
@@ -252,7 +252,7 @@ class MyCourseScreenState extends State<MyCourseScreen>
                   _tab == 0
                       ? 'คอร์สทั้งหมดที่ซื้อแล้ว พร้อมวันหมดอายุ'
                       : 'ติดตามสถานะการชำระเงินของคุณ',
-                  style: GoogleFonts.sarabun(
+                  style: GoogleFonts.notoSansThai(
                     fontSize: 13,
                     color: AppTheme.textLight,
                     fontWeight: FontWeight.w600,
@@ -287,7 +287,7 @@ class MyCourseScreenState extends State<MyCourseScreen>
                     child: Center(
                       child: Text(
                         '$pendingCount',
-                        style: GoogleFonts.sarabun(
+                        style: GoogleFonts.notoSansThai(
                           fontSize: 10,
                           color: Colors.white,
                           fontWeight: FontWeight.w900,
@@ -357,7 +357,7 @@ class MyCourseScreenState extends State<MyCourseScreen>
               const SizedBox(width: 6),
               Text(
                 label,
-                style: GoogleFonts.sarabun(
+                style: GoogleFonts.notoSansThai(
                   fontSize: 14,
                   fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
                   color: selected ? AppTheme.primary : AppTheme.textLight,
@@ -375,7 +375,7 @@ class MyCourseScreenState extends State<MyCourseScreen>
                   ),
                   child: Text(
                     '$badge',
-                    style: GoogleFonts.sarabun(
+                    style: GoogleFonts.notoSansThai(
                       fontSize: 10,
                       color: Colors.white,
                       fontWeight: FontWeight.w900,
@@ -413,11 +413,11 @@ class MyCourseScreenState extends State<MyCourseScreen>
                   ),
                   const SizedBox(height: 16),
                   Text('ยังไม่มีคอร์สที่ซื้อ',
-                      style: GoogleFonts.sarabun(
+                      style: GoogleFonts.notoSansThai(
                           fontSize: 17, fontWeight: FontWeight.w800, color: AppTheme.textDark)),
                   const SizedBox(height: 6),
                   Text('เลือกซื้อคอร์สและเริ่มเรียนได้เลย!',
-                      style: GoogleFonts.sarabun(
+                      style: GoogleFonts.notoSansThai(
                           fontSize: 13, color: AppTheme.textLight, fontWeight: FontWeight.w600)),
                 ],
               ),
@@ -482,7 +482,7 @@ class MyCourseScreenState extends State<MyCourseScreen>
         children: [
           Text(
             value,
-            style: GoogleFonts.sarabun(
+            style: GoogleFonts.notoSansThai(
               fontSize: 24,
               height: 1,
               fontWeight: FontWeight.w900,
@@ -492,7 +492,7 @@ class MyCourseScreenState extends State<MyCourseScreen>
           const SizedBox(height: 5),
           Text(
             label,
-            style: GoogleFonts.sarabun(
+            style: GoogleFonts.notoSansThai(
               fontSize: 11,
               color: Colors.white.withOpacity(0.86),
               fontWeight: FontWeight.w600,
@@ -565,7 +565,7 @@ class MyCourseScreenState extends State<MyCourseScreen>
                       ),
                       child: Text(
                         '${course.lessonsDone}/${course.lessonsTotal} lessons',
-                        style: GoogleFonts.sarabun(
+                        style: GoogleFonts.notoSansThai(
                           fontSize: 12,
                           color: Colors.white,
                           fontWeight: FontWeight.w800,
@@ -581,7 +581,7 @@ class MyCourseScreenState extends State<MyCourseScreen>
                       course.title,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.sarabun(
+                      style: GoogleFonts.notoSansThai(
                         fontSize: 18,
                         height: 1.22,
                         color: Colors.white,
@@ -604,7 +604,7 @@ class MyCourseScreenState extends State<MyCourseScreen>
                       Expanded(
                         child: Text(
                           course.teacher,
-                          style: GoogleFonts.sarabun(
+                          style: GoogleFonts.notoSansThai(
                             fontSize: 13,
                             color: AppTheme.textMedium,
                             fontWeight: FontWeight.w700,
@@ -613,7 +613,7 @@ class MyCourseScreenState extends State<MyCourseScreen>
                       ),
                       Text(
                         'หมดอายุ ${course.expiresAt}',
-                        style: GoogleFonts.sarabun(
+                        style: GoogleFonts.notoSansThai(
                           fontSize: 11,
                           color: AppTheme.textLight,
                           fontWeight: FontWeight.w600,
@@ -637,7 +637,7 @@ class MyCourseScreenState extends State<MyCourseScreen>
                     children: [
                       Text(
                         '${(course.progress * 100).round()}% สำเร็จ',
-                        style: GoogleFonts.sarabun(
+                        style: GoogleFonts.notoSansThai(
                           fontSize: 12,
                           color: AppTheme.primary,
                           fontWeight: FontWeight.w700,
@@ -646,7 +646,7 @@ class MyCourseScreenState extends State<MyCourseScreen>
                       const Spacer(),
                       Text(
                         '${course.lessonsDone}/${course.lessonsTotal} บทเรียน',
-                        style: GoogleFonts.sarabun(
+                        style: GoogleFonts.notoSansThai(
                           fontSize: 12,
                           color: AppTheme.textLight,
                           fontWeight: FontWeight.w600,
@@ -663,7 +663,7 @@ class MyCourseScreenState extends State<MyCourseScreen>
                           icon: const Icon(Icons.play_arrow_rounded, size: 20),
                           label: Text(
                             'เข้าเรียน',
-                            style: GoogleFonts.sarabun(fontWeight: FontWeight.w900),
+                            style: GoogleFonts.notoSansThai(fontWeight: FontWeight.w900),
                           ),
                         ),
                       ),
@@ -679,7 +679,7 @@ class MyCourseScreenState extends State<MyCourseScreen>
                             size: 18, color: AppTheme.primary),
                         label: Text(
                           'ไฟล์',
-                          style: GoogleFonts.sarabun(
+                          style: GoogleFonts.notoSansThai(
                               fontSize: 13,
                               fontWeight: FontWeight.w700,
                               color: AppTheme.primary),
@@ -700,7 +700,7 @@ class MyCourseScreenState extends State<MyCourseScreen>
                       icon: const Icon(Icons.assignment_turned_in_rounded, size: 18),
                       label: Text(
                         'แบบทดสอบ',
-                        style: GoogleFonts.sarabun(
+                        style: GoogleFonts.notoSansThai(
                             fontSize: 14, fontWeight: FontWeight.w800),
                       ),
                     ),
@@ -786,7 +786,7 @@ class MyCourseScreenState extends State<MyCourseScreen>
           Expanded(
             child: Text(
               'ทีมงานจะตรวจสอบสลิปและยืนยันการชำระภายใน 1-3 ชม. ในวันทำการ',
-              style: GoogleFonts.sarabun(
+              style: GoogleFonts.notoSansThai(
                 fontSize: 12,
                 color: const Color(0xFF5D4037),
                 fontWeight: FontWeight.w600,
@@ -845,7 +845,7 @@ class MyCourseScreenState extends State<MyCourseScreen>
                           const Spacer(),
                           Text(
                             '#${order.orderNumber.length > 6 ? order.orderNumber.substring(order.orderNumber.length - 6) : order.orderNumber}',
-                            style: GoogleFonts.sarabun(
+                            style: GoogleFonts.notoSansThai(
                               fontSize: 11,
                               color: Colors.white70,
                               fontWeight: FontWeight.w600,
@@ -858,7 +858,7 @@ class MyCourseScreenState extends State<MyCourseScreen>
                         order.title,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.sarabun(
+                        style: GoogleFonts.notoSansThai(
                           fontSize: 15,
                           color: Colors.white,
                           fontWeight: FontWeight.w900,
@@ -896,7 +896,7 @@ class MyCourseScreenState extends State<MyCourseScreen>
                         const SizedBox(width: 4),
                         Text(
                           order.submittedAt,
-                          style: GoogleFonts.sarabun(
+                          style: GoogleFonts.notoSansThai(
                             fontSize: 12,
                             color: AppTheme.textLight,
                             fontWeight: FontWeight.w600,
@@ -923,7 +923,7 @@ class MyCourseScreenState extends State<MyCourseScreen>
                             const SizedBox(width: 5),
                             Text(
                               'คอร์สในแพ็กเกจ (${order.courses!.length} คอร์ส)',
-                              style: GoogleFonts.sarabun(fontSize: 11, fontWeight: FontWeight.w700, color: const Color(0xFF6D28D9)),
+                              style: GoogleFonts.notoSansThai(fontSize: 11, fontWeight: FontWeight.w700, color: const Color(0xFF6D28D9)),
                             ),
                           ],
                         ),
@@ -935,7 +935,7 @@ class MyCourseScreenState extends State<MyCourseScreen>
                               const Icon(Icons.circle, size: 5, color: Color(0xFF6D28D9)),
                               const SizedBox(width: 6),
                               Expanded(
-                                child: Text(c, style: GoogleFonts.sarabun(fontSize: 12, color: const Color(0xFF4C1D95)), maxLines: 1, overflow: TextOverflow.ellipsis),
+                                child: Text(c, style: GoogleFonts.notoSansThai(fontSize: 12, color: const Color(0xFF4C1D95)), maxLines: 1, overflow: TextOverflow.ellipsis),
                               ),
                             ],
                           ),
@@ -977,7 +977,7 @@ class MyCourseScreenState extends State<MyCourseScreen>
           const SizedBox(width: 5),
           Text(
             info.label,
-            style: GoogleFonts.sarabun(
+            style: GoogleFonts.notoSansThai(
               fontSize: 11,
               color: Colors.white,
               fontWeight: FontWeight.w700,
@@ -1002,7 +1002,7 @@ class MyCourseScreenState extends State<MyCourseScreen>
           const SizedBox(width: 5),
           Text(
             label,
-            style: GoogleFonts.sarabun(
+            style: GoogleFonts.notoSansThai(
               fontSize: 12,
               color: color,
               fontWeight: FontWeight.w700,
@@ -1118,7 +1118,7 @@ class MyCourseScreenState extends State<MyCourseScreen>
           child: Text(
             step.label,
             textAlign: TextAlign.center,
-            style: GoogleFonts.sarabun(
+            style: GoogleFonts.notoSansThai(
               fontSize: 10,
               color: step.done
                   ? AppTheme.primary
@@ -1152,13 +1152,13 @@ class MyCourseScreenState extends State<MyCourseScreen>
           ),
           const SizedBox(height: 16),
           Text('ไม่มีรายการรอยืนยัน',
-              style: GoogleFonts.sarabun(
+              style: GoogleFonts.notoSansThai(
                   fontSize: 17,
                   fontWeight: FontWeight.w800,
                   color: AppTheme.textDark)),
           const SizedBox(height: 6),
           Text('การชำระเงินทั้งหมดได้รับการยืนยันแล้ว',
-              style: GoogleFonts.sarabun(
+              style: GoogleFonts.notoSansThai(
                   fontSize: 13, color: AppTheme.textLight,
                   fontWeight: FontWeight.w600)),
         ],
@@ -1351,7 +1351,7 @@ class _FilesSheetState extends State<_FilesSheet> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('บันทึกแล้วที่: $savePath',
-                style: GoogleFonts.sarabun(fontSize: 12)),
+                style: GoogleFonts.notoSansThai(fontSize: 12)),
             duration: const Duration(seconds: 5),
           ),
         );
@@ -1363,7 +1363,7 @@ class _FilesSheetState extends State<_FilesSheet> {
         SnackBar(
           backgroundColor: Colors.red.shade700,
           content: Text('ดาวน์โหลดล้มเหลว: $e',
-              style: GoogleFonts.sarabun(fontSize: 12, color: Colors.white)),
+              style: GoogleFonts.notoSansThai(fontSize: 12, color: Colors.white)),
         ),
       );
     }
@@ -1377,7 +1377,7 @@ class _FilesSheetState extends State<_FilesSheet> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('ไม่พบแอปสำหรับเปิดไฟล์ PDF',
-              style: GoogleFonts.sarabun(fontSize: 13)),
+              style: GoogleFonts.notoSansThai(fontSize: 13)),
         ),
       );
     }
@@ -1424,14 +1424,14 @@ class _FilesSheetState extends State<_FilesSheet> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text('ไฟล์ประกอบการเรียน',
-                          style: GoogleFonts.sarabun(
+                          style: GoogleFonts.notoSansThai(
                               fontSize: 15,
                               fontWeight: FontWeight.w900,
                               color: AppTheme.textDark)),
                       Text(widget.courseTitle,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.sarabun(
+                          style: GoogleFonts.notoSansThai(
                               fontSize: 12,
                               color: AppTheme.textLight,
                               fontWeight: FontWeight.w600)),
@@ -1457,7 +1457,7 @@ class _FilesSheetState extends State<_FilesSheet> {
                       size: 40, color: AppTheme.textLight),
                   const SizedBox(height: 8),
                   Text('ไม่มีไฟล์ประกอบการเรียน',
-                      style: GoogleFonts.sarabun(
+                      style: GoogleFonts.notoSansThai(
                           color: AppTheme.textLight,
                           fontWeight: FontWeight.w600)),
                 ],
@@ -1510,7 +1510,7 @@ class _FilesSheetState extends State<_FilesSheet> {
                 Text(name,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.sarabun(
+                    style: GoogleFonts.notoSansThai(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
                         color: AppTheme.textDark)),
@@ -1525,12 +1525,12 @@ class _FilesSheetState extends State<_FilesSheet> {
                   ),
                   const SizedBox(height: 2),
                   Text('${(prog * 100).round()}%',
-                      style: GoogleFonts.sarabun(
+                      style: GoogleFonts.notoSansThai(
                           fontSize: 10, color: AppTheme.textLight)),
                 ] else if (isDownloaded) ...[
                   const SizedBox(height: 3),
                   Text('ดาวน์โหลดแล้ว',
-                      style: GoogleFonts.sarabun(
+                      style: GoogleFonts.notoSansThai(
                           fontSize: 11,
                           color: AppTheme.primary,
                           fontWeight: FontWeight.w600)),
@@ -1562,7 +1562,7 @@ class _FilesSheetState extends State<_FilesSheet> {
         ),
         icon: const Icon(Icons.open_in_new_rounded, size: 14),
         label: Text('เปิด',
-            style: GoogleFonts.sarabun(
+            style: GoogleFonts.notoSansThai(
                 fontSize: 12, fontWeight: FontWeight.w700)),
       );
     }
@@ -1576,7 +1576,7 @@ class _FilesSheetState extends State<_FilesSheet> {
       icon: const Icon(Icons.download_rounded,
           size: 14, color: AppTheme.primary),
       label: Text('โหลด',
-          style: GoogleFonts.sarabun(
+          style: GoogleFonts.notoSansThai(
               fontSize: 12,
               fontWeight: FontWeight.w700,
               color: AppTheme.primary)),

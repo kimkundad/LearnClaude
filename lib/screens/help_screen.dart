@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -50,7 +50,7 @@ class HelpScreen extends StatelessWidget {
               children: [
                 Text(
                   'ต้องการความช่วยเหลือ?',
-                  style: GoogleFonts.sarabun(
+                  style: GoogleFonts.notoSansThai(
                     fontSize: 23,
                     height: 1.16,
                     fontWeight: FontWeight.w900,
@@ -60,7 +60,7 @@ class HelpScreen extends StatelessWidget {
                 const SizedBox(height: 8),
                 Text(
                   'คุยกับทีมครูพี่โฮม หรืออ่านคำตอบยอดนิยมได้ที่นี่',
-                  style: GoogleFonts.sarabun(
+                  style: GoogleFonts.notoSansThai(
                     fontSize: 13,
                     color: Colors.white.withOpacity(0.86),
                     fontWeight: FontWeight.w600,
@@ -73,7 +73,7 @@ class HelpScreen extends StatelessWidget {
                   icon: const Icon(Icons.chat_bubble_rounded, size: 18),
                   label: Text(
                     'แชทกับครูพี่โฮม',
-                    style: GoogleFonts.sarabun(fontWeight: FontWeight.w900),
+                    style: GoogleFonts.notoSansThai(fontWeight: FontWeight.w900),
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
@@ -114,7 +114,7 @@ class HelpScreen extends StatelessWidget {
           const SizedBox(width: 10),
           Text(
             'ค้นหาปัญหา เช่น ดูคอร์สไม่ได้, ขอใบเสร็จ',
-            style: GoogleFonts.sarabun(
+            style: GoogleFonts.notoSansThai(
               fontSize: 13,
               color: AppTheme.textLight,
               fontWeight: FontWeight.w600,
@@ -184,7 +184,7 @@ class HelpScreen extends StatelessWidget {
                     item.title,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.sarabun(
+                    style: GoogleFonts.notoSansThai(
                       fontSize: 14,
                       fontWeight: FontWeight.w900,
                       color: AppTheme.textDark,
@@ -194,7 +194,7 @@ class HelpScreen extends StatelessWidget {
                     item.subtitle,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.sarabun(
+                    style: GoogleFonts.notoSansThai(
                       fontSize: 11,
                       color: AppTheme.textLight,
                       fontWeight: FontWeight.w600,
@@ -228,7 +228,7 @@ class HelpScreen extends StatelessWidget {
         children: [
           Text(
             'คำถามยอดนิยม',
-            style: GoogleFonts.sarabun(
+            style: GoogleFonts.notoSansThai(
               fontSize: 18,
               fontWeight: FontWeight.w900,
               color: AppTheme.textDark,
@@ -255,7 +255,7 @@ class HelpScreen extends StatelessWidget {
                       children: [
                         Text(
                           faq[0],
-                          style: GoogleFonts.sarabun(
+                          style: GoogleFonts.notoSansThai(
                             fontSize: 14,
                             fontWeight: FontWeight.w900,
                             color: AppTheme.textDark,
@@ -264,7 +264,7 @@ class HelpScreen extends StatelessWidget {
                         const SizedBox(height: 3),
                         Text(
                           faq[1],
-                          style: GoogleFonts.sarabun(
+                          style: GoogleFonts.notoSansThai(
                             fontSize: 12,
                             color: AppTheme.textMedium,
                             height: 1.45,

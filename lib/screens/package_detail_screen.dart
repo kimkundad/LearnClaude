@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -97,7 +97,7 @@ class _PackageDetailScreenState extends State<PackageDetailScreen> {
                             const SizedBox(height: 4),
                             Text(
                               '${_courses.length} คอร์ส · มูลค่ารวม ฿${_fmt(_originalPrice)}',
-                              style: GoogleFonts.sarabun(
+                              style: GoogleFonts.notoSansThai(
                                 fontSize: 12,
                                 color: AppTheme.textLight,
                                 fontWeight: FontWeight.w600,
@@ -122,7 +122,7 @@ class _PackageDetailScreenState extends State<PackageDetailScreen> {
         padding: const EdgeInsets.all(32),
         child: Text(
           _error,
-          style: GoogleFonts.sarabun(fontSize: 15, color: AppTheme.textLight),
+          style: GoogleFonts.notoSansThai(fontSize: 15, color: AppTheme.textLight),
           textAlign: TextAlign.center,
         ),
       ),
@@ -158,7 +158,7 @@ class _PackageDetailScreenState extends State<PackageDetailScreen> {
       ),
       title: Text(
         'แพ็กเกจสุดคุ้ม',
-        style: GoogleFonts.sarabun(
+        style: GoogleFonts.notoSansThai(
           fontSize: 17,
           fontWeight: FontWeight.w800,
           color: Colors.white,
@@ -228,7 +228,7 @@ class _PackageDetailScreenState extends State<PackageDetailScreen> {
                     (_pack['c_pack_name'] as String?) ?? '',
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.sarabun(
+                    style: GoogleFonts.notoSansThai(
                       fontSize: 17,
                       fontWeight: FontWeight.w900,
                       color: Colors.white,
@@ -246,7 +246,7 @@ class _PackageDetailScreenState extends State<PackageDetailScreen> {
                   ),
                   child: Text(
                     '${_courses.length} คอร์ส',
-                    style: GoogleFonts.sarabun(
+                    style: GoogleFonts.notoSansThai(
                       fontSize: 12,
                       color: Colors.white,
                       fontWeight: FontWeight.w800,
@@ -289,7 +289,7 @@ class _PackageDetailScreenState extends State<PackageDetailScreen> {
       ),
       child: Text(
         text,
-        style: GoogleFonts.sarabun(
+        style: GoogleFonts.notoSansThai(
           fontSize: 13,
           color: Colors.white,
           fontWeight: FontWeight.w900,
@@ -302,7 +302,7 @@ class _PackageDetailScreenState extends State<PackageDetailScreen> {
     final name = (_pack['c_pack_name'] as String?) ?? '';
     return Text(
       name,
-      style: GoogleFonts.sarabun(
+      style: GoogleFonts.notoSansThai(
         fontSize: 20,
         fontWeight: FontWeight.w900,
         color: AppTheme.textDark,
@@ -331,7 +331,7 @@ class _PackageDetailScreenState extends State<PackageDetailScreen> {
                   children: [
                     Text(
                       '฿${_fmt(_salePrice)}',
-                      style: GoogleFonts.sarabun(
+                      style: GoogleFonts.notoSansThai(
                         fontSize: 28,
                         fontWeight: FontWeight.w900,
                         color: AppTheme.primary,
@@ -342,7 +342,7 @@ class _PackageDetailScreenState extends State<PackageDetailScreen> {
                       const SizedBox(width: 10),
                       Text(
                         '฿${_fmt(_originalPrice)}',
-                        style: GoogleFonts.sarabun(
+                        style: GoogleFonts.notoSansThai(
                           fontSize: 14,
                           color: AppTheme.textLight,
                           decoration: TextDecoration.lineThrough,
@@ -355,7 +355,7 @@ class _PackageDetailScreenState extends State<PackageDetailScreen> {
                   const SizedBox(height: 6),
                   Text(
                     'ประหยัด ฿${_fmt(_savedAmount)}',
-                    style: GoogleFonts.sarabun(
+                    style: GoogleFonts.notoSansThai(
                       fontSize: 12,
                       color: AppTheme.primary,
                       fontWeight: FontWeight.w700,
@@ -366,7 +366,7 @@ class _PackageDetailScreenState extends State<PackageDetailScreen> {
                   const SizedBox(height: 4),
                   Text(
                     'เฉลี่ยเพียง ฿${_fmt((_salePrice / _courses.length).round())} ต่อคอร์ส',
-                    style: GoogleFonts.sarabun(
+                    style: GoogleFonts.notoSansThai(
                       fontSize: 12,
                       color: AppTheme.textMedium,
                       fontWeight: FontWeight.w600,
@@ -400,7 +400,7 @@ class _PackageDetailScreenState extends State<PackageDetailScreen> {
           ),
           child: Text(
             detail,
-            style: GoogleFonts.sarabun(
+            style: GoogleFonts.notoSansThai(
               fontSize: 14,
               color: AppTheme.textMedium,
               height: 1.6,
@@ -463,7 +463,7 @@ class _PackageDetailScreenState extends State<PackageDetailScreen> {
                     ),
                     child: Text(
                       '${index + 1}',
-                      style: GoogleFonts.sarabun(
+                      style: GoogleFonts.notoSansThai(
                         fontSize: 11,
                         fontWeight: FontWeight.w900,
                         color: AppTheme.textDark,
@@ -485,7 +485,7 @@ class _PackageDetailScreenState extends State<PackageDetailScreen> {
                     title,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.sarabun(
+                    style: GoogleFonts.notoSansThai(
                       fontSize: 13,
                       fontWeight: FontWeight.w800,
                       color: AppTheme.textDark,
@@ -495,7 +495,7 @@ class _PackageDetailScreenState extends State<PackageDetailScreen> {
                   const SizedBox(height: 6),
                   Text(
                     '฿${_fmt(price)} บาท',
-                    style: GoogleFonts.sarabun(
+                    style: GoogleFonts.notoSansThai(
                       fontSize: 12,
                       color: AppTheme.priceRed,
                       fontWeight: FontWeight.w900,
@@ -536,7 +536,7 @@ class _PackageDetailScreenState extends State<PackageDetailScreen> {
         const SizedBox(width: 8),
         Text(
           title,
-          style: GoogleFonts.sarabun(
+          style: GoogleFonts.notoSansThai(
             fontSize: 16,
             fontWeight: FontWeight.w900,
             color: AppTheme.textDark,
@@ -573,7 +573,7 @@ class _PackageDetailScreenState extends State<PackageDetailScreen> {
                   if (_savedAmount > 0)
                     Text(
                       '฿${_fmt(_originalPrice)}',
-                      style: GoogleFonts.sarabun(
+                      style: GoogleFonts.notoSansThai(
                         fontSize: 11,
                         color: AppTheme.textLight,
                         decoration: TextDecoration.lineThrough,
@@ -581,7 +581,7 @@ class _PackageDetailScreenState extends State<PackageDetailScreen> {
                     ),
                   Text(
                     '฿${_fmt(_salePrice)}',
-                    style: GoogleFonts.sarabun(
+                    style: GoogleFonts.notoSansThai(
                       fontSize: 20,
                       height: 1,
                       color: AppTheme.textDark,
@@ -611,7 +611,7 @@ class _PackageDetailScreenState extends State<PackageDetailScreen> {
                 ),
                 child: Text(
                   'ซื้อแพ็กเกจนี้',
-                  style: GoogleFonts.sarabun(
+                  style: GoogleFonts.notoSansThai(
                     fontSize: 16,
                     fontWeight: FontWeight.w900,
                   ),

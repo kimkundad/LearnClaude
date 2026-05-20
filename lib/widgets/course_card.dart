@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_theme.dart';
@@ -57,7 +57,7 @@ class CourseCard extends StatelessWidget {
           children: [
             _buildThumbnail(),
             Padding(
-              padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
+              padding: const EdgeInsets.fromLTRB(10, 6, 10, 6),
               child: _buildInfo(),
             ),
           ],
@@ -86,7 +86,7 @@ class CourseCard extends StatelessWidget {
               padding: const EdgeInsets.all(12),
               child: Text(
                 course.flashLabel,
-                style: GoogleFonts.sarabun(
+                style: GoogleFonts.notoSansThai(
                   fontSize: 18,
                   fontWeight: FontWeight.w900,
                   color: Colors.white,
@@ -110,32 +110,10 @@ class CourseCard extends StatelessWidget {
               child: Text(
                 course.price.toString().replaceAllMapped(
                     RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]},'),
-                style: GoogleFonts.sarabun(
+                style: GoogleFonts.notoSansThai(
                   fontSize: 12,
                   fontWeight: FontWeight.w800,
                   color: Colors.white,
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            bottom: 8,
-            right: 8,
-            child: Container(
-              width: 28,
-              height: 28,
-              decoration: BoxDecoration(
-                color: AppTheme.primary,
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Center(
-                child: Text(
-                  'ホ',
-                  style: GoogleFonts.sarabun(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w900,
-                    color: Colors.white,
-                  ),
                 ),
               ),
             ),
@@ -165,34 +143,14 @@ class CourseCard extends StatelessWidget {
           course.courseName,
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
-          style: GoogleFonts.sarabun(
+          style: GoogleFonts.notoSansThai(
             fontSize: 13,
             fontWeight: FontWeight.w700,
             color: AppTheme.textDark,
             height: 1.3,
           ),
         ),
-        const SizedBox(height: 4),
-        Row(
-          children: [
-            const Icon(Icons.star, color: AppTheme.warning, size: 14),
-            const SizedBox(width: 2),
-            Text(
-              '${course.rating}',
-              style: GoogleFonts.sarabun(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: AppTheme.textMedium,
-              ),
-            ),
-            const SizedBox(width: 4),
-            Text(
-              '${_formatNumber(course.students)} students',
-              style: GoogleFonts.sarabun(fontSize: 12, color: AppTheme.textLight),
-            ),
-          ],
-        ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 2),
         Row(
           children: [
             Container(
@@ -212,7 +170,7 @@ class CourseCard extends StatelessWidget {
             const SizedBox(width: 4),
             Text(
               'ครูพี่โฮม',
-              style: GoogleFonts.sarabun(fontSize: 11, color: AppTheme.textMedium),
+              style: GoogleFonts.notoSansThai(fontSize: 11, color: AppTheme.textMedium),
             ),
             if (course.tags.isNotEmpty) ...[
               const SizedBox(width: 4),
@@ -226,7 +184,7 @@ class CourseCard extends StatelessWidget {
                   child: Text(
                     course.tags.first,
                     overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.sarabun(
+                    style: GoogleFonts.notoSansThai(
                       fontSize: 10,
                       color: AppTheme.primary,
                       fontWeight: FontWeight.w600,
@@ -292,7 +250,7 @@ class PackageCard extends StatelessWidget {
                 ),
                 child: Text(
                   'ครูพี่โฮม',
-                  style: GoogleFonts.sarabun(
+                  style: GoogleFonts.notoSansThai(
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
                     color: Colors.white,
@@ -306,7 +264,7 @@ class PackageCard extends StatelessWidget {
                 children: [
                   Text(
                     price,
-                    style: GoogleFonts.sarabun(
+                    style: GoogleFonts.notoSansThai(
                       fontSize: 28,
                       fontWeight: FontWeight.w900,
                       color: Colors.white,
@@ -314,7 +272,7 @@ class PackageCard extends StatelessWidget {
                   ),
                   Text(
                     label,
-                    style: GoogleFonts.sarabun(
+                    style: GoogleFonts.notoSansThai(
                       fontSize: 12,
                       color: Colors.white.withOpacity(0.9),
                     ),

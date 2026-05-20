@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -42,7 +42,7 @@ class AboutUsScreen extends StatelessWidget {
       ),
       title: Text(
         'เกี่ยวกับเรา',
-        style: GoogleFonts.sarabun(fontSize: 17, fontWeight: FontWeight.w700, color: Colors.white),
+        style: GoogleFonts.notoSansThai(fontSize: 17, fontWeight: FontWeight.w700, color: Colors.white),
       ),
       centerTitle: true,
     );
@@ -74,25 +74,25 @@ class AboutUsScreen extends StatelessWidget {
             child: Center(
               child: Text(
                 'ホ',
-                style: GoogleFonts.sarabun(fontSize: 36, fontWeight: FontWeight.w900, color: Colors.white),
+                style: GoogleFonts.notoSansThai(fontSize: 36, fontWeight: FontWeight.w900, color: Colors.white),
               ),
             ),
           ),
           const SizedBox(height: 16),
           Text(
             'ZA-SHI · Learnsbuy',
-            style: GoogleFonts.sarabun(fontSize: 13, color: Colors.white.withOpacity(0.8), letterSpacing: 1.5),
+            style: GoogleFonts.notoSansThai(fontSize: 13, color: Colors.white.withOpacity(0.8), letterSpacing: 1.5),
           ),
           const SizedBox(height: 6),
           Text(
             'เสาหลักแห่งศิลป์ญี่ปุ่น',
-            style: GoogleFonts.sarabun(fontSize: 24, fontWeight: FontWeight.w900, color: Colors.white, height: 1.2),
+            style: GoogleFonts.notoSansThai(fontSize: 24, fontWeight: FontWeight.w900, color: Colors.white, height: 1.2),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 12),
           Text(
             'สถาบันสอนภาษาญี่ปุ่นออนไลน์ ที่เชื่อว่าทุกคนเรียนได้\nด้วยระบบที่ออกแบบมาเพื่อผลสอบจริง',
-            style: GoogleFonts.sarabun(fontSize: 14, color: Colors.white.withOpacity(0.9), height: 1.6),
+            style: GoogleFonts.notoSansThai(fontSize: 14, color: Colors.white.withOpacity(0.9), height: 1.6),
             textAlign: TextAlign.center,
           ),
         ],
@@ -139,7 +139,7 @@ class AboutUsScreen extends StatelessWidget {
                     boxShadow: [BoxShadow(color: AppTheme.primary.withOpacity(0.3), blurRadius: 12, offset: const Offset(0, 4))],
                   ),
                   child: Center(
-                    child: Text('ホ', style: GoogleFonts.sarabun(fontSize: 32, fontWeight: FontWeight.w900, color: Colors.white)),
+                    child: Text('ホ', style: GoogleFonts.notoSansThai(fontSize: 32, fontWeight: FontWeight.w900, color: Colors.white)),
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -154,17 +154,17 @@ class AboutUsScreen extends StatelessWidget {
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text('ผู้ก่อตั้ง & ผู้สอนหลัก',
-                          style: GoogleFonts.sarabun(fontSize: 11, color: AppTheme.primary, fontWeight: FontWeight.w700)),
+                          style: GoogleFonts.notoSansThai(fontSize: 11, color: AppTheme.primary, fontWeight: FontWeight.w700)),
                       ),
                       const SizedBox(height: 6),
                       Text('ครูพี่โฮม',
-                        style: GoogleFonts.sarabun(fontSize: 20, fontWeight: FontWeight.w900, color: AppTheme.textDark)),
+                        style: GoogleFonts.notoSansThai(fontSize: 20, fontWeight: FontWeight.w900, color: AppTheme.textDark)),
                       Text('อ.ประมาตร ชัยกิตติวานิช',
-                        style: GoogleFonts.sarabun(fontSize: 12, color: AppTheme.textLight)),
+                        style: GoogleFonts.notoSansThai(fontSize: 12, color: AppTheme.textLight)),
                       const SizedBox(height: 8),
                       Text(
                         'อักษรศาสตร์บัณฑิต จุฬาฯ เกียรตินิยมอันดับ 1 เหรียญทอง เอกภาษาญี่ปุ่น',
-                        style: GoogleFonts.sarabun(fontSize: 12, color: AppTheme.textMedium, height: 1.5),
+                        style: GoogleFonts.notoSansThai(fontSize: 12, color: AppTheme.textMedium, height: 1.5),
                       ),
                     ],
                   ),
@@ -200,9 +200,9 @@ class AboutUsScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text('คะแนน PAT ภาษาญี่ปุ่น 300/300',
-                        style: GoogleFonts.sarabun(fontSize: 14, fontWeight: FontWeight.w800, color: const Color(0xFF7B5900))),
+                        style: GoogleFonts.notoSansThai(fontSize: 14, fontWeight: FontWeight.w800, color: const Color(0xFF7B5900))),
                       Text('คนเดียวในประเทศไทยที่ทำได้',
-                        style: GoogleFonts.sarabun(fontSize: 12, color: const Color(0xFF9D6C00))),
+                        style: GoogleFonts.notoSansThai(fontSize: 12, color: const Color(0xFF9D6C00))),
                     ],
                   ),
                 ),
@@ -239,8 +239,8 @@ class AboutUsScreen extends StatelessWidget {
               children: [
                 Icon(s.icon, size: 20, color: AppTheme.primary),
                 const SizedBox(height: 6),
-                Text(s.value, style: GoogleFonts.sarabun(fontSize: 15, fontWeight: FontWeight.w900, color: AppTheme.textDark)),
-                Text(s.label, style: GoogleFonts.sarabun(fontSize: 10, color: AppTheme.textLight)),
+                Text(s.value, style: GoogleFonts.notoSansThai(fontSize: 15, fontWeight: FontWeight.w900, color: AppTheme.textDark)),
+                Text(s.label, style: GoogleFonts.notoSansThai(fontSize: 10, color: AppTheme.textLight)),
               ],
             ),
           ),
@@ -267,7 +267,7 @@ class AboutUsScreen extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             'Learnsbuy / ZA-SHI คือสถาบันสอนภาษาออนไลน์ที่เชี่ยวชาญด้านภาษาญี่ปุ่น เกาหลี เยอรมัน และจีน ครอบคลุมทั้งการเตรียมสอบ A-Level PAT และ JLPT ทุกระดับ ด้วยระบบการสอนที่ออกแบบให้เรียนซ้ำได้ วัดผลได้จริง พร้อม PDF และช่องทางถาม-ตอบกับครูโดยตรง',
-            style: GoogleFonts.sarabun(fontSize: 14, color: AppTheme.textMedium, height: 1.7),
+            style: GoogleFonts.notoSansThai(fontSize: 14, color: AppTheme.textMedium, height: 1.7),
           ),
         ],
       ),
@@ -351,10 +351,10 @@ class AboutUsScreen extends StatelessWidget {
             child: Column(
               children: [
                 Text('ติดต่อเรา',
-                  style: GoogleFonts.sarabun(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white)),
+                  style: GoogleFonts.notoSansThai(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white)),
                 const SizedBox(height: 4),
                 Text('พร้อมตอบทุกคำถามเกี่ยวกับการเรียน',
-                  style: GoogleFonts.sarabun(fontSize: 13, color: Colors.white.withOpacity(0.85))),
+                  style: GoogleFonts.notoSansThai(fontSize: 13, color: Colors.white.withOpacity(0.85))),
               ],
             ),
           ),
@@ -401,7 +401,7 @@ class AboutUsScreen extends StatelessWidget {
               Clipboard.setData(ClipboardData(text: copyText));
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('คัดลอก "$copyText" แล้ว', style: GoogleFonts.sarabun()),
+                  content: Text('คัดลอก "$copyText" แล้ว', style: GoogleFonts.notoSansThai()),
                   behavior: SnackBarBehavior.floating,
                   backgroundColor: AppTheme.primary,
                   duration: const Duration(seconds: 2),
@@ -416,7 +416,7 @@ class AboutUsScreen extends StatelessWidget {
             Icon(icon, size: 18, color: Colors.white),
             const SizedBox(width: 12),
             Expanded(
-              child: Text(label, style: GoogleFonts.sarabun(fontSize: 13, color: Colors.white, fontWeight: FontWeight.w600)),
+              child: Text(label, style: GoogleFonts.notoSansThai(fontSize: 13, color: Colors.white, fontWeight: FontWeight.w600)),
             ),
             if (copyText != null)
               Icon(Icons.copy_rounded, size: 14, color: Colors.white.withOpacity(0.6)),
@@ -443,7 +443,7 @@ class AboutUsScreen extends StatelessWidget {
           children: [
             Icon(icon, size: 18, color: Colors.white),
             const SizedBox(height: 4),
-            Text(label, style: GoogleFonts.sarabun(fontSize: 10, color: Colors.white.withOpacity(0.9))),
+            Text(label, style: GoogleFonts.notoSansThai(fontSize: 10, color: Colors.white.withOpacity(0.9))),
           ],
         ),
       ),
@@ -461,7 +461,7 @@ class AboutUsScreen extends StatelessWidget {
           child: Icon(icon, size: 16, color: AppTheme.primary),
         ),
         const SizedBox(width: 10),
-        Text(title, style: GoogleFonts.sarabun(fontSize: 16, fontWeight: FontWeight.w800, color: AppTheme.textDark)),
+        Text(title, style: GoogleFonts.notoSansThai(fontSize: 16, fontWeight: FontWeight.w800, color: AppTheme.textDark)),
       ],
     );
   }
@@ -482,8 +482,8 @@ class AboutUsScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(item.title, style: GoogleFonts.sarabun(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.textDark)),
-                Text(item.subtitle, style: GoogleFonts.sarabun(fontSize: 12, color: AppTheme.textLight, height: 1.4)),
+                Text(item.title, style: GoogleFonts.notoSansThai(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.textDark)),
+                Text(item.subtitle, style: GoogleFonts.notoSansThai(fontSize: 12, color: AppTheme.textLight, height: 1.4)),
               ],
             ),
           ),

@@ -1,4 +1,4 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -287,8 +287,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
               tabIndex: _tabIndex,
               onChanged: (i) {
                 setState(() => _tabIndex = i);
-                if (i == 2) _loadReviews();
-                if (i == 3) _loadExercises();
+                if (i == 2) _loadExercises();
               },
             ),
           ),
@@ -313,7 +312,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
       ),
       title: Text(
         'รายละเอียดคอร์ส',
-        style: GoogleFonts.sarabun(fontSize: 17, fontWeight: FontWeight.w700, color: Colors.white),
+        style: GoogleFonts.notoSansThai(fontSize: 17, fontWeight: FontWeight.w700, color: Colors.white),
       ),
       centerTitle: true,
     );
@@ -385,7 +384,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                     const SizedBox(width: 4),
                     Text(
                       'ทดลองชมฟรี',
-                      style: GoogleFonts.sarabun(
+                      style: GoogleFonts.notoSansThai(
                         fontSize: 12, fontWeight: FontWeight.w800, color: Colors.white,
                       ),
                     ),
@@ -464,7 +463,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                         name,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.sarabun(fontSize: 10, color: Colors.white),
+                        style: GoogleFonts.notoSansThai(fontSize: 10, color: Colors.white),
                       ),
                     ),
                   ),
@@ -511,7 +510,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
         children: [
           Text(
             _title,
-            style: GoogleFonts.sarabun(
+            style: GoogleFonts.notoSansThai(
               fontSize: 18, fontWeight: FontWeight.w800,
               color: AppTheme.textDark, height: 1.3,
             ),
@@ -530,7 +529,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
           if (_students > 0) ...[
             const SizedBox(height: 10),
             Text('$_students students',
-                style: GoogleFonts.sarabun(fontSize: 13, color: AppTheme.textLight)),
+                style: GoogleFonts.notoSansThai(fontSize: 13, color: AppTheme.textLight)),
           ],
           const SizedBox(height: 4),
         ],
@@ -549,7 +548,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
           Icon(icon, size: 13, color: color),
           const SizedBox(width: 4),
           Text(label,
-              style: GoogleFonts.sarabun(
+              style: GoogleFonts.notoSansThai(
                   fontSize: 12, color: color, fontWeight: FontWeight.w600)),
         ],
       ),
@@ -561,8 +560,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
   Widget _buildTabContent() {
     switch (_tabIndex) {
       case 1:  return _buildLessonsContent();
-      case 2:  return _buildReviewsContent();
-      case 3:  return _buildQuizContent();
+      case 2:  return _buildQuizContent();
       default: return _buildOverviewContent();
     }
   }
@@ -594,7 +592,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
             text,
             maxLines: _showFullDesc ? null : 4,
             overflow: _showFullDesc ? null : TextOverflow.ellipsis,
-            style: GoogleFonts.sarabun(
+            style: GoogleFonts.notoSansThai(
                 fontSize: 13, color: AppTheme.textMedium, height: 1.7),
           ),
           const SizedBox(height: 8),
@@ -602,7 +600,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
             onTap: () => setState(() => _showFullDesc = !_showFullDesc),
             child: Text(
               _showFullDesc ? 'Show less' : 'Show more',
-              style: GoogleFonts.sarabun(
+              style: GoogleFonts.notoSansThai(
                   fontSize: 13, color: AppTheme.primary, fontWeight: FontWeight.w700),
             ),
           ),
@@ -639,7 +637,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                 ),
                 child: Center(
                   child: Text('ホ',
-                      style: GoogleFonts.sarabun(
+                      style: GoogleFonts.notoSansThai(
                           fontSize: 24, fontWeight: FontWeight.w900, color: Colors.white)),
                 ),
               ),
@@ -649,10 +647,10 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('ครูพี่โฮม',
-                        style: GoogleFonts.sarabun(
+                        style: GoogleFonts.notoSansThai(
                             fontSize: 16, fontWeight: FontWeight.w800, color: AppTheme.textDark)),
                     Text('ผู้เชี่ยวชาญภาษาญี่ปุ่น JLPT N1',
-                        style: GoogleFonts.sarabun(fontSize: 12, color: AppTheme.textLight)),
+                        style: GoogleFonts.notoSansThai(fontSize: 12, color: AppTheme.textLight)),
                     const SizedBox(height: 8),
                     Row(
                       children: [
@@ -677,10 +675,10 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     return Column(
       children: [
         Text(value,
-            style: GoogleFonts.sarabun(
+            style: GoogleFonts.notoSansThai(
                 fontSize: 14, fontWeight: FontWeight.w800, color: AppTheme.primary)),
         Text(label,
-            style: GoogleFonts.sarabun(fontSize: 10, color: AppTheme.textLight)),
+            style: GoogleFonts.notoSansThai(fontSize: 10, color: AppTheme.textLight)),
       ],
     );
   }
@@ -721,7 +719,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                       const SizedBox(width: 6),
                       Expanded(
                         child: Text(f.label,
-                            style: GoogleFonts.sarabun(
+                            style: GoogleFonts.notoSansThai(
                                 fontSize: 12,
                                 color: AppTheme.primary,
                                 fontWeight: FontWeight.w600)),
@@ -749,7 +747,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
           _sectionTitle('Lessons'),
           const SizedBox(height: 4),
           Text('${_videos.length} บทเรียน',
-              style: GoogleFonts.sarabun(fontSize: 12, color: AppTheme.textLight)),
+              style: GoogleFonts.notoSansThai(fontSize: 12, color: AppTheme.textLight)),
           const SizedBox(height: 12),
           ...preview.map((v) => _lessonRow(v)),
           GestureDetector(
@@ -760,7 +758,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
               alignment: Alignment.center,
               child: Text(
                 'ดูบทเรียนทั้งหมด ${_videos.length} บท →',
-                style: GoogleFonts.sarabun(
+                style: GoogleFonts.notoSansThai(
                     fontSize: 13, color: AppTheme.primary, fontWeight: FontWeight.w700),
               ),
             ),
@@ -786,7 +784,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                 _sectionTitle('Lessons'),
                 const SizedBox(height: 4),
                 Text('${_videos.length} บทเรียน',
-                    style: GoogleFonts.sarabun(
+                    style: GoogleFonts.notoSansThai(
                         fontSize: 12, color: AppTheme.textLight)),
               ],
             ),
@@ -801,7 +799,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
               padding: const EdgeInsets.symmetric(vertical: 32),
               child: Center(
                 child: Text('ยังไม่มีบทเรียน',
-                    style: GoogleFonts.sarabun(
+                    style: GoogleFonts.notoSansThai(
                         fontSize: 14, color: AppTheme.textLight)),
               ),
             )
@@ -844,7 +842,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                         child: Center(
                           child: Text(
                             '${(index ?? 0) + 1}',
-                            style: GoogleFonts.sarabun(
+                            style: GoogleFonts.notoSansThai(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w900,
                                 color: Colors.white),
@@ -857,7 +855,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                       child: Center(
                         child: Text(
                           '${(index ?? 0) + 1}',
-                          style: GoogleFonts.sarabun(
+                          style: GoogleFonts.notoSansThai(
                               fontSize: 16,
                               fontWeight: FontWeight.w900,
                               color: Colors.white),
@@ -874,7 +872,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                 Text(name,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.sarabun(
+                    style: GoogleFonts.notoSansThai(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                         color: AppTheme.textDark,
@@ -882,7 +880,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                 if (duration.isNotEmpty) ...[
                   const SizedBox(height: 3),
                   Text(duration,
-                      style: GoogleFonts.sarabun(
+                      style: GoogleFonts.notoSansThai(
                           fontSize: 11, color: AppTheme.textLight)),
                 ],
               ],
@@ -897,7 +895,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text('ฟรี',
-                  style: GoogleFonts.sarabun(
+                  style: GoogleFonts.notoSansThai(
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
                       color: const Color(0xFF2ECC71))),
@@ -944,7 +942,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
               padding: const EdgeInsets.symmetric(vertical: 24),
               child: Center(
                 child: Text('ยังไม่มีรีวิว เป็นคนแรกที่รีวิวคอร์สนี้!',
-                    style: GoogleFonts.sarabun(fontSize: 14, color: AppTheme.textLight)),
+                    style: GoogleFonts.notoSansThai(fontSize: 14, color: AppTheme.textLight)),
               ),
             )
           else
@@ -969,7 +967,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
           Column(
             children: [
               Text(avg.toStringAsFixed(1),
-                  style: GoogleFonts.sarabun(
+                  style: GoogleFonts.notoSansThai(
                       fontSize: 48, fontWeight: FontWeight.w900,
                       color: AppTheme.textDark, height: 1)),
               const SizedBox(height: 6),
@@ -981,7 +979,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
               ),
               const SizedBox(height: 4),
               Text('$total รีวิว',
-                  style: GoogleFonts.sarabun(fontSize: 11, color: AppTheme.textLight)),
+                  style: GoogleFonts.notoSansThai(fontSize: 11, color: AppTheme.textLight)),
             ],
           ),
           const SizedBox(width: 20),
@@ -1006,7 +1004,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
       child: Row(
         children: [
           Text('$star★',
-              style: GoogleFonts.sarabun(fontSize: 11, color: AppTheme.textLight)),
+              style: GoogleFonts.notoSansThai(fontSize: 11, color: AppTheme.textLight)),
           const SizedBox(width: 6),
           Expanded(
             child: ClipRRect(
@@ -1024,7 +1022,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
             width: 24,
             child: Text('$count',
                 textAlign: TextAlign.right,
-                style: GoogleFonts.sarabun(fontSize: 11, color: AppTheme.textLight)),
+                style: GoogleFonts.notoSansThai(fontSize: 11, color: AppTheme.textLight)),
           ),
         ],
       ),
@@ -1043,7 +1041,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(_hasMyReview ? 'แก้ไขรีวิวของคุณ' : 'เขียนรีวิว',
-              style: GoogleFonts.sarabun(
+              style: GoogleFonts.notoSansThai(
                   fontSize: 15, fontWeight: FontWeight.w800, color: AppTheme.textDark)),
           const SizedBox(height: 12),
           Row(
@@ -1065,11 +1063,11 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
             maxLength: 300,
             decoration: InputDecoration(
               hintText: 'เขียนรีวิวของคุณ... (อย่างน้อย 10 ตัวอักษร)',
-              hintStyle: GoogleFonts.sarabun(fontSize: 13, color: AppTheme.textLight),
+              hintStyle: GoogleFonts.notoSansThai(fontSize: 13, color: AppTheme.textLight),
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
               contentPadding: const EdgeInsets.all(12),
             ),
-            style: GoogleFonts.sarabun(fontSize: 13),
+            style: GoogleFonts.notoSansThai(fontSize: 13),
           ),
           const SizedBox(height: 8),
           SizedBox(
@@ -1088,7 +1086,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                       height: 18, width: 18,
                       child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                   : Text(_hasMyReview ? 'แก้ไขรีวิว' : 'ส่งรีวิว',
-                      style: GoogleFonts.sarabun(fontSize: 14, fontWeight: FontWeight.w700)),
+                      style: GoogleFonts.notoSansThai(fontSize: 14, fontWeight: FontWeight.w700)),
             ),
           ),
         ],
@@ -1121,7 +1119,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
             decoration: BoxDecoration(color: color, shape: BoxShape.circle),
             child: Center(
               child: Text(name.isNotEmpty ? name.substring(0, 1) : '?',
-                  style: GoogleFonts.sarabun(
+                  style: GoogleFonts.notoSansThai(
                       fontSize: 16, fontWeight: FontWeight.w800, color: Colors.white)),
             ),
           ),
@@ -1133,7 +1131,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                 Row(
                   children: [
                     Text(name,
-                        style: GoogleFonts.sarabun(
+                        style: GoogleFonts.notoSansThai(
                             fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.textDark)),
                     if (isMe) ...[
                       const SizedBox(width: 6),
@@ -1144,7 +1142,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text('คุณ',
-                            style: GoogleFonts.sarabun(
+                            style: GoogleFonts.notoSansThai(
                                 fontSize: 10, color: AppTheme.primary, fontWeight: FontWeight.w700)),
                       ),
                     ],
@@ -1155,7 +1153,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                     (_) => const Icon(Icons.star_rounded, size: 13, color: Color(0xFFFFB800)))),
                 const SizedBox(height: 6),
                 Text(text,
-                    style: GoogleFonts.sarabun(
+                    style: GoogleFonts.notoSansThai(
                         fontSize: 13, color: AppTheme.textMedium, height: 1.5)),
               ],
             ),
@@ -1205,10 +1203,10 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text('แบบฝึกหัดทั้งหมด',
-                          style: GoogleFonts.sarabun(
+                          style: GoogleFonts.notoSansThai(
                               fontSize: 15, color: Colors.white, fontWeight: FontWeight.w800)),
                       Text('${_exercises.length} ชุด · ทำได้ไม่จำกัดครั้ง',
-                          style: GoogleFonts.sarabun(
+                          style: GoogleFonts.notoSansThai(
                               fontSize: 12, color: Colors.white70, fontWeight: FontWeight.w600)),
                     ],
                   ),
@@ -1222,7 +1220,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
               child: Padding(
                 padding: const EdgeInsets.all(24),
                 child: Text('ยังไม่มีแบบฝึกหัดสำหรับคอร์สนี้',
-                    style: GoogleFonts.sarabun(
+                    style: GoogleFonts.notoSansThai(
                         fontSize: 14, color: AppTheme.textLight, fontWeight: FontWeight.w600)),
               ),
             )
@@ -1270,7 +1268,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(title,
-                      style: GoogleFonts.sarabun(
+                      style: GoogleFonts.notoSansThai(
                           fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.textDark)),
                   const SizedBox(height: 4),
                   Row(
@@ -1278,7 +1276,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                       const Icon(Icons.help_outline_rounded, size: 13, color: AppTheme.textLight),
                       const SizedBox(width: 3),
                       Text('$qCount ข้อ',
-                          style: GoogleFonts.sarabun(
+                          style: GoogleFonts.notoSansThai(
                               fontSize: 12, color: AppTheme.textLight, fontWeight: FontWeight.w600)),
                       const SizedBox(width: 8),
                       Container(
@@ -1288,7 +1286,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text('ผ่าน $passScore%',
-                            style: GoogleFonts.sarabun(
+                            style: GoogleFonts.notoSansThai(
                                 fontSize: 11, color: AppTheme.primary, fontWeight: FontWeight.w700)),
                       ),
                       if (timeLimit != null) ...[
@@ -1296,7 +1294,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                         const Icon(Icons.timer_outlined, size: 13, color: AppTheme.textLight),
                         const SizedBox(width: 2),
                         Text('$timeLimit น.',
-                            style: GoogleFonts.sarabun(
+                            style: GoogleFonts.notoSansThai(
                                 fontSize: 12, color: AppTheme.textLight, fontWeight: FontWeight.w600)),
                       ],
                     ],
@@ -1338,7 +1336,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
               children: [
                 Text(
                   _price > 0 ? '฿${_fmtPrice(_price)}' : 'ราคา',
-                  style: GoogleFonts.sarabun(
+                  style: GoogleFonts.notoSansThai(
                       fontSize: 22, fontWeight: FontWeight.w900, color: AppTheme.textDark, height: 1.1),
                 ),
               ],
@@ -1367,7 +1365,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
               ),
               child: Text(
                 _isOwned ? 'เข้าเรียน' : 'จองคอร์สเรียน',
-                style: GoogleFonts.sarabun(fontSize: 16, fontWeight: FontWeight.w800),
+                style: GoogleFonts.notoSansThai(fontSize: 16, fontWeight: FontWeight.w800),
               ),
             ),
           ),
@@ -1392,7 +1390,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
         ),
         const SizedBox(width: 8),
         Text(title,
-            style: GoogleFonts.sarabun(
+            style: GoogleFonts.notoSansThai(
                 fontSize: 16, fontWeight: FontWeight.w800, color: AppTheme.textDark)),
       ],
     );
@@ -1407,7 +1405,7 @@ class _StickyTabBar extends SliverPersistentHeaderDelegate {
 
   const _StickyTabBar({required this.tabIndex, required this.onChanged});
 
-  static const _tabs = ['Overview', 'Lessons', 'รีวิว', 'แบบฝึกหัด'];
+  static const _tabs = ['Overview', 'Lessons', 'แบบฝึกหัด'];
 
   @override double get minExtent => 48;
   @override double get maxExtent => 48;
@@ -1441,7 +1439,7 @@ class _StickyTabBar extends SliverPersistentHeaderDelegate {
                 alignment: Alignment.center,
                 child: Text(
                   _tabs[i],
-                  style: GoogleFonts.sarabun(
+                  style: GoogleFonts.notoSansThai(
                     fontSize: 12,
                     fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
                     color: selected ? AppTheme.primary : AppTheme.textLight,

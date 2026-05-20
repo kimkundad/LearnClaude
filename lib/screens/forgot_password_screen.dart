@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_theme.dart';
@@ -45,7 +45,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   void _showError(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(msg, style: GoogleFonts.sarabun()),
+      content: Text(msg, style: GoogleFonts.notoSansThai()),
       backgroundColor: AppTheme.priceRed,
       behavior: SnackBarBehavior.floating,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -81,7 +81,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               const SizedBox(height: 32),
               Text(
                 'ลืมรหัสผ่าน?',
-                style: GoogleFonts.sarabun(
+                style: GoogleFonts.notoSansThai(
                   fontSize: 28,
                   fontWeight: FontWeight.w800,
                   color: AppTheme.textDark,
@@ -90,7 +90,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               const SizedBox(height: 6),
               Text(
                 'กรอกอีเมลที่ใช้สมัคร เราจะส่งรหัสยืนยัน 6 หลักไปให้',
-                style: GoogleFonts.sarabun(fontSize: 14, color: AppTheme.textLight),
+                style: GoogleFonts.notoSansThai(fontSize: 14, color: AppTheme.textLight),
               ),
               const SizedBox(height: 32),
               Center(
@@ -111,7 +111,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               const SizedBox(height: 32),
               Text(
                 'อีเมล',
-                style: GoogleFonts.sarabun(
+                style: GoogleFonts.notoSansThai(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                   color: AppTheme.textDark,
@@ -143,12 +143,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   onTap: () => context.go('/login'),
                   child: RichText(
                     text: TextSpan(
-                      style: GoogleFonts.sarabun(fontSize: 14, color: AppTheme.textMedium),
+                      style: GoogleFonts.notoSansThai(fontSize: 14, color: AppTheme.textMedium),
                       children: [
                         const TextSpan(text: 'จำรหัสได้แล้ว? '),
                         TextSpan(
                           text: 'กลับไปเข้าสู่ระบบ',
-                          style: GoogleFonts.sarabun(
+                          style: GoogleFonts.notoSansThai(
                             fontSize: 14,
                             color: AppTheme.primary,
                             fontWeight: FontWeight.w700,

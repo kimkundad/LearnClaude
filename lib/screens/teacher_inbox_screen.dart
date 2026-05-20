@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -135,7 +135,7 @@ class _TeacherInboxScreenState extends State<TeacherInboxScreen> {
         ),
         title: Text(
           'แชท',
-          style: GoogleFonts.sarabun(
+          style: GoogleFonts.notoSansThai(
             color: Colors.white,
             fontWeight: FontWeight.w900,
             fontSize: 20,
@@ -182,7 +182,7 @@ class _TeacherInboxScreenState extends State<TeacherInboxScreen> {
         controller: _searchCtrl,
         decoration: InputDecoration(
           hintText: 'ค้นหา',
-          hintStyle: GoogleFonts.sarabun(color: Colors.grey.shade400),
+          hintStyle: GoogleFonts.notoSansThai(color: Colors.grey.shade400),
           prefixIcon: const Icon(Icons.search_rounded, color: Colors.grey),
           suffixIcon: _searchCtrl.text.isNotEmpty
               ? IconButton(
@@ -198,7 +198,7 @@ class _TeacherInboxScreenState extends State<TeacherInboxScreen> {
             borderSide: BorderSide.none,
           ),
         ),
-        style: GoogleFonts.sarabun(fontSize: 15),
+        style: GoogleFonts.notoSansThai(fontSize: 15),
       ),
     );
   }
@@ -241,7 +241,7 @@ class _TeacherInboxScreenState extends State<TeacherInboxScreen> {
                       Expanded(
                         child: Text(
                           name,
-                          style: GoogleFonts.sarabun(
+                          style: GoogleFonts.notoSansThai(
                             fontSize: 15,
                             fontWeight: unread > 0 ? FontWeight.w900 : FontWeight.w700,
                             color: AppTheme.textDark,
@@ -251,7 +251,7 @@ class _TeacherInboxScreenState extends State<TeacherInboxScreen> {
                       ),
                       Text(
                         timeLabel,
-                        style: GoogleFonts.sarabun(
+                        style: GoogleFonts.notoSansThai(
                           fontSize: 11,
                           color: unread > 0 ? AppTheme.primary : AppTheme.textLight,
                           fontWeight: unread > 0 ? FontWeight.w700 : FontWeight.w400,
@@ -267,7 +267,7 @@ class _TeacherInboxScreenState extends State<TeacherInboxScreen> {
                           preview,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.sarabun(
+                          style: GoogleFonts.notoSansThai(
                             fontSize: 13,
                             color: unread > 0 ? AppTheme.textDark : AppTheme.textLight,
                             fontWeight: unread > 0 ? FontWeight.w700 : FontWeight.w400,
@@ -285,7 +285,7 @@ class _TeacherInboxScreenState extends State<TeacherInboxScreen> {
                           ),
                           child: Text(
                             unread > 99 ? '99+' : '$unread',
-                            style: GoogleFonts.sarabun(
+                            style: GoogleFonts.notoSansThai(
                               fontSize: 11,
                               color: Colors.white,
                               fontWeight: FontWeight.w900,
@@ -316,7 +316,7 @@ class _TeacherInboxScreenState extends State<TeacherInboxScreen> {
           child: url.isEmpty
               ? Text(
                   initials,
-                  style: GoogleFonts.sarabun(
+                  style: GoogleFonts.notoSansThai(
                     fontSize: 18,
                     fontWeight: FontWeight.w900,
                     color: AppTheme.primary,
@@ -347,7 +347,7 @@ class _TeacherInboxScreenState extends State<TeacherInboxScreen> {
     return Center(
       child: Text(
         'ยังไม่มีข้อความ',
-        style: GoogleFonts.sarabun(fontSize: 15, color: AppTheme.textLight),
+        style: GoogleFonts.notoSansThai(fontSize: 15, color: AppTheme.textLight),
       ),
     );
   }

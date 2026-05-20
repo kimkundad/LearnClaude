@@ -1,4 +1,4 @@
-import 'dart:io';
+﻿import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -122,12 +122,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           children: [
             ListTile(
               leading: const Icon(Icons.photo_camera_rounded, color: AppTheme.primary),
-              title: Text('ถ่ายรูป', style: GoogleFonts.sarabun(fontSize: 15, fontWeight: FontWeight.w600)),
+              title: Text('ถ่ายรูป', style: GoogleFonts.notoSansThai(fontSize: 15, fontWeight: FontWeight.w600)),
               onTap: () => Navigator.pop(context, ImageSource.camera),
             ),
             ListTile(
               leading: const Icon(Icons.photo_library_rounded, color: AppTheme.primary),
-              title: Text('เลือกจากคลัง', style: GoogleFonts.sarabun(fontSize: 15, fontWeight: FontWeight.w600)),
+              title: Text('เลือกจากคลัง', style: GoogleFonts.notoSansThai(fontSize: 15, fontWeight: FontWeight.w600)),
               onTap: () => Navigator.pop(context, ImageSource.gallery),
             ),
             const SizedBox(height: 8),
@@ -212,7 +212,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                 child: Text(
                   title,
-                  style: GoogleFonts.sarabun(
+                  style: GoogleFonts.notoSansThai(
                     fontSize: 17,
                     fontWeight: FontWeight.w800,
                     color: AppTheme.textDark,
@@ -224,7 +224,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 child: TextField(
                   decoration: InputDecoration(
                     hintText: 'ค้นหา...',
-                    hintStyle: GoogleFonts.sarabun(color: AppTheme.textLight),
+                    hintStyle: GoogleFonts.notoSansThai(color: AppTheme.textLight),
                     prefixIcon: const Icon(Icons.search_rounded, color: AppTheme.textLight),
                     contentPadding: const EdgeInsets.symmetric(vertical: 10),
                   ),
@@ -245,7 +245,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       itemBuilder: (_, i) => ListTile(
                         title: Text(
                           filtered[i],
-                          style: GoogleFonts.sarabun(
+                          style: GoogleFonts.notoSansThai(
                             fontSize: 15,
                             color: AppTheme.textDark,
                           ),
@@ -290,7 +290,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       }
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('บันทึกข้อมูลเรียบร้อยแล้ว', style: GoogleFonts.sarabun()),
+        content: Text('บันทึกข้อมูลเรียบร้อยแล้ว', style: GoogleFonts.notoSansThai()),
         backgroundColor: AppTheme.primary,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -303,7 +303,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('$e', style: GoogleFonts.sarabun()),
+        content: Text('$e', style: GoogleFonts.notoSansThai()),
         backgroundColor: Colors.red,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -328,7 +328,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         ),
         title: Text(
           'แก้ไขโปรไฟล์',
-          style: GoogleFonts.sarabun(
+          style: GoogleFonts.notoSansThai(
             color: Colors.white,
             fontWeight: FontWeight.w800,
             fontSize: 17,
@@ -505,7 +505,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       child: Center(
         child: Text(
           _avatarInitial,
-          style: GoogleFonts.sarabun(
+          style: GoogleFonts.notoSansThai(
             fontSize: 40,
             fontWeight: FontWeight.w900,
             color: Colors.white,
@@ -551,7 +551,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 const SizedBox(width: 10),
                 Text(
                   title,
-                  style: GoogleFonts.sarabun(
+                  style: GoogleFonts.notoSansThai(
                     fontSize: 15,
                     fontWeight: FontWeight.w800,
                     color: AppTheme.textDark,
@@ -585,7 +585,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         children: [
           Text(
             label,
-            style: GoogleFonts.sarabun(
+            style: GoogleFonts.notoSansThai(
               fontSize: 12,
               fontWeight: FontWeight.w600,
               color: AppTheme.textLight,
@@ -597,7 +597,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             maxLines: maxLines,
             keyboardType: keyboardType,
             textCapitalization: textCapitalization,
-            style: GoogleFonts.sarabun(
+            style: GoogleFonts.notoSansThai(
               fontSize: 15,
               color: AppTheme.textDark,
               fontWeight: FontWeight.w600,
@@ -630,7 +630,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         children: [
           Text(
             label,
-            style: GoogleFonts.sarabun(
+            style: GoogleFonts.notoSansThai(
               fontSize: 12,
               fontWeight: FontWeight.w600,
               color: AppTheme.textLight,
@@ -657,7 +657,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   Expanded(
                     child: Text(
                       value ?? hint,
-                      style: GoogleFonts.sarabun(
+                      style: GoogleFonts.notoSansThai(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
                         color: value != null ? AppTheme.textDark : AppTheme.textLight,
@@ -686,7 +686,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         children: [
           Text(
             'รหัสไปรษณีย์',
-            style: GoogleFonts.sarabun(
+            style: GoogleFonts.notoSansThai(
               fontSize: 12,
               fontWeight: FontWeight.w600,
               color: AppTheme.textLight,
@@ -710,7 +710,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 const SizedBox(width: 12),
                 Text(
                   _zipCode ?? 'กรอกอัตโนมัติเมื่อเลือกแขวง',
-                  style: GoogleFonts.sarabun(
+                  style: GoogleFonts.notoSansThai(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
                     color: _zipCode != null ? AppTheme.textDark : AppTheme.textLight,
@@ -732,7 +732,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         children: [
           Text(
             'วันเกิด',
-            style: GoogleFonts.sarabun(
+            style: GoogleFonts.notoSansThai(
               fontSize: 12,
               fontWeight: FontWeight.w600,
               color: AppTheme.textLight,
@@ -755,7 +755,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   Expanded(
                     child: Text(
                       _birthdayLabel,
-                      style: GoogleFonts.sarabun(
+                      style: GoogleFonts.notoSansThai(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
                         color: _birthday != null ? AppTheme.textDark : AppTheme.textLight,
@@ -775,7 +775,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         const SizedBox(width: 4),
                         Text(
                           'เลือก',
-                          style: GoogleFonts.sarabun(
+                          style: GoogleFonts.notoSansThai(
                             fontSize: 11,
                             color: AppTheme.primary,
                             fontWeight: FontWeight.w700,
@@ -824,7 +824,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               )
             : Text(
                 'บันทึกข้อมูล',
-                style: GoogleFonts.sarabun(fontSize: 16, fontWeight: FontWeight.w800),
+                style: GoogleFonts.notoSansThai(fontSize: 16, fontWeight: FontWeight.w800),
               ),
       ),
     );

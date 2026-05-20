@@ -308,7 +308,10 @@
       "PowerShell(docker cp \"D:\\\\xampp\\\\htdocs\\\\e-testing\\\\app\\\\Http\\\\routes.php\" \"e-testing-app:/var/www/html/app/Http/\")",
       "PowerShell(docker exec e-testing-app php artisan route:list 2>&1)",
       "PowerShell(tail -30)",
-      "PowerShell(docker cp \"D:\\\\xampp\\\\htdocs\\\\e-testing\\\\app\\\\Http\\\\Controllers\\\\ReviewController.php\" \"e-testing-app:/var/www/html/app/Http/Controllers/\" 2>&1)"
+      "PowerShell(docker cp \"D:\\\\xampp\\\\htdocs\\\\e-testing\\\\app\\\\Http\\\\Controllers\\\\ReviewController.php\" \"e-testing-app:/var/www/html/app/Http/Controllers/\" 2>&1)",
+      "Bash(find /mnt/d -name \"*.js\" -path \"*chat*\" -not -path \"*/node_modules/*\" 2>/dev/null | head -20)",
+      "Read(//mnt/**)",
+      "PowerShell(Test-Path \"D:\\\\Nodejs\\\\chatLearn\" ; [System.IO.Directory]::GetFiles\\(\"D:\\\\Nodejs\\\\chatLearn\"\\) | ForEach-Object { Split-Path $_ -Leaf })"
     ],
     "additionalDirectories": [
       "D:\\xampp\\htdocs\\e-testing\\public\\uploads",

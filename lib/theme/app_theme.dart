@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
@@ -15,7 +15,7 @@ class AppTheme {
 
   static ThemeData get theme {
     final base = ThemeData.light();
-    final textTheme = GoogleFonts.sarabunTextTheme(base.textTheme);
+    final textTheme = GoogleFonts.notoSansThaiTextTheme(base.textTheme);
 
     return ThemeData(
       useMaterial3: true,
@@ -30,7 +30,7 @@ class AppTheme {
         backgroundColor: white,
         elevation: 0,
         iconTheme: const IconThemeData(color: textDark),
-        titleTextStyle: GoogleFonts.sarabun(
+        titleTextStyle: GoogleFonts.notoSansThai(
           color: textDark,
           fontSize: 18,
           fontWeight: FontWeight.w700,
@@ -68,7 +68,7 @@ class AppTheme {
             borderRadius: BorderRadius.circular(12),
           ),
           minimumSize: const Size(double.infinity, 52),
-          textStyle: GoogleFonts.sarabun(
+          textStyle: GoogleFonts.notoSansThai(
             fontSize: 16,
             fontWeight: FontWeight.w700,
           ),

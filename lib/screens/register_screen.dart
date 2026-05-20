@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_theme.dart';
@@ -121,10 +121,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
             children: [
               const SizedBox(height: 24),
               _AppLogoHeader(),
-              const SizedBox(height: 32),
+              const SizedBox(height: 16),
               Text(
                 'สมัครสมาชิก 🎉',
-                style: GoogleFonts.sarabun(
+                style: GoogleFonts.notoSansThai(
                   fontSize: 28,
                   fontWeight: FontWeight.w800,
                   color: AppTheme.textDark,
@@ -133,10 +133,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
               const SizedBox(height: 6),
               Text(
                 'สร้างบัญชีเพื่อเริ่มเรียน',
-                style: GoogleFonts.sarabun(fontSize: 15, color: AppTheme.textLight),
+                style: GoogleFonts.notoSansThai(fontSize: 15, color: AppTheme.textLight),
               ),
               const SizedBox(height: 28),
-              _buildLabel('ชื่อผู้ใช้'),
+              _buildLabel('ชื่อ-นามสกุล (ภาษาไทย)'),
               const SizedBox(height: 8),
               TextField(
                 controller: _usernameCtrl,
@@ -194,7 +194,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     const SizedBox(width: 8),
                     Text(
                       _strengthLabel,
-                      style: GoogleFonts.sarabun(
+                      style: GoogleFonts.notoSansThai(
                         fontSize: 12,
                         color: _strengthColor,
                         fontWeight: FontWeight.w600,
@@ -239,7 +239,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       onTap: () => setState(() => _acceptTerms = !_acceptTerms),
                       child: RichText(
                         text: TextSpan(
-                          style: GoogleFonts.sarabun(fontSize: 13, color: AppTheme.textMedium),
+                          style: GoogleFonts.notoSansThai(fontSize: 13, color: AppTheme.textMedium),
                           children: [
                             const TextSpan(text: 'ยอมรับ '),
                             WidgetSpan(
@@ -247,7 +247,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 onTap: () => context.push('/terms'),
                                 child: Text(
                                   'ข้อกำหนด',
-                                  style: GoogleFonts.sarabun(
+                                  style: GoogleFonts.notoSansThai(
                                     fontSize: 13,
                                     color: AppTheme.primary,
                                     decoration: TextDecoration.underline,
@@ -262,7 +262,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 onTap: () => context.push('/privacy'),
                                 child: Text(
                                   'นโยบายความเป็นส่วนตัว',
-                                  style: GoogleFonts.sarabun(
+                                  style: GoogleFonts.notoSansThai(
                                     fontSize: 13,
                                     color: AppTheme.primary,
                                     decoration: TextDecoration.underline,
@@ -295,12 +295,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   onTap: () => context.pop(),
                   child: RichText(
                     text: TextSpan(
-                      style: GoogleFonts.sarabun(fontSize: 14, color: AppTheme.textMedium),
+                      style: GoogleFonts.notoSansThai(fontSize: 14, color: AppTheme.textMedium),
                       children: [
                         const TextSpan(text: 'มีบัญชีอยู่แล้ว? '),
                         TextSpan(
                           text: 'เข้าสู่ระบบ',
-                          style: GoogleFonts.sarabun(
+                          style: GoogleFonts.notoSansThai(
                             fontSize: 14,
                             color: AppTheme.primary,
                             fontWeight: FontWeight.w700,
@@ -322,7 +322,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Widget _buildLabel(String text) {
     return Text(
       text,
-      style: GoogleFonts.sarabun(
+      style: GoogleFonts.notoSansThai(
         fontSize: 14,
         fontWeight: FontWeight.w600,
         color: AppTheme.textDark,
@@ -334,45 +334,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
 class _AppLogoHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(
-            color: AppTheme.primary,
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Center(
-            child: Text(
-              'ホ',
-              style: GoogleFonts.sarabun(
-                fontSize: 22,
-                fontWeight: FontWeight.w900,
-                color: Colors.white,
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(width: 10),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'ครูพี่โฮม',
-              style: GoogleFonts.sarabun(
-                fontSize: 16,
-                fontWeight: FontWeight.w800,
-                color: AppTheme.textDark,
-              ),
-            ),
-            Text(
-              'เรียนภาษาญี่ปุ่นออนไลน์',
-              style: GoogleFonts.sarabun(fontSize: 12, color: AppTheme.textLight),
-            ),
-          ],
-        ),
-      ],
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Image.asset(
+        'assets/logo/logo.png',
+        height: 62,
+        fit: BoxFit.contain,
+      ),
     );
   }
 }

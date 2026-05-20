@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -204,7 +204,7 @@ class _QuizScreenState extends State<QuizScreen>
         ),
         title: Text(
           widget.quizTitle,
-          style: GoogleFonts.sarabun(fontSize: 15, fontWeight: FontWeight.w800),
+          style: GoogleFonts.notoSansThai(fontSize: 15, fontWeight: FontWeight.w800),
           overflow: TextOverflow.ellipsis,
         ),
         actions: [
@@ -221,7 +221,7 @@ class _QuizScreenState extends State<QuizScreen>
                     size: 14, color: AppTheme.primary),
                 const SizedBox(width: 4),
                 Text('$_score/${_questions.length}',
-                    style: GoogleFonts.sarabun(
+                    style: GoogleFonts.notoSansThai(
                         fontSize: 13, color: AppTheme.primary,
                         fontWeight: FontWeight.w800)),
               ],
@@ -295,7 +295,7 @@ class _QuizScreenState extends State<QuizScreen>
                     ),
                     child: AnimatedDefaultTextStyle(
                       duration: const Duration(milliseconds: 300),
-                      style: GoogleFonts.sarabun(
+                      style: GoogleFonts.notoSansThai(
                         fontSize: 28,
                         fontWeight: FontWeight.w900,
                         color: _timerColor,
@@ -315,7 +315,7 @@ class _QuizScreenState extends State<QuizScreen>
             children: [
               Text(
                 '${(_progress * 100).round()}% Complete',
-                style: GoogleFonts.sarabun(
+                style: GoogleFonts.notoSansThai(
                   fontSize: 12,
                   color: AppTheme.primary,
                   fontWeight: FontWeight.w700,
@@ -324,7 +324,7 @@ class _QuizScreenState extends State<QuizScreen>
               const Spacer(),
               Text(
                 '${_current + 1} of ${_questions.length}',
-                style: GoogleFonts.sarabun(
+                style: GoogleFonts.notoSansThai(
                   fontSize: 12,
                   color: AppTheme.textLight,
                   fontWeight: FontWeight.w600,
@@ -391,7 +391,7 @@ class _QuizScreenState extends State<QuizScreen>
               child: Center(
                 child: Text(
                   '${i + 1}',
-                  style: GoogleFonts.sarabun(
+                  style: GoogleFonts.notoSansThai(
                     fontSize: 14,
                     fontWeight: FontWeight.w800,
                     color: isCurrent ? Colors.white : AppTheme.textMedium,
@@ -447,7 +447,7 @@ class _QuizScreenState extends State<QuizScreen>
       ),
       child: Text(
         q.text,
-        style: GoogleFonts.sarabun(
+        style: GoogleFonts.notoSansThai(
           fontSize: 16,
           fontWeight: FontWeight.w700,
           color: AppTheme.textDark,
@@ -526,7 +526,7 @@ class _QuizScreenState extends State<QuizScreen>
               child: Center(
                 child: Text(
                   '${index + 1}',
-                  style: GoogleFonts.sarabun(
+                  style: GoogleFonts.notoSansThai(
                     fontSize: 14,
                     fontWeight: FontWeight.w800,
                     color: numColor,
@@ -538,7 +538,7 @@ class _QuizScreenState extends State<QuizScreen>
             Expanded(
               child: Text(
                 q.choices[index],
-                style: GoogleFonts.sarabun(
+                style: GoogleFonts.notoSansThai(
                   fontSize: 15,
                   fontWeight: FontWeight.w700,
                   color: textColor,
@@ -571,7 +571,7 @@ class _QuizScreenState extends State<QuizScreen>
           Expanded(
             child: Text(
               'หมดเวลา! เฉลยคือตัวเลือกที่ ${correctIndex + 1}',
-              style: GoogleFonts.sarabun(
+              style: GoogleFonts.notoSansThai(
                 fontSize: 13,
                 color: const Color(0xFF5D4037),
                 fontWeight: FontWeight.w700,
@@ -598,7 +598,7 @@ class _QuizScreenState extends State<QuizScreen>
               onPressed: _current > 0 ? _prevQuestion : null,
               icon: const Icon(Icons.chevron_left_rounded, size: 18),
               label: Text('ข้อก่อนหน้า',
-                  style: GoogleFonts.sarabun(
+                  style: GoogleFonts.notoSansThai(
                       fontSize: 14, fontWeight: FontWeight.w700)),
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppTheme.textMedium,
@@ -621,7 +621,7 @@ class _QuizScreenState extends State<QuizScreen>
               ),
               label: Text(
                 _isLastQuestion ? 'ดูผลลัพธ์' : 'ข้อต่อไป',
-                style: GoogleFonts.sarabun(
+                style: GoogleFonts.notoSansThai(
                     fontSize: 14, fontWeight: FontWeight.w800),
               ),
               style: ElevatedButton.styleFrom(
@@ -681,7 +681,7 @@ class _ResultDialog extends StatelessWidget {
             const SizedBox(height: 16),
             Text(
               passed ? 'ยอดเยี่ยม!' : 'ลองอีกครั้งนะ!',
-              style: GoogleFonts.sarabun(
+              style: GoogleFonts.notoSansThai(
                 fontSize: 22,
                 fontWeight: FontWeight.w900,
                 color: AppTheme.textDark,
@@ -691,14 +691,14 @@ class _ResultDialog extends StatelessWidget {
             RichText(
               textAlign: TextAlign.center,
               text: TextSpan(
-                style: GoogleFonts.sarabun(
+                style: GoogleFonts.notoSansThai(
                     fontSize: 15, color: AppTheme.textMedium,
                     fontWeight: FontWeight.w600),
                 children: [
                   const TextSpan(text: 'คุณตอบถูก '),
                   TextSpan(
                     text: '$score/$total ข้อ',
-                    style: GoogleFonts.sarabun(
+                    style: GoogleFonts.notoSansThai(
                         fontSize: 18, color: color,
                         fontWeight: FontWeight.w900),
                   ),
@@ -714,7 +714,7 @@ class _ResultDialog extends StatelessWidget {
               ),
               child: Text(
                 '$pct%',
-                style: GoogleFonts.sarabun(
+                style: GoogleFonts.notoSansThai(
                     fontSize: 24, color: color, fontWeight: FontWeight.w900),
               ),
             ),
@@ -726,7 +726,7 @@ class _ResultDialog extends StatelessWidget {
                     onPressed: onRetry,
                     icon: const Icon(Icons.refresh_rounded, size: 16),
                     label: Text('ทำใหม่',
-                        style: GoogleFonts.sarabun(fontWeight: FontWeight.w700)),
+                        style: GoogleFonts.notoSansThai(fontWeight: FontWeight.w700)),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppTheme.primary,
                       side: const BorderSide(color: AppTheme.primary),
@@ -742,7 +742,7 @@ class _ResultDialog extends StatelessWidget {
                     onPressed: onExit,
                     icon: const Icon(Icons.check_rounded, size: 16),
                     label: Text('เสร็จสิ้น',
-                        style: GoogleFonts.sarabun(fontWeight: FontWeight.w800)),
+                        style: GoogleFonts.notoSansThai(fontWeight: FontWeight.w800)),
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(

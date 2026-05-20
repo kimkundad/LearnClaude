@@ -1,4 +1,4 @@
-import 'dart:io';
+﻿import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -191,7 +191,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('กรุณาแนบสลิปการโอนเงิน',
-              style: GoogleFonts.sarabun(fontWeight: FontWeight.w700)),
+              style: GoogleFonts.notoSansThai(fontWeight: FontWeight.w700)),
           backgroundColor: AppTheme.priceRed,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -245,7 +245,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: SelectableText(msg,
-            style: GoogleFonts.sarabun(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white)),
+            style: GoogleFonts.notoSansThai(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white)),
         backgroundColor: AppTheme.priceRed,
         behavior: SnackBarBehavior.floating,
         duration: const Duration(seconds: 15),
@@ -265,7 +265,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
           onPressed: () => context.pop(),
         ),
         title: Text('ชำระเงิน',
-            style: GoogleFonts.sarabun(fontSize: 18, fontWeight: FontWeight.w800)),
+            style: GoogleFonts.notoSansThai(fontSize: 18, fontWeight: FontWeight.w800)),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
           child: Container(color: AppTheme.border, height: 1),
@@ -327,11 +327,11 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('เลือกบัญชีรับโอน',
-                      style: GoogleFonts.sarabun(
+                      style: GoogleFonts.notoSansThai(
                           fontSize: 15, fontWeight: FontWeight.w800,
                           color: AppTheme.textDark)),
                   Text('โอนมาที่บัญชีที่เลือกด้านล่าง',
-                      style: GoogleFonts.sarabun(
+                      style: GoogleFonts.notoSansThai(
                           fontSize: 12, color: AppTheme.textLight,
                           fontWeight: FontWeight.w600)),
                 ],
@@ -372,7 +372,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                       child: Center(
                         child: Text(
                           acc.bankName.isNotEmpty ? acc.bankName.substring(0, 1) : 'B',
-                          style: GoogleFonts.sarabun(
+                          style: GoogleFonts.notoSansThai(
                               fontSize: 16, color: Colors.white,
                               fontWeight: FontWeight.w900),
                         ),
@@ -384,13 +384,13 @@ class _PaymentScreenState extends State<PaymentScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(acc.bankName,
-                              style: GoogleFonts.sarabun(
+                              style: GoogleFonts.notoSansThai(
                                   fontSize: 13,
                                   color: selected ? acc.color : AppTheme.textDark,
                                   fontWeight: FontWeight.w800)),
                           const SizedBox(height: 2),
                           Text(acc.accountNumber,
-                              style: GoogleFonts.sarabun(
+                              style: GoogleFonts.notoSansThai(
                                   fontSize: 14,
                                   color: selected ? acc.color : AppTheme.textMedium,
                                   fontWeight: FontWeight.w700,
@@ -456,7 +456,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                     color: Colors.white70, size: 16),
                 const SizedBox(width: 7),
                 Text(acc.bankName,
-                    style: GoogleFonts.sarabun(
+                    style: GoogleFonts.notoSansThai(
                         fontSize: 13, color: Colors.white70,
                         fontWeight: FontWeight.w600)),
                 const Spacer(),
@@ -467,7 +467,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text('บัญชีรับโอน',
-                      style: GoogleFonts.sarabun(
+                      style: GoogleFonts.notoSansThai(
                           fontSize: 11, color: Colors.white,
                           fontWeight: FontWeight.w700)),
                 ),
@@ -482,12 +482,12 @@ class _PaymentScreenState extends State<PaymentScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text('เลขบัญชี',
-                          style: GoogleFonts.sarabun(
+                          style: GoogleFonts.notoSansThai(
                               fontSize: 11, color: Colors.white60,
                               fontWeight: FontWeight.w600)),
                       const SizedBox(height: 3),
                       Text(acc.accountNumber,
-                          style: GoogleFonts.sarabun(
+                          style: GoogleFonts.notoSansThai(
                               fontSize: 24, color: Colors.white,
                               fontWeight: FontWeight.w900, letterSpacing: 1.5)),
                     ],
@@ -500,7 +500,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text('คัดลอกเลขบัญชีแล้ว',
-                            style: GoogleFonts.sarabun(fontWeight: FontWeight.w700)),
+                            style: GoogleFonts.notoSansThai(fontWeight: FontWeight.w700)),
                         backgroundColor: AppTheme.primary,
                         behavior: SnackBarBehavior.floating,
                         duration: const Duration(seconds: 2),
@@ -522,7 +522,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                             size: 14, color: Colors.white),
                         const SizedBox(width: 5),
                         Text('คัดลอก',
-                            style: GoogleFonts.sarabun(
+                            style: GoogleFonts.notoSansThai(
                                 fontSize: 13, color: Colors.white,
                                 fontWeight: FontWeight.w700)),
                       ],
@@ -533,7 +533,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
             ),
             const SizedBox(height: 8),
             Text('ชื่อบัญชี: ${acc.accountName}',
-                style: GoogleFonts.sarabun(
+                style: GoogleFonts.notoSansThai(
                     fontSize: 13, color: Colors.white.withOpacity(0.85),
                     fontWeight: FontWeight.w600)),
           ],
@@ -562,7 +562,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
               ),
               const SizedBox(width: 10),
               Text('วันที่และเวลาโอน',
-                  style: GoogleFonts.sarabun(
+                  style: GoogleFonts.notoSansThai(
                       fontSize: 15, fontWeight: FontWeight.w800,
                       color: AppTheme.textDark)),
             ],
@@ -618,11 +618,11 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('แนบสลิปการโอน',
-                        style: GoogleFonts.sarabun(
+                        style: GoogleFonts.notoSansThai(
                             fontSize: 15, fontWeight: FontWeight.w800,
                             color: AppTheme.textDark)),
                     Text('รองรับไฟล์ JPG, PNG',
-                        style: GoogleFonts.sarabun(
+                        style: GoogleFonts.notoSansThai(
                             fontSize: 12, color: AppTheme.textLight,
                             fontWeight: FontWeight.w600)),
                   ],
@@ -684,7 +684,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                                     size: 14, color: Colors.white),
                                 const SizedBox(width: 4),
                                 Text('เปลี่ยนรูป',
-                                    style: GoogleFonts.sarabun(
+                                    style: GoogleFonts.notoSansThai(
                                         fontSize: 12, color: Colors.white,
                                         fontWeight: FontWeight.w700)),
                               ],
@@ -707,12 +707,12 @@ class _PaymentScreenState extends State<PaymentScreen> {
                         ),
                         const SizedBox(height: 10),
                         Text('แตะเพื่อเลือกรูปสลิป',
-                            style: GoogleFonts.sarabun(
+                            style: GoogleFonts.notoSansThai(
                                 fontSize: 14, color: AppTheme.primary,
                                 fontWeight: FontWeight.w700)),
                         const SizedBox(height: 4),
                         Text('จากกล้องหรือแกลเลอรี่',
-                            style: GoogleFonts.sarabun(
+                            style: GoogleFonts.notoSansThai(
                                 fontSize: 12, color: AppTheme.textLight,
                                 fontWeight: FontWeight.w600)),
                       ],
@@ -747,11 +747,11 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('คูปองส่วนลด',
-                      style: GoogleFonts.sarabun(
+                      style: GoogleFonts.notoSansThai(
                           fontSize: 15, fontWeight: FontWeight.w800,
                           color: AppTheme.textDark)),
                   Text('ใส่รหัสคูปองเพื่อรับส่วนลด',
-                      style: GoogleFonts.sarabun(
+                      style: GoogleFonts.notoSansThai(
                           fontSize: 12, color: AppTheme.textLight,
                           fontWeight: FontWeight.w600)),
                 ],
@@ -777,7 +777,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   },
                   decoration: InputDecoration(
                     hintText: 'รหัสคูปอง',
-                    hintStyle: GoogleFonts.sarabun(
+                    hintStyle: GoogleFonts.notoSansThai(
                         fontSize: 14, color: AppTheme.textLight),
                     contentPadding: const EdgeInsets.symmetric(
                         horizontal: 14, vertical: 12),
@@ -800,7 +800,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                             color: Color(0xFF388E3C), size: 20)
                         : null,
                   ),
-                  style: GoogleFonts.sarabun(
+                  style: GoogleFonts.notoSansThai(
                       fontSize: 14, fontWeight: FontWeight.w700),
                 ),
               ),
@@ -824,7 +824,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                           child: CircularProgressIndicator(
                               strokeWidth: 2, color: Colors.white))
                       : Text('ตรวจสอบ',
-                          style: GoogleFonts.sarabun(
+                          style: GoogleFonts.notoSansThai(
                               fontSize: 14, fontWeight: FontWeight.w800)),
                 ),
               ),
@@ -846,7 +846,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 const SizedBox(width: 6),
                 Text(
                   _couponMsg!,
-                  style: GoogleFonts.sarabun(
+                  style: GoogleFonts.notoSansThai(
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
                       color: _couponValid
@@ -884,13 +884,13 @@ class _PaymentScreenState extends State<PaymentScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text('ยอดชำระ',
-                  style: GoogleFonts.sarabun(
+                  style: GoogleFonts.notoSansThai(
                       fontSize: 12, color: AppTheme.textLight,
                       fontWeight: FontWeight.w600)),
               if (_discountAmount > 0)
                 Text(
                   '฿${widget.price.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]},')}',
-                  style: GoogleFonts.sarabun(
+                  style: GoogleFonts.notoSansThai(
                       fontSize: 13,
                       color: AppTheme.textLight,
                       fontWeight: FontWeight.w600,
@@ -898,7 +898,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 ),
               Text(
                 '฿${_finalPrice.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]},')}',
-                style: GoogleFonts.sarabun(
+                style: GoogleFonts.notoSansThai(
                     fontSize: 22,
                     color: AppTheme.primary,
                     fontWeight: FontWeight.w900),
@@ -927,7 +927,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                         const Icon(Icons.send_rounded, size: 18),
                         const SizedBox(width: 8),
                         Text('ส่งหลักฐานการชำระ',
-                            style: GoogleFonts.sarabun(
+                            style: GoogleFonts.notoSansThai(
                                 fontSize: 16, fontWeight: FontWeight.w800)),
                       ],
                     ),
@@ -998,14 +998,14 @@ class _CourseCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(isPackage ? 'แพ็กเกจสุดคุ้ม' : 'คอร์สเรียน',
-                    style: GoogleFonts.sarabun(
+                    style: GoogleFonts.notoSansThai(
                         fontSize: 11, color: Colors.white70,
                         fontWeight: FontWeight.w600)),
                 const SizedBox(height: 3),
                 Text(title,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.sarabun(
+                    style: GoogleFonts.notoSansThai(
                         fontSize: 14, color: Colors.white,
                         fontWeight: FontWeight.w800, height: 1.3)),
               ],
@@ -1016,12 +1016,12 @@ class _CourseCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text('ราคา',
-                  style: GoogleFonts.sarabun(
+                  style: GoogleFonts.notoSansThai(
                       fontSize: 11, color: Colors.white70,
                       fontWeight: FontWeight.w600)),
               Text(
                 '฿${price.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]},')}',
-                style: GoogleFonts.sarabun(
+                style: GoogleFonts.notoSansThai(
                     fontSize: 20, color: Colors.white,
                     fontWeight: FontWeight.w900),
               ),
@@ -1065,14 +1065,14 @@ class _DateTimeButton extends StatelessWidget {
                 Icon(icon, size: 14, color: AppTheme.primary),
                 const SizedBox(width: 5),
                 Text(label,
-                    style: GoogleFonts.sarabun(
+                    style: GoogleFonts.notoSansThai(
                         fontSize: 11, color: AppTheme.primary,
                         fontWeight: FontWeight.w600)),
               ],
             ),
             const SizedBox(height: 6),
             Text(value,
-                style: GoogleFonts.sarabun(
+                style: GoogleFonts.notoSansThai(
                     fontSize: 14, color: AppTheme.textDark,
                     fontWeight: FontWeight.w800)),
           ],
@@ -1105,7 +1105,7 @@ class _SourceSheet extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text('เลือกรูปสลิป',
-              style: GoogleFonts.sarabun(
+              style: GoogleFonts.notoSansThai(
                   fontSize: 16, fontWeight: FontWeight.w800)),
           const SizedBox(height: 16),
           Padding(
@@ -1140,7 +1140,7 @@ class _SourceSheet extends StatelessWidget {
             child: TextButton(
               onPressed: () => Navigator.pop(context),
               child: Text('ยกเลิก',
-                  style: GoogleFonts.sarabun(
+                  style: GoogleFonts.notoSansThai(
                       fontSize: 15, color: AppTheme.textLight,
                       fontWeight: FontWeight.w700)),
             ),
@@ -1170,7 +1170,7 @@ class _SourceSheet extends StatelessWidget {
             Icon(icon, color: color, size: 32),
             const SizedBox(height: 8),
             Text(label,
-                style: GoogleFonts.sarabun(
+                style: GoogleFonts.notoSansThai(
                     fontSize: 14, color: color, fontWeight: FontWeight.w700)),
           ],
         ),

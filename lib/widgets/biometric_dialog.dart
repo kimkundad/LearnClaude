@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_theme.dart';
 
@@ -30,7 +30,7 @@ class BiometricDialog extends StatelessWidget {
             const SizedBox(height: 20),
             Text(
               _title,
-              style: GoogleFonts.sarabun(
+              style: GoogleFonts.notoSansThai(
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
                 color: AppTheme.textDark,
@@ -39,7 +39,7 @@ class BiometricDialog extends StatelessWidget {
             const SizedBox(height: 6),
             Text(
               _subtitle,
-              style: GoogleFonts.sarabun(
+              style: GoogleFonts.notoSansThai(
                 fontSize: 14,
                 color: AppTheme.textLight,
               ),

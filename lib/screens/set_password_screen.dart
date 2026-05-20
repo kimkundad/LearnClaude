@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_theme.dart';
@@ -74,7 +74,7 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
       );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('ตั้งรหัสผ่านใหม่สำเร็จ!', style: GoogleFonts.sarabun()),
+        content: Text('ตั้งรหัสผ่านใหม่สำเร็จ!', style: GoogleFonts.notoSansThai()),
         backgroundColor: AppTheme.primary,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -93,7 +93,7 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
 
   void _showError(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(msg, style: GoogleFonts.sarabun()),
+      content: Text(msg, style: GoogleFonts.notoSansThai()),
       backgroundColor: AppTheme.priceRed,
       behavior: SnackBarBehavior.floating,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -129,7 +129,7 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
               const SizedBox(height: 32),
               Text(
                 'ตั้งรหัสผ่านใหม่',
-                style: GoogleFonts.sarabun(
+                style: GoogleFonts.notoSansThai(
                   fontSize: 28,
                   fontWeight: FontWeight.w800,
                   color: AppTheme.textDark,
@@ -138,7 +138,7 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
               const SizedBox(height: 6),
               Text(
                 'สร้างรหัสผ่านใหม่ที่คาดเดายาก เพื่อความปลอดภัยของบัญชี',
-                style: GoogleFonts.sarabun(fontSize: 14, color: AppTheme.textLight),
+                style: GoogleFonts.notoSansThai(fontSize: 14, color: AppTheme.textLight),
               ),
               const SizedBox(height: 28),
               _buildLabel('รหัสผ่านใหม่'),
@@ -212,7 +212,7 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
                   children: [
                     Text(
                       'เคล็ดลับ:',
-                      style: GoogleFonts.sarabun(
+                      style: GoogleFonts.notoSansThai(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
                         color: AppTheme.textDark,
@@ -230,11 +230,11 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text('• ',
-                                style: GoogleFonts.sarabun(
+                                style: GoogleFonts.notoSansThai(
                                     fontSize: 13, color: AppTheme.textMedium)),
                             Expanded(
                               child: Text(tip,
-                                  style: GoogleFonts.sarabun(
+                                  style: GoogleFonts.notoSansThai(
                                       fontSize: 13,
                                       color: AppTheme.textMedium)),
                             ),
@@ -268,7 +268,7 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
   Widget _buildLabel(String text) {
     return Text(
       text,
-      style: GoogleFonts.sarabun(
+      style: GoogleFonts.notoSansThai(
         fontSize: 14,
         fontWeight: FontWeight.w600,
         color: AppTheme.textDark,

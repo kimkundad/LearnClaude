@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_theme.dart';
@@ -93,7 +93,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!_hasStoredToken) {
       // No token yet — user must log in with password first
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('กรุณาเข้าสู่ระบบด้วยรหัสผ่านก่อน', style: GoogleFonts.sarabun()),
+        content: Text('กรุณาเข้าสู่ระบบด้วยรหัสผ่านก่อน', style: GoogleFonts.notoSansThai()),
         backgroundColor: AppTheme.textMedium,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -165,7 +165,7 @@ class _LoginScreenState extends State<LoginScreen> {
             const SizedBox(height: 16),
             Text(
               'เปิดใช้งาน $label?',
-              style: GoogleFonts.sarabun(
+              style: GoogleFonts.notoSansThai(
                 fontSize: 18,
                 fontWeight: FontWeight.w800,
                 color: AppTheme.textDark,
@@ -175,7 +175,7 @@ class _LoginScreenState extends State<LoginScreen> {
             Text(
               'ครั้งหน้าเข้าสู่ระบบได้เลย\nโดยไม่ต้องพิมพ์รหัสผ่าน',
               textAlign: TextAlign.center,
-              style: GoogleFonts.sarabun(
+              style: GoogleFonts.notoSansThai(
                 fontSize: 14,
                 color: AppTheme.textLight,
                 height: 1.5,
@@ -188,14 +188,14 @@ class _LoginScreenState extends State<LoginScreen> {
             onPressed: () => Navigator.pop(ctx, false),
             child: Text(
               'ไว้ทีหลัง',
-              style: GoogleFonts.sarabun(color: AppTheme.textLight, fontWeight: FontWeight.w600),
+              style: GoogleFonts.notoSansThai(color: AppTheme.textLight, fontWeight: FontWeight.w600),
             ),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(
               'เปิดใช้งาน',
-              style: GoogleFonts.sarabun(fontWeight: FontWeight.w800),
+              style: GoogleFonts.notoSansThai(fontWeight: FontWeight.w800),
             ),
           ),
         ],
@@ -221,7 +221,7 @@ class _LoginScreenState extends State<LoginScreen> {
   void _showError(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(msg, style: GoogleFonts.sarabun()),
+        content: Text(msg, style: GoogleFonts.notoSansThai()),
         backgroundColor: AppTheme.priceRed,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -244,10 +244,10 @@ class _LoginScreenState extends State<LoginScreen> {
             children: [
               const SizedBox(height: 24),
               _AppLogoHeader(),
-              const SizedBox(height: 32),
+              const SizedBox(height: 16),
               Text(
                 'เข้าสู่ระบบ 🌿',
-                style: GoogleFonts.sarabun(
+                style: GoogleFonts.notoSansThai(
                   fontSize: 28,
                   fontWeight: FontWeight.w800,
                   color: AppTheme.textDark,
@@ -256,7 +256,7 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 6),
               Text(
                 'ยินดีต้อนรับกลับ เรียนญี่ปุ่นกันต่อ!',
-                style: GoogleFonts.sarabun(fontSize: 15, color: AppTheme.textLight),
+                style: GoogleFonts.notoSansThai(fontSize: 15, color: AppTheme.textLight),
               ),
               const SizedBox(height: 28),
               _buildLabel('อีเมล'),
@@ -294,7 +294,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   onTap: () => context.push('/forgot-password'),
                   child: Text(
                     'ลืมรหัสผ่าน?',
-                    style: GoogleFonts.sarabun(
+                    style: GoogleFonts.notoSansThai(
                       fontSize: 14,
                       color: AppTheme.primary,
                       fontWeight: FontWeight.w600,
@@ -323,7 +323,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 12),
                       child: Text(
                         'หรือเข้าสู่ระบบด้วย',
-                        style: GoogleFonts.sarabun(fontSize: 13, color: AppTheme.textLight),
+                        style: GoogleFonts.notoSansThai(fontSize: 13, color: AppTheme.textLight),
                       ),
                     ),
                     const Expanded(child: Divider()),
@@ -356,7 +356,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       const SizedBox(height: 6),
                       Text(
                         _useFaceId ? 'Face ID' : 'ลายนิ้วมือ',
-                        style: GoogleFonts.sarabun(fontSize: 12, color: AppTheme.textLight),
+                        style: GoogleFonts.notoSansThai(fontSize: 12, color: AppTheme.textLight),
                       ),
                     ],
                   ),
@@ -368,12 +368,12 @@ class _LoginScreenState extends State<LoginScreen> {
                   onTap: () => context.push('/register'),
                   child: RichText(
                     text: TextSpan(
-                      style: GoogleFonts.sarabun(fontSize: 14, color: AppTheme.textMedium),
+                      style: GoogleFonts.notoSansThai(fontSize: 14, color: AppTheme.textMedium),
                       children: [
                         const TextSpan(text: 'ยังไม่มีบัญชี? '),
                         TextSpan(
                           text: 'สมัครสมาชิก',
-                          style: GoogleFonts.sarabun(
+                          style: GoogleFonts.notoSansThai(
                             fontSize: 14,
                             color: AppTheme.primary,
                             fontWeight: FontWeight.w700,
@@ -395,7 +395,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget _buildLabel(String text) {
     return Text(
       text,
-      style: GoogleFonts.sarabun(
+      style: GoogleFonts.notoSansThai(
         fontSize: 14,
         fontWeight: FontWeight.w600,
         color: AppTheme.textDark,
@@ -407,45 +407,13 @@ class _LoginScreenState extends State<LoginScreen> {
 class _AppLogoHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(
-            color: AppTheme.primary,
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Center(
-            child: Text(
-              'ホ',
-              style: GoogleFonts.sarabun(
-                fontSize: 22,
-                fontWeight: FontWeight.w900,
-                color: Colors.white,
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(width: 10),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'ครูพี่โฮม',
-              style: GoogleFonts.sarabun(
-                fontSize: 16,
-                fontWeight: FontWeight.w800,
-                color: AppTheme.textDark,
-              ),
-            ),
-            Text(
-              'เรียนภาษาญี่ปุ่นออนไลน์',
-              style: GoogleFonts.sarabun(fontSize: 12, color: AppTheme.textLight),
-            ),
-          ],
-        ),
-      ],
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Image.asset(
+        'assets/logo/logo.png',
+        height: 62,
+        fit: BoxFit.contain,
+      ),
     );
   }
 }

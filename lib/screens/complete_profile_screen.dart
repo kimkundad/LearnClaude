@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_theme.dart';
@@ -127,7 +127,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                 child: Text(
                   title,
-                  style: GoogleFonts.sarabun(
+                  style: GoogleFonts.notoSansThai(
                     fontSize: 17,
                     fontWeight: FontWeight.w800,
                     color: AppTheme.textDark,
@@ -140,7 +140,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                   autofocus: true,
                   decoration: InputDecoration(
                     hintText: 'ค้นหา...',
-                    hintStyle: GoogleFonts.sarabun(color: AppTheme.textLight),
+                    hintStyle: GoogleFonts.notoSansThai(color: AppTheme.textLight),
                     prefixIcon: const Icon(Icons.search_rounded, color: AppTheme.textLight),
                     contentPadding: const EdgeInsets.symmetric(vertical: 10),
                   ),
@@ -161,7 +161,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                       itemBuilder: (_, i) => ListTile(
                         title: Text(
                           filtered[i],
-                          style: GoogleFonts.sarabun(fontSize: 15, color: AppTheme.textDark),
+                          style: GoogleFonts.notoSansThai(fontSize: 15, color: AppTheme.textDark),
                         ),
                         onTap: () {
                           onSelect(filtered[i]);
@@ -203,7 +203,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('$e', style: GoogleFonts.sarabun()),
+        content: Text('$e', style: GoogleFonts.notoSansThai()),
         backgroundColor: Colors.red,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -331,7 +331,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                           Expanded(
                             child: Text(
                               'จะมีขั้นตอนยืนยัน OTP ผ่าน SMS หลังบันทึก',
-                              style: GoogleFonts.sarabun(
+                              style: GoogleFonts.notoSansThai(
                                 fontSize: 12,
                                 color: const Color(0xFF15803D),
                                 fontWeight: FontWeight.w600,
@@ -381,7 +381,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                     child: Center(
                       child: Text(
                         'ホ',
-                        style: GoogleFonts.sarabun(
+                        style: GoogleFonts.notoSansThai(
                           fontSize: 20,
                           fontWeight: FontWeight.w900,
                           color: Colors.white,
@@ -392,7 +392,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                   const SizedBox(width: 12),
                   Text(
                     'ครูพี่โฮม',
-                    style: GoogleFonts.sarabun(
+                    style: GoogleFonts.notoSansThai(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
                       color: Colors.white.withOpacity(0.9),
@@ -403,7 +403,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
               const SizedBox(height: 18),
               Text(
                 'ยินดีต้อนรับ! 🎉',
-                style: GoogleFonts.sarabun(
+                style: GoogleFonts.notoSansThai(
                   fontSize: 26,
                   fontWeight: FontWeight.w900,
                   color: Colors.white,
@@ -413,7 +413,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
               const SizedBox(height: 6),
               Text(
                 'กรอกข้อมูลเพิ่มเติมเพื่อรับสิทธิพิเศษ\nและจัดส่งหนังสือถึงบ้านคุณ',
-                style: GoogleFonts.sarabun(
+                style: GoogleFonts.notoSansThai(
                   fontSize: 14,
                   color: Colors.white.withOpacity(0.85),
                   height: 1.5,
@@ -455,7 +455,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
             ? Icon(icon, size: 16, color: AppTheme.primary.withOpacity(0.5))
             : Text(
                 label,
-                style: GoogleFonts.sarabun(
+                style: GoogleFonts.notoSansThai(
                   fontSize: 14,
                   fontWeight: FontWeight.w900,
                   color: active ? AppTheme.primary : Colors.white,
@@ -489,7 +489,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
           Expanded(
             child: Text(
               'ข้อมูลนี้ใช้สำหรับจัดส่งหนังสือ ของขวัญวันเกิด และติดต่อนักเรียน กรุณากรอกให้ครบถ้วน',
-              style: GoogleFonts.sarabun(
+              style: GoogleFonts.notoSansThai(
                 fontSize: 13,
                 color: const Color(0xFF92400E),
                 fontWeight: FontWeight.w600,
@@ -557,7 +557,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                             ),
                             child: Text(
                               'ขั้นตอน $step',
-                              style: GoogleFonts.sarabun(
+                              style: GoogleFonts.notoSansThai(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w700,
                                 color: Colors.white,
@@ -567,7 +567,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                           const SizedBox(width: 8),
                           Text(
                             title,
-                            style: GoogleFonts.sarabun(
+                            style: GoogleFonts.notoSansThai(
                               fontSize: 15,
                               fontWeight: FontWeight.w800,
                               color: AppTheme.textDark,
@@ -578,7 +578,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                       const SizedBox(height: 3),
                       Text(
                         subtitle,
-                        style: GoogleFonts.sarabun(
+                        style: GoogleFonts.notoSansThai(
                           fontSize: 12,
                           color: AppTheme.textLight,
                           height: 1.4,
@@ -616,7 +616,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
         children: [
           Text(
             label,
-            style: GoogleFonts.sarabun(
+            style: GoogleFonts.notoSansThai(
               fontSize: 12,
               fontWeight: FontWeight.w600,
               color: AppTheme.textLight,
@@ -629,14 +629,14 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
             keyboardType: keyboardType,
             textCapitalization: textCapitalization,
             onChanged: (_) => setState(() {}),
-            style: GoogleFonts.sarabun(
+            style: GoogleFonts.notoSansThai(
               fontSize: 15,
               color: AppTheme.textDark,
               fontWeight: FontWeight.w600,
             ),
             decoration: InputDecoration(
               hintText: hint,
-              hintStyle: GoogleFonts.sarabun(color: AppTheme.textLight, fontSize: 14),
+              hintStyle: GoogleFonts.notoSansThai(color: AppTheme.textLight, fontSize: 14),
               prefixIcon: Icon(icon, color: AppTheme.primary, size: 19),
               alignLabelWithHint: maxLines > 1,
               contentPadding: maxLines > 1
@@ -664,7 +664,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
         children: [
           Text(
             label,
-            style: GoogleFonts.sarabun(
+            style: GoogleFonts.notoSansThai(
               fontSize: 12,
               fontWeight: FontWeight.w600,
               color: AppTheme.textLight,
@@ -693,7 +693,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                   Expanded(
                     child: Text(
                       value ?? hint,
-                      style: GoogleFonts.sarabun(
+                      style: GoogleFonts.notoSansThai(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
                         color: value != null ? AppTheme.textDark : AppTheme.textLight,
@@ -724,7 +724,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
         children: [
           Text(
             'รหัสไปรษณีย์',
-            style: GoogleFonts.sarabun(
+            style: GoogleFonts.notoSansThai(
               fontSize: 12,
               fontWeight: FontWeight.w600,
               color: AppTheme.textLight,
@@ -744,7 +744,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                 const SizedBox(width: 12),
                 Text(
                   _zipCode ?? 'กรอกอัตโนมัติเมื่อเลือกแขวง/ตำบล',
-                  style: GoogleFonts.sarabun(
+                  style: GoogleFonts.notoSansThai(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
                     color: _zipCode != null ? AppTheme.textDark : AppTheme.textLight,
@@ -785,7 +785,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
               Expanded(
                 child: Text(
                   _birthdayLabel,
-                  style: GoogleFonts.sarabun(
+                  style: GoogleFonts.notoSansThai(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
                     color: _birthday != null ? AppTheme.textDark : AppTheme.textLight,
@@ -809,7 +809,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                     const SizedBox(width: 4),
                     Text(
                       _birthday != null ? 'เลือกแล้ว' : 'เลือก',
-                      style: GoogleFonts.sarabun(
+                      style: GoogleFonts.notoSansThai(
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
                         color: _birthday != null ? Colors.white : AppTheme.primary,
@@ -852,7 +852,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
               padding: const EdgeInsets.only(bottom: 10),
               child: Text(
                 'กรุณากรอกข้อมูลให้ครบทุกช่องที่มี * ก่อนกดบันทึก',
-                style: GoogleFonts.sarabun(
+                style: GoogleFonts.notoSansThai(
                   fontSize: 12,
                   color: AppTheme.textLight,
                 ),
@@ -870,7 +870,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                 : const Icon(Icons.arrow_forward_rounded, size: 20),
             label: Text(
               _saving ? 'กำลังบันทึก...' : 'บันทึกและยืนยันเบอร์โทร',
-              style: GoogleFonts.sarabun(fontSize: 16, fontWeight: FontWeight.w800),
+              style: GoogleFonts.notoSansThai(fontSize: 16, fontWeight: FontWeight.w800),
             ),
           ),
         ],

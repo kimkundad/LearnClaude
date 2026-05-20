@@ -42,8 +42,8 @@ android {
         applicationId = "com.app1.learnsbuy"
         minSdk = 23
         targetSdk = flutter.targetSdkVersion
-        versionCode = 10
-        versionName = "12.0.0"
+        versionCode = 11
+        versionName = "13.0.0"
     }
 
     buildTypes {

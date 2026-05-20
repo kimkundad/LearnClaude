@@ -1,4 +1,4 @@
-import 'dart:math' as math;
+﻿import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -176,7 +176,7 @@ class _PaymentSuccessScreenState extends State<PaymentSuccessScreen>
                     children: [
                       Text(
                         'ส่งหลักฐานสำเร็จ!',
-                        style: GoogleFonts.sarabun(
+                        style: GoogleFonts.notoSansThai(
                           fontSize: 26,
                           fontWeight: FontWeight.w900,
                           color: Colors.white,
@@ -186,7 +186,7 @@ class _PaymentSuccessScreenState extends State<PaymentSuccessScreen>
                       Text(
                         'ทีมงานจะตรวจสอบและยืนยันการชำระเงิน\nภายใน 1-3 ชั่วโมงในวันทำการ',
                         textAlign: TextAlign.center,
-                        style: GoogleFonts.sarabun(
+                        style: GoogleFonts.notoSansThai(
                           fontSize: 13,
                           color: Colors.white.withOpacity(0.85),
                           fontWeight: FontWeight.w600,
@@ -237,7 +237,7 @@ class _PaymentSuccessScreenState extends State<PaymentSuccessScreen>
                 ),
                 const SizedBox(width: 10),
                 Text('รายละเอียดคำสั่งซื้อ',
-                    style: GoogleFonts.sarabun(
+                    style: GoogleFonts.notoSansThai(
                         fontSize: 15, fontWeight: FontWeight.w800,
                         color: AppTheme.textDark)),
                 const Spacer(),
@@ -253,7 +253,7 @@ class _PaymentSuccessScreenState extends State<PaymentSuccessScreen>
                           size: 13, color: Color(0xFFE65100)),
                       const SizedBox(width: 4),
                       Text('รอตรวจสอบ',
-                          style: GoogleFonts.sarabun(
+                          style: GoogleFonts.notoSansThai(
                               fontSize: 11, color: const Color(0xFFE65100),
                               fontWeight: FontWeight.w800)),
                     ],
@@ -276,12 +276,12 @@ class _PaymentSuccessScreenState extends State<PaymentSuccessScreen>
                     size: 16, color: AppTheme.primary),
                 const SizedBox(width: 8),
                 Text('ยอดชำระ',
-                    style: GoogleFonts.sarabun(
+                    style: GoogleFonts.notoSansThai(
                         fontSize: 13, color: AppTheme.textLight,
                         fontWeight: FontWeight.w600)),
                 const Spacer(),
                 Text('฿3,950',
-                    style: GoogleFonts.sarabun(
+                    style: GoogleFonts.notoSansThai(
                         fontSize: 18, color: AppTheme.primary,
                         fontWeight: FontWeight.w900)),
               ],
@@ -300,7 +300,7 @@ class _PaymentSuccessScreenState extends State<PaymentSuccessScreen>
         Icon(icon, size: 16, color: AppTheme.primary),
         const SizedBox(width: 8),
         Text(label,
-            style: GoogleFonts.sarabun(
+            style: GoogleFonts.notoSansThai(
                 fontSize: 13, color: AppTheme.textLight,
                 fontWeight: FontWeight.w600)),
         const SizedBox(width: 8),
@@ -309,7 +309,7 @@ class _PaymentSuccessScreenState extends State<PaymentSuccessScreen>
               textAlign: TextAlign.right,
               maxLines: valueMaxLines,
               overflow: TextOverflow.ellipsis,
-              style: GoogleFonts.sarabun(
+              style: GoogleFonts.notoSansThai(
                   fontSize: 13, color: AppTheme.textDark,
                   fontWeight: FontWeight.w700)),
         ),
@@ -361,7 +361,7 @@ class _PaymentSuccessScreenState extends State<PaymentSuccessScreen>
                 ),
                 const SizedBox(width: 10),
                 Text('ขั้นตอนการดำเนินการ',
-                    style: GoogleFonts.sarabun(
+                    style: GoogleFonts.notoSansThai(
                         fontSize: 15, fontWeight: FontWeight.w800,
                         color: AppTheme.textDark)),
               ],
@@ -416,7 +416,7 @@ class _PaymentSuccessScreenState extends State<PaymentSuccessScreen>
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(step.title,
-                              style: GoogleFonts.sarabun(
+                              style: GoogleFonts.notoSansThai(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w800,
                                   color: step.done
@@ -424,7 +424,7 @@ class _PaymentSuccessScreenState extends State<PaymentSuccessScreen>
                                       : AppTheme.textLight)),
                           const SizedBox(height: 2),
                           Text(step.subtitle,
-                              style: GoogleFonts.sarabun(
+                              style: GoogleFonts.notoSansThai(
                                   fontSize: 12,
                                   color: step.done
                                       ? AppTheme.primary
@@ -445,7 +445,7 @@ class _PaymentSuccessScreenState extends State<PaymentSuccessScreen>
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text('สำเร็จ',
-                            style: GoogleFonts.sarabun(
+                            style: GoogleFonts.notoSansThai(
                                 fontSize: 11, color: AppTheme.primary,
                                 fontWeight: FontWeight.w800)),
                       ),
@@ -479,7 +479,7 @@ class _PaymentSuccessScreenState extends State<PaymentSuccessScreen>
             Expanded(
               child: Text(
                 'หากไม่ได้รับการยืนยันภายใน 3 ชั่วโมง กรุณาติดต่อทีมงานผ่าน Line Official หรือโทร 086-xxx-xxxx',
-                style: GoogleFonts.sarabun(
+                style: GoogleFonts.notoSansThai(
                   fontSize: 13,
                   color: const Color(0xFF5D4037),
                   fontWeight: FontWeight.w600,
@@ -515,7 +515,7 @@ class _PaymentSuccessScreenState extends State<PaymentSuccessScreen>
             onPressed: () => context.go('/home'),
             icon: const Icon(Icons.home_rounded, size: 20),
             label: Text('กลับหน้าหลัก',
-                style: GoogleFonts.sarabun(
+                style: GoogleFonts.notoSansThai(
                     fontSize: 16, fontWeight: FontWeight.w800)),
             style: ElevatedButton.styleFrom(
               minimumSize: const Size(double.infinity, 52),
@@ -528,7 +528,7 @@ class _PaymentSuccessScreenState extends State<PaymentSuccessScreen>
             onPressed: () => context.push('/chat'),
             icon: const Icon(Icons.chat_bubble_outline_rounded, size: 18),
             label: Text('ติดต่อทีมงาน',
-                style: GoogleFonts.sarabun(
+                style: GoogleFonts.notoSansThai(
                     fontSize: 15, fontWeight: FontWeight.w700,
                     color: AppTheme.primary)),
             style: OutlinedButton.styleFrom(

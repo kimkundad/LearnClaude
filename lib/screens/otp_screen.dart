@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -50,7 +50,7 @@ class _OTPScreenState extends State<OTPScreen> {
         setState(() => _secondsLeft = 60);
         _startTimer();
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('ส่งรหัสใหม่แล้ว', style: GoogleFonts.sarabun()),
+          content: Text('ส่งรหัสใหม่แล้ว', style: GoogleFonts.notoSansThai()),
           backgroundColor: AppTheme.primary,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -98,7 +98,7 @@ class _OTPScreenState extends State<OTPScreen> {
 
   void _showError(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(msg, style: GoogleFonts.sarabun()),
+      content: Text(msg, style: GoogleFonts.notoSansThai()),
       backgroundColor: AppTheme.priceRed,
       behavior: SnackBarBehavior.floating,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -136,7 +136,7 @@ class _OTPScreenState extends State<OTPScreen> {
               const SizedBox(height: 32),
               Text(
                 'กรอกรหัสยืนยัน',
-                style: GoogleFonts.sarabun(
+                style: GoogleFonts.notoSansThai(
                   fontSize: 28,
                   fontWeight: FontWeight.w800,
                   color: AppTheme.textDark,
@@ -145,12 +145,12 @@ class _OTPScreenState extends State<OTPScreen> {
               const SizedBox(height: 6),
               RichText(
                 text: TextSpan(
-                  style: GoogleFonts.sarabun(fontSize: 14, color: AppTheme.textLight),
+                  style: GoogleFonts.notoSansThai(fontSize: 14, color: AppTheme.textLight),
                   children: [
                     const TextSpan(text: 'รหัส 6 หลักถูกส่งไปที่\n'),
                     TextSpan(
                       text: maskedEmail,
-                      style: GoogleFonts.sarabun(
+                      style: GoogleFonts.notoSansThai(
                         fontSize: 14,
                         color: AppTheme.textDark,
                         fontWeight: FontWeight.w700,
@@ -169,7 +169,7 @@ class _OTPScreenState extends State<OTPScreen> {
                 child: _secondsLeft > 0
                     ? Text(
                         'ไม่ได้รับรหัส? ส่งใหม่ได้ใน ${_secondsLeft}s',
-                        style: GoogleFonts.sarabun(
+                        style: GoogleFonts.notoSansThai(
                           fontSize: 13,
                           color: AppTheme.textLight,
                         ),
@@ -178,7 +178,7 @@ class _OTPScreenState extends State<OTPScreen> {
                         onTap: _resend,
                         child: Text(
                           'ส่งรหัสใหม่อีกครั้ง',
-                          style: GoogleFonts.sarabun(
+                          style: GoogleFonts.notoSansThai(
                             fontSize: 13,
                             color: AppTheme.primary,
                             fontWeight: FontWeight.w600,
@@ -218,7 +218,7 @@ class _OTPScreenState extends State<OTPScreen> {
           FilteringTextInputFormatter.digitsOnly,
           LengthLimitingTextInputFormatter(1),
         ],
-        style: GoogleFonts.sarabun(
+        style: GoogleFonts.notoSansThai(
           fontSize: 20,
           fontWeight: FontWeight.w700,
           color: AppTheme.textDark,
