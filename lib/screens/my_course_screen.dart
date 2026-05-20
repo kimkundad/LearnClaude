@@ -241,7 +241,7 @@ class MyCourseScreenState extends State<MyCourseScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'My Course',
+                  'My Courses',
                   style: GoogleFonts.notoSansThai(
                     fontSize: 26,
                     fontWeight: FontWeight.w900,

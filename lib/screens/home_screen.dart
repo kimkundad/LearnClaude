@@ -694,7 +694,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildBottomNav() {
     final items = [
       _NavItem(icon: Icons.home_outlined,       activeIcon: Icons.home,       label: 'Home'),
-      _NavItem(icon: Icons.menu_book_outlined,  activeIcon: Icons.menu_book,  label: 'My Course'),
+      _NavItem(icon: Icons.menu_book_outlined,  activeIcon: Icons.menu_book,  label: 'My Courses'),
       _NavItem(icon: Icons.chat_bubble_outline, activeIcon: Icons.chat_bubble, label: 'Help'),
       _NavItem(icon: Icons.settings_outlined,  activeIcon: Icons.settings,   label: 'Setting'),
     ];

@@ -229,7 +229,10 @@ class _PaymentScreenState extends State<PaymentScreen> {
           couponId: _couponId,
         );
       }
-      if (mounted) context.pushReplacement('/payment-success', extra: widget.courseTitle);
+      if (mounted) context.pushReplacement('/payment-success', extra: {
+        'title': widget.courseTitle,
+        'price': _finalPrice,
+      });
     } on ApiException catch (e) {
       debugPrint('[SUBMIT] ApiException: ${e.message}');
       if (mounted) _showDebug('API: ${e.message}');

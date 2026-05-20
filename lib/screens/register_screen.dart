@@ -142,7 +142,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 controller: _usernameCtrl,
                 onChanged: (_) => setState(() {}),
                 decoration: const InputDecoration(
-                  hintText: 'เช่น พี่โฮม',
+                  hintText: 'ชื่อ นามสกุล',
                   prefixIcon: Icon(Icons.person_outline, color: AppTheme.textLight),
                 ),
               ),

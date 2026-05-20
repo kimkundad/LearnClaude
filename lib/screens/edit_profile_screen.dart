@@ -272,8 +272,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     try {
       final updated = await ApiService.instance.updateProfile(
         name:          _nameCtrl.text.trim(),
-        email:         _emailCtrl.text.trim(),
-        phone:         _phoneCtrl.text.trim(),
+        email:         '',
+        phone:         '',
         hbd:           _birthdayApi.isNotEmpty ? _birthdayApi : null,
         receiverName:  _receiverNameCtrl.text.trim().isNotEmpty ? _receiverNameCtrl.text.trim() : null,
         receiverPhone: _receiverPhoneCtrl.text.trim().isNotEmpty ? _receiverPhoneCtrl.text.trim() : null,
@@ -354,9 +354,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                               keyboardType: TextInputType.name,
                               textCapitalization: TextCapitalization.words),
                           _textField('อีเมล', _emailCtrl, Icons.mail_outline_rounded,
-                              keyboardType: TextInputType.emailAddress),
+                              keyboardType: TextInputType.emailAddress,
+                              readOnly: true),
                           _textField('เบอร์โทรศัพท์', _phoneCtrl, Icons.phone_outlined,
-                              keyboardType: TextInputType.phone),
+                              keyboardType: TextInputType.phone,
+                              readOnly: true),
                           _dateField(),
                         ],
                       ),
@@ -577,19 +579,28 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     int maxLines = 1,
     TextInputType keyboardType = TextInputType.text,
     TextCapitalization textCapitalization = TextCapitalization.none,
+    bool readOnly = false,
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            label,
-            style: GoogleFonts.notoSansThai(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: AppTheme.textLight,
-            ),
+          Row(
+            children: [
+              Text(
+                label,
+                style: GoogleFonts.notoSansThai(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.textLight,
+                ),
+              ),
+              if (readOnly) ...[
+                const SizedBox(width: 4),
+                const Icon(Icons.lock_outline_rounded, size: 11, color: AppTheme.textLight),
+              ],
+            ],
           ),
           const SizedBox(height: 6),
           TextField(
@@ -597,13 +608,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             maxLines: maxLines,
             keyboardType: keyboardType,
             textCapitalization: textCapitalization,
+            readOnly: readOnly,
             style: GoogleFonts.notoSansThai(
               fontSize: 15,
-              color: AppTheme.textDark,
+              color: readOnly ? AppTheme.textLight : AppTheme.textDark,
               fontWeight: FontWeight.w600,
             ),
             decoration: InputDecoration(
-              prefixIcon: Icon(icon, color: AppTheme.primary, size: 19),
+              prefixIcon: Icon(icon,
+                  color: readOnly ? AppTheme.textLight : AppTheme.primary, size: 19),
+              filled: readOnly,
+              fillColor: readOnly ? Colors.grey.shade50 : null,
               alignLabelWithHint: maxLines > 1,
               contentPadding: maxLines > 1
                   ? const EdgeInsets.fromLTRB(0, 14, 16, 14)

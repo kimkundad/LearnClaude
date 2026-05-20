@@ -82,6 +82,17 @@ class AuthService {
     return token != null && token.isNotEmpty;
   }
 
+  Future<bool> isProfileComplete() async {
+    final user = await getUser();
+    if (user == null) return false;
+    final hbd          = (user['hbd']           as String?)?.trim() ?? '';
+    final receiverName = (user['receiver_name']  as String?)?.trim() ?? '';
+    final province     = (user['province']       as String?)?.trim() ?? '';
+    final phone        = (user['phone']          as String?)?.trim() ?? '';
+    return hbd.isNotEmpty && receiverName.isNotEmpty &&
+           province.isNotEmpty && phone.isNotEmpty;
+  }
+
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_keyToken);

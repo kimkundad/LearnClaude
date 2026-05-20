@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "738481561377",
+    "project_id": "learnsbuy-2af81",
+    "storage_bucket": "learnsbuy-2af81.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:738481561377:android:3212cbcf72bf9d4a31e860",
+        "android_client_info": {
+          "package_name": "com.app1"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAp9tP7VTd0pFCpLesQiFHtYv6VfgkiH-0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:738481561377:android:c72f869d873d405431e860",
+        "android_client_info": {
+          "package_name": "com.app1.learnsbuy"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAp9tP7VTd0pFCpLesQiFHtYv6VfgkiH-0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

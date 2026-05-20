@@ -44,16 +44,27 @@ final _router = GoRouter(
   initialLocation: '/login',
   redirect: (context, state) async {
     final loggedIn = await AuthService.instance.isLoggedIn();
-    final isLoginPage = state.matchedLocation == '/login' ||
-        state.matchedLocation == '/register';
+    final loc = state.matchedLocation;
+    final isLoginPage = loc == '/login' || loc == '/register';
     final isPublicPage = isLoginPage ||
-        state.matchedLocation == '/forgot-password' ||
-        state.matchedLocation == '/otp' ||
-        state.matchedLocation == '/set-password' ||
-        state.matchedLocation == '/complete-profile' ||
-        state.matchedLocation == '/phone-otp';
+        loc == '/forgot-password' ||
+        loc == '/otp' ||
+        loc == '/set-password' ||
+        loc == '/complete-profile' ||
+        loc == '/phone-otp';
+
     if (!loggedIn && !isPublicPage) return '/login';
-    if (loggedIn && isLoginPage) return '/home';
+
+    if (loggedIn && !isPublicPage) {
+      final complete = await AuthService.instance.isProfileComplete();
+      if (!complete) return '/complete-profile';
+    }
+
+    if (loggedIn && isLoginPage) {
+      final complete = await AuthService.instance.isProfileComplete();
+      return complete ? '/home' : '/complete-profile';
+    }
+
     return null;
   },
   routes: [
@@ -130,9 +141,13 @@ final _router = GoRouter(
     ),
     GoRoute(
       path: '/phone-otp',
-      builder: (context, state) => PhoneOtpScreen(
-        phone: state.extra as String? ?? '',
-      ),
+      builder: (context, state) {
+        final extra = (state.extra as Map?)?.cast<String, dynamic>() ?? {};
+        return PhoneOtpScreen(
+          phone: extra['phone'] as String? ?? state.extra as String? ?? '',
+          phoneCode: extra['phoneCode'] as String? ?? '',
+        );
+      },
     ),
     GoRoute(
       path: '/about-us',
@@ -166,9 +181,13 @@ final _router = GoRouter(
     ),
     GoRoute(
       path: '/payment-success',
-      builder: (context, state) => PaymentSuccessScreen(
-        courseTitle: state.extra as String? ?? 'คอร์สเรียน',
-      ),
+      builder: (context, state) {
+        final extra = state.extra as Map<String, dynamic>?;
+        return PaymentSuccessScreen(
+          courseTitle: extra?['title'] as String? ?? 'คอร์สเรียน',
+          price: (extra?['price'] as num?)?.toInt() ?? 0,
+        );
+      },
     ),
     GoRoute(
       path: '/quiz',

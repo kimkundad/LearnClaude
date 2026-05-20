@@ -9,7 +9,8 @@ import '../services/auth_service.dart';
 
 class PhoneOtpScreen extends StatefulWidget {
   final String phone;
-  const PhoneOtpScreen({super.key, required this.phone});
+  final String phoneCode;
+  const PhoneOtpScreen({super.key, required this.phone, this.phoneCode = ''});
 
   @override
   State<PhoneOtpScreen> createState() => _PhoneOtpScreenState();
@@ -79,7 +80,8 @@ class _PhoneOtpScreenState extends State<PhoneOtpScreen> {
     FocusScope.of(context).unfocus();
     setState(() => _verifying = true);
     try {
-      final updated = await ApiService.instance.verifyPhoneOtp(widget.phone, _otp);
+      final updated = await ApiService.instance.verifyPhoneOtp(
+        widget.phone, _otp, phoneCode: widget.phoneCode);
       final token = await AuthService.instance.getToken();
       if (token != null) await AuthService.instance.saveSession(token, updated);
       if (!mounted) return;

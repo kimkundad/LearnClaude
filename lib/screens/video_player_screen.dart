@@ -369,7 +369,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen>
   </style>
 </head>
 <body>
-  <video controls playsinline preload="metadata"${poster.isNotEmpty ? ' poster="$poster"' : ''}>
+  <video controls controlsList="nodownload" playsinline preload="metadata"${poster.isNotEmpty ? ' poster="$poster"' : ''}>
     <source src="$videoUrl" type="video/mp4">
   </video>
   <script>

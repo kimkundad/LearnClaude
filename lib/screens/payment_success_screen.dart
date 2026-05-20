@@ -7,10 +7,12 @@ import '../theme/app_theme.dart';
 
 class PaymentSuccessScreen extends StatefulWidget {
   final String courseTitle;
+  final int price;
 
   const PaymentSuccessScreen({
     super.key,
     this.courseTitle = 'ติวโค้งสุดท้าย A-Level ญี่ปุ่น',
+    this.price = 0,
   });
 
   @override
@@ -280,7 +282,8 @@ class _PaymentSuccessScreenState extends State<PaymentSuccessScreen>
                         fontSize: 13, color: AppTheme.textLight,
                         fontWeight: FontWeight.w600)),
                 const Spacer(),
-                Text('฿3,950',
+                Text(
+                    '฿${widget.price.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]},')}',
                     style: GoogleFonts.notoSansThai(
                         fontSize: 18, color: AppTheme.primary,
                         fontWeight: FontWeight.w900)),

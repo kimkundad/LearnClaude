@@ -27,8 +27,11 @@ class BiometricService {
 
   Future<bool> authenticate() async {
     try {
+      final isFace = await hasFaceId();
       return await _auth.authenticate(
-        localizedReason: 'สแกนลายนิ้วมือเพื่อเข้าสู่ระบบ',
+        localizedReason: isFace
+            ? 'สแกน Face ID เพื่อเข้าสู่ระบบ'
+            : 'สแกนลายนิ้วมือเพื่อเข้าสู่ระบบ',
         options: const AuthenticationOptions(
           biometricOnly: true,
           stickyAuth: true,

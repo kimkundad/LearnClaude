@@ -25,6 +25,32 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
   String? _zipCode;
   DateTime? _birthday;
   bool _saving = false;
+  String _countryCode = '+66';
+
+  static const _countryCodes = [
+    {'name': 'ไทย', 'flag': '🇹🇭', 'code': '+66'},
+    {'name': 'ญี่ปุ่น', 'flag': '🇯🇵', 'code': '+81'},
+    {'name': 'เกาหลีใต้', 'flag': '🇰🇷', 'code': '+82'},
+    {'name': 'จีน', 'flag': '🇨🇳', 'code': '+86'},
+    {'name': 'ฮ่องกง', 'flag': '🇭🇰', 'code': '+852'},
+    {'name': 'ไต้หวัน', 'flag': '🇹🇼', 'code': '+886'},
+    {'name': 'สิงคโปร์', 'flag': '🇸🇬', 'code': '+65'},
+    {'name': 'มาเลเซีย', 'flag': '🇲🇾', 'code': '+60'},
+    {'name': 'อินโดนีเซีย', 'flag': '🇮🇩', 'code': '+62'},
+    {'name': 'ฟิลิปปินส์', 'flag': '🇵🇭', 'code': '+63'},
+    {'name': 'เวียดนาม', 'flag': '🇻🇳', 'code': '+84'},
+    {'name': 'เมียนมาร์', 'flag': '🇲🇲', 'code': '+95'},
+    {'name': 'ลาว', 'flag': '🇱🇦', 'code': '+856'},
+    {'name': 'กัมพูชา', 'flag': '🇰🇭', 'code': '+855'},
+    {'name': 'อินเดีย', 'flag': '🇮🇳', 'code': '+91'},
+    {'name': 'สหรัฐอเมริกา', 'flag': '🇺🇸', 'code': '+1'},
+    {'name': 'แคนาดา', 'flag': '🇨🇦', 'code': '+1'},
+    {'name': 'สหราชอาณาจักร', 'flag': '🇬🇧', 'code': '+44'},
+    {'name': 'ออสเตรเลีย', 'flag': '🇦🇺', 'code': '+61'},
+    {'name': 'นิวซีแลนด์', 'flag': '🇳🇿', 'code': '+64'},
+    {'name': 'เยอรมนี', 'flag': '🇩🇪', 'code': '+49'},
+    {'name': 'ฝรั่งเศส', 'flag': '🇫🇷', 'code': '+33'},
+  ];
 
   static const _thMonths = [
     'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน',
@@ -179,6 +205,111 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     );
   }
 
+  Future<void> _openCountryPicker() async {
+    final search = ValueNotifier('');
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => DraggableScrollableSheet(
+        initialChildSize: 0.65,
+        minChildSize: 0.4,
+        maxChildSize: 0.92,
+        builder: (_, scrollCtrl) => Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Column(
+            children: [
+              const SizedBox(height: 8),
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                child: Text(
+                  'เลือกรหัสประเทศ',
+                  style: GoogleFonts.notoSansThai(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w800,
+                    color: AppTheme.textDark,
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                child: TextField(
+                  autofocus: true,
+                  decoration: InputDecoration(
+                    hintText: 'ค้นหาประเทศ หรือ รหัส...',
+                    hintStyle: GoogleFonts.notoSansThai(color: AppTheme.textLight),
+                    prefixIcon: const Icon(Icons.search_rounded, color: AppTheme.textLight),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                  ),
+                  onChanged: (v) => search.value = v.toLowerCase(),
+                ),
+              ),
+              Divider(height: 1, color: AppTheme.border),
+              Expanded(
+                child: ValueListenableBuilder<String>(
+                  valueListenable: search,
+                  builder: (_, q, __) {
+                    final filtered = q.isEmpty
+                        ? _countryCodes
+                        : _countryCodes
+                            .where((e) =>
+                                e['name']!.contains(q) ||
+                                e['code']!.contains(q))
+                            .toList();
+                    return ListView.builder(
+                      controller: scrollCtrl,
+                      itemCount: filtered.length,
+                      itemBuilder: (_, i) {
+                        final item = filtered[i];
+                        final selected = item['code'] == _countryCode;
+                        return ListTile(
+                          leading: Text(item['flag']!, style: const TextStyle(fontSize: 22)),
+                          title: Text(
+                            item['name']!,
+                            style: GoogleFonts.notoSansThai(
+                              fontSize: 15,
+                              color: AppTheme.textDark,
+                              fontWeight: selected ? FontWeight.w700 : FontWeight.normal,
+                            ),
+                          ),
+                          trailing: Text(
+                            item['code']!,
+                            style: GoogleFonts.notoSansThai(
+                              fontSize: 14,
+                              color: selected ? AppTheme.primary : AppTheme.textLight,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          selected: selected,
+                          selectedTileColor: AppTheme.primaryLight,
+                          onTap: () {
+                            setState(() => _countryCode = item['code']!);
+                            Navigator.pop(ctx);
+                          },
+                        );
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Future<void> _save() async {
     FocusScope.of(context).unfocus();
     setState(() => _saving = true);
@@ -199,7 +330,12 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
       final token = await AuthService.instance.getToken();
       if (token != null) await AuthService.instance.saveSession(token, updated);
       if (!mounted) return;
-      context.go('/phone-otp', extra: _studentPhoneCtrl.text.trim());
+      final rawPhone = _studentPhoneCtrl.text.trim();
+      final localNumber = rawPhone.startsWith('0') ? rawPhone.substring(1) : rawPhone;
+      context.go('/phone-otp', extra: {
+        'phone': '$_countryCode$localNumber',
+        'phoneCode': _countryCode,
+      });
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -314,9 +450,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                   icon: Icons.phone_iphone_rounded,
                   color: const Color(0xFF32D191),
                   children: [
-                    _textField('เบอร์โทรศัพท์ *', _studentPhoneCtrl, Icons.phone_outlined,
-                        hint: 'เบอร์มือถือสำหรับติดต่อนักเรียน',
-                        keyboardType: TextInputType.phone),
+                    _phoneFieldWithCode(),
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
@@ -369,36 +503,13 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  Container(
-                    width: 42,
-                    height: 42,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Center(
-                      child: Text(
-                        'ホ',
-                        style: GoogleFonts.notoSansThai(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w900,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    'ครูพี่โฮม',
-                    style: GoogleFonts.notoSansThai(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white.withOpacity(0.9),
-                    ),
-                  ),
-                ],
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Image.asset(
+                  'assets/logo/logo.png',
+                  height: 36,
+                  fit: BoxFit.contain,
+                ),
               ),
               const SizedBox(height: 18),
               Text(
@@ -823,6 +934,119 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
         ),
       ),
     );
+  }
+
+  Widget _phoneFieldWithCode() {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'เบอร์โทรศัพท์ *',
+            style: GoogleFonts.notoSansThai(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: AppTheme.textLight,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              GestureDetector(
+                onTap: _openCountryPicker,
+                child: Container(
+                  height: 52,
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppTheme.primary.withOpacity(0.4)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        _countryCodes.firstWhere(
+                          (e) => e['code'] == _countryCode,
+                          orElse: () => _countryCodes[0],
+                        )['flag']!,
+                        style: const TextStyle(fontSize: 20),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        _countryCode,
+                        style: GoogleFonts.notoSansThai(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: AppTheme.primary,
+                        ),
+                      ),
+                      const SizedBox(width: 2),
+                      const Icon(Icons.arrow_drop_down_rounded,
+                          size: 18, color: AppTheme.primary),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: TextField(
+                  controller: _studentPhoneCtrl,
+                  keyboardType: TextInputType.phone,
+                  onChanged: (_) => setState(() {}),
+                  style: GoogleFonts.notoSansThai(
+                    fontSize: 15,
+                    color: AppTheme.textDark,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: 'เช่น 0812345678 หรือ 812345678',
+                    hintStyle: GoogleFonts.notoSansThai(
+                        color: AppTheme.textLight, fontSize: 14),
+                    prefixIcon: const Icon(Icons.phone_outlined,
+                        color: AppTheme.primary, size: 19),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (_studentPhoneCtrl.text.trim().isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: AppTheme.primaryLight,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.phone_forwarded_outlined,
+                      size: 14, color: AppTheme.primary),
+                  const SizedBox(width: 6),
+                  Text(
+                    'จะส่ง OTP ไปยัง: ${_buildFullPhone()}',
+                    style: GoogleFonts.notoSansThai(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.primary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  String _buildFullPhone() {
+    final raw = _studentPhoneCtrl.text.trim();
+    final local = raw.startsWith('0') ? raw.substring(1) : raw;
+    return '$_countryCode$local';
   }
 
   Widget _buildBottomBar() {

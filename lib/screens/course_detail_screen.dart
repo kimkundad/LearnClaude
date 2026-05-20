@@ -572,7 +572,6 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
       children: [
         _buildDescSection(),
         _buildInstructorSection(),
-        _buildFeaturesSection(),
         if (_videos.isNotEmpty) _buildLessonsPreview(),
       ],
     );
@@ -649,7 +648,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                     Text('ครูพี่โฮม',
                         style: GoogleFonts.notoSansThai(
                             fontSize: 16, fontWeight: FontWeight.w800, color: AppTheme.textDark)),
-                    Text('ผู้เชี่ยวชาญภาษาญี่ปุ่น JLPT N1',
+                    Text('No.1 ที่สื่อชั้นนำยอมรับ',
                         style: GoogleFonts.notoSansThai(fontSize: 12, color: AppTheme.textLight)),
                     const SizedBox(height: 8),
                     Row(
@@ -680,58 +679,6 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
         Text(label,
             style: GoogleFonts.notoSansThai(fontSize: 10, color: AppTheme.textLight)),
       ],
-    );
-  }
-
-  Widget _buildFeaturesSection() {
-    const features = [
-      _Feature(Icons.play_circle_outline_rounded, 'ดูได้ไม่จำกัด'),
-      _Feature(Icons.devices_rounded, 'ดูได้ทุกอุปกรณ์'),
-      _Feature(Icons.picture_as_pdf_outlined, 'มี PDF ดาวน์โหลด'),
-      _Feature(Icons.chat_bubble_outline_rounded, 'ถาม-ตอบกับครูได้'),
-      _Feature(Icons.workspace_premium_outlined, 'มีประกาศนียบัตร'),
-      _Feature(Icons.refresh_rounded, 'คืนเงินใน 7 วัน'),
-    ];
-    return Container(
-      color: Colors.white,
-      margin: const EdgeInsets.only(top: 8),
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _sectionTitle('คุณสมบัติของคอร์ส'),
-          const SizedBox(height: 14),
-          Wrap(
-            spacing: 10,
-            runSpacing: 10,
-            children: features.map((f) {
-              return SizedBox(
-                width: (MediaQuery.of(context).size.width - 52) / 2,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: AppTheme.primaryLight,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(f.icon, size: 16, color: AppTheme.primary),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: Text(f.label,
-                            style: GoogleFonts.notoSansThai(
-                                fontSize: 12,
-                                color: AppTheme.primary,
-                                fontWeight: FontWeight.w600)),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-        ],
-      ),
     );
   }
 
@@ -1317,6 +1264,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
   // ── Bottom Bar ─────────────────────────────────────────────────────────────
 
   Widget _buildBottomBar(BuildContext context) {
+    final bottomInset = MediaQuery.of(context).padding.bottom;
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -1326,7 +1274,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
             blurRadius: 12,
             offset: const Offset(0, -4))],
       ),
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+      padding: EdgeInsets.fromLTRB(16, 12, 16, 12 + bottomInset),
       child: Row(
         children: [
           if (!_isOwned) ...[
@@ -1472,10 +1420,4 @@ class _QuizSet {
   final String difficulty;
   final Color diffColor;
   const _QuizSet(this.title, this.questionCount, this.difficulty, this.diffColor);
-}
-
-class _Feature {
-  final IconData icon;
-  final String label;
-  const _Feature(this.icon, this.label);
 }

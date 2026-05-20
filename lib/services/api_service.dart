@@ -200,10 +200,13 @@ class ApiService {
     _check(r);
   }
 
-  Future<Map<String, dynamic>> verifyPhoneOtp(String phone, String otp) async {
+  Future<Map<String, dynamic>> verifyPhoneOtp(String phone, String otp,
+      {String phoneCode = ''}) async {
+    final map = <String, String>{'phone': phone, 'otp': otp};
+    if (phoneCode.isNotEmpty) map['phone_phoneCode'] = phoneCode;
     final r = await _dio.post(
       '/verify-phone-otp',
-      data: FormData.fromMap({'phone': phone, 'otp': otp}),
+      data: FormData.fromMap(map),
       options: await _authOptions(),
     );
     _check(r);
