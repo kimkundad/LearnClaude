@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:io';
 
 import 'package:audioplayers/audioplayers.dart';
@@ -11,6 +11,7 @@ import 'package:record/record.dart';
 
 import '../config/app_config.dart';
 import '../services/api_service.dart';
+import '../services/notification_service.dart';
 import '../theme/app_theme.dart';
 
 class TeacherChatScreen extends StatefulWidget {
@@ -30,18 +31,18 @@ class TeacherChatScreen extends StatefulWidget {
 }
 
 class _TeacherChatScreenState extends State<TeacherChatScreen> {
-  final _dio           = Dio(BaseOptions(baseUrl: AppConfig.chatApi));
-  final _msgCtrl       = TextEditingController();
-  final _scrollCtrl    = ScrollController();
-  final _imagePicker   = ImagePicker();
+  final _dio = Dio(BaseOptions(baseUrl: AppConfig.chatApi));
+  final _msgCtrl = TextEditingController();
+  final _scrollCtrl = ScrollController();
+  final _imagePicker = ImagePicker();
   final _audioRecorder = AudioRecorder();
-  final _audioPlayer   = AudioPlayer();
+  final _audioPlayer = AudioPlayer();
 
   Timer? _pollTimer;
   StreamSubscription<void>? _playerSub;
 
   List<Map<String, dynamic>> _messages = [];
-  bool _isSending   = false;
+  bool _isSending = false;
   bool _isRecording = false;
   DateTime? _recordStart;
   int? _playingIndex;
@@ -50,12 +51,14 @@ class _TeacherChatScreenState extends State<TeacherChatScreen> {
   @override
   void initState() {
     super.initState();
+    NotificationService.instance.isChatOpen = true;
     _load(markRead: true);
     _pollTimer = Timer.periodic(const Duration(seconds: 5), (_) => _load());
   }
 
   @override
   void dispose() {
+    NotificationService.instance.isChatOpen = false;
     _pollTimer?.cancel();
     _playerSub?.cancel();
     _audioPlayer.dispose();
@@ -87,7 +90,7 @@ class _TeacherChatScreenState extends State<TeacherChatScreen> {
   Future<void> _markRead() async {
     try {
       await _dio.post('/mark-as-read', data: {
-        'room_id':    widget.roomId,
+        'room_id': widget.roomId,
         'teacher_id': AppConfig.teacherId,
       });
     } catch (_) {}
@@ -116,11 +119,11 @@ class _TeacherChatScreenState extends State<TeacherChatScreen> {
     setState(() => _isSending = true);
     try {
       await _dio.post('/send-message', data: {
-        'room_id':      widget.roomId,
-        'sender_id':    AppConfig.teacherId,
-        'message':      text,
+        'room_id': widget.roomId,
+        'sender_id': AppConfig.teacherId,
+        'message': text,
         'message_type': 'text',
-        'name':         'ครูพี่โฮม',
+        'name': 'ครูพี่โฮม',
       });
       await _load(markRead: true);
     } catch (_) {
@@ -139,20 +142,23 @@ class _TeacherChatScreenState extends State<TeacherChatScreen> {
 
     setState(() => _isSending = true);
     try {
-      final result   = await ApiService.instance.uploadChatMedia(File(picked.path));
+      final result =
+          await ApiService.instance.uploadChatMedia(File(picked.path));
       final mediaUrl = result['url'] as String;
       await _dio.post('/send-message', data: {
-        'room_id':      widget.roomId,
-        'sender_id':    AppConfig.teacherId,
+        'room_id': widget.roomId,
+        'sender_id': AppConfig.teacherId,
         'message_type': 'image',
-        'media_url':    mediaUrl,
-        'name':         'ครูพี่โฮม',
+        'media_url': mediaUrl,
+        'name': 'ครูพี่โฮม',
       });
       await _load(markRead: true);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('ส่งรูปไม่สำเร็จ: $e', style: GoogleFonts.notoSansThai())),
+          SnackBar(
+              content: Text('ส่งรูปไม่สำเร็จ: $e',
+                  style: GoogleFonts.notoSansThai())),
         );
       }
     } finally {
@@ -168,13 +174,17 @@ class _TeacherChatScreenState extends State<TeacherChatScreen> {
     }
     final ok = await _audioRecorder.hasPermission();
     if (!ok) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('ไม่สามารถใช้ไมโครโฟนได้', style: GoogleFonts.notoSansThai())),
-      );
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text('ไม่สามารถใช้ไมโครโฟนได้',
+                  style: GoogleFonts.notoSansThai())),
+        );
       return;
     }
-    final dir  = await getTemporaryDirectory();
-    final path = '${dir.path}/voice_${DateTime.now().millisecondsSinceEpoch}.m4a';
+    final dir = await getTemporaryDirectory();
+    final path =
+        '${dir.path}/voice_${DateTime.now().millisecondsSinceEpoch}.m4a';
     await _audioRecorder.start(
       const RecordConfig(encoder: AudioEncoder.aacLc),
       path: path,
@@ -186,9 +196,9 @@ class _TeacherChatScreenState extends State<TeacherChatScreen> {
   }
 
   Future<void> _stopAndSendVoice() async {
-    final path  = await _audioRecorder.stop();
+    final path = await _audioRecorder.stop();
     final start = _recordStart;
-    final secs  = start == null
+    final secs = start == null
         ? 1
         : DateTime.now().difference(start).inSeconds.clamp(1, 599).toInt();
     setState(() {
@@ -199,21 +209,24 @@ class _TeacherChatScreenState extends State<TeacherChatScreen> {
 
     setState(() => _isSending = true);
     try {
-      final result   = await ApiService.instance.uploadChatMedia(File(path));
+      final result = await ApiService.instance.uploadChatMedia(File(path));
       final mediaUrl = result['url'] as String;
       await _dio.post('/send-message', data: {
-        'room_id':      widget.roomId,
-        'sender_id':    AppConfig.teacherId,
+        'room_id': widget.roomId,
+        'sender_id': AppConfig.teacherId,
         'message_type': 'audio',
-        'media_url':    mediaUrl,
-        'duration':     secs,
-        'name':         'ครูพี่โฮม',
+        'media_url': mediaUrl,
+        'duration': secs,
+        'name': 'ครูพี่โฮม',
       });
       await _load(markRead: true);
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('ส่งเสียงไม่สำเร็จ: $e', style: GoogleFonts.notoSansThai())),
-      );
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text('ส่งเสียงไม่สำเร็จ: $e',
+                  style: GoogleFonts.notoSansThai())),
+        );
     } finally {
       if (mounted) setState(() => _isSending = false);
     }
@@ -246,11 +259,12 @@ class _TeacherChatScreenState extends State<TeacherChatScreen> {
     try {
       final dt = DateTime.parse(raw).toLocal();
       return '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
-    } catch (_) { return ''; }
+    } catch (_) {
+      return '';
+    }
   }
 
-  String _fmtDur(int s) =>
-      '${s ~/ 60}:${(s % 60).toString().padLeft(2, '0')}';
+  String _fmtDur(int s) => '${s ~/ 60}:${(s % 60).toString().padLeft(2, '0')}';
 
   // ── Build ─────────────────────────────────────────────────────────────────
 
@@ -262,7 +276,8 @@ class _TeacherChatScreenState extends State<TeacherChatScreen> {
         backgroundColor: AppTheme.primary,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.chevron_left_rounded, color: Colors.white, size: 30),
+          icon: const Icon(Icons.chevron_left_rounded,
+              color: Colors.white, size: 30),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Row(
@@ -326,14 +341,15 @@ class _TeacherChatScreenState extends State<TeacherChatScreen> {
   }
 
   Widget _buildAppBarAvatar() {
-    final url      = widget.avatarUrl;
+    final url = widget.avatarUrl;
     final initials = widget.studentName.isNotEmpty
         ? widget.studentName[0].toUpperCase()
         : '?';
     return CircleAvatar(
       radius: 19,
       backgroundColor: AppTheme.primaryLight,
-      backgroundImage: (url != null && url.isNotEmpty) ? NetworkImage(url) : null,
+      backgroundImage:
+          (url != null && url.isNotEmpty) ? NetworkImage(url) : null,
       child: (url == null || url.isEmpty)
           ? Text(initials,
               style: GoogleFonts.notoSansThai(
@@ -354,7 +370,8 @@ class _TeacherChatScreenState extends State<TeacherChatScreen> {
       child: Row(
         children: [
           Container(
-            width: 9, height: 9,
+            width: 9,
+            height: 9,
             decoration: BoxDecoration(
               color: recording ? AppTheme.priceRed : AppTheme.primary,
               shape: BoxShape.circle,
@@ -377,12 +394,12 @@ class _TeacherChatScreenState extends State<TeacherChatScreen> {
   }
 
   Widget _buildBubble(int index, Map<String, dynamic> msg) {
-    final isMe      = _isMe(msg);
-    final type      = (msg['message_type'] as String?) ?? 'text';
-    final text      = (msg['message'] as String?) ?? '';
-    final mediaUrl  = (msg['media_url'] as String?) ?? '';
+    final isMe = _isMe(msg);
+    final type = (msg['message_type'] as String?) ?? 'text';
+    final text = (msg['message'] as String?) ?? '';
+    final mediaUrl = (msg['media_url'] as String?) ?? '';
     final senderName = (msg['name'] as String?) ?? widget.studentName;
-    final timeStr   = _timeLabel(msg['created_at'] as String?);
+    final timeStr = _timeLabel(msg['created_at'] as String?);
 
     final bubbleColor = isMe ? AppTheme.primary : const Color(0xFFF0F3F6);
 
@@ -404,9 +421,9 @@ class _TeacherChatScreenState extends State<TeacherChatScreen> {
               decoration: BoxDecoration(
                 color: bubbleColor,
                 borderRadius: BorderRadius.only(
-                  topLeft:     const Radius.circular(18),
-                  topRight:    const Radius.circular(18),
-                  bottomLeft:  Radius.circular(isMe ? 18 : 5),
+                  topLeft: const Radius.circular(18),
+                  topRight: const Radius.circular(18),
+                  bottomLeft: Radius.circular(isMe ? 18 : 5),
                   bottomRight: Radius.circular(isMe ? 5 : 18),
                 ),
               ),
@@ -438,7 +455,8 @@ class _TeacherChatScreenState extends State<TeacherChatScreen> {
             const SizedBox(height: 3),
             Text(
               timeStr,
-              style: GoogleFonts.notoSansThai(fontSize: 10, color: AppTheme.textLight),
+              style: GoogleFonts.notoSansThai(
+                  fontSize: 10, color: AppTheme.textLight),
             ),
           ],
         ),
@@ -446,8 +464,8 @@ class _TeacherChatScreenState extends State<TeacherChatScreen> {
     );
   }
 
-  Widget _bubbleContent(int index, bool isMe, String type,
-      String text, String mediaUrl, Map<String, dynamic> msg) {
+  Widget _bubbleContent(int index, bool isMe, String type, String text,
+      String mediaUrl, Map<String, dynamic> msg) {
     final textColor = isMe ? Colors.white : AppTheme.textDark;
 
     if (type == 'image' && mediaUrl.isNotEmpty) {
@@ -461,15 +479,18 @@ class _TeacherChatScreenState extends State<TeacherChatScreen> {
               height: 160,
               fit: BoxFit.cover,
               errorBuilder: (_, __, ___) => Container(
-                width: 220, height: 100,
+                width: 220,
+                height: 100,
                 color: Colors.grey.shade200,
                 child: const Icon(Icons.broken_image_rounded, size: 40),
               ),
             ),
             Positioned(
-              right: 8, bottom: 8,
+              right: 8,
+              bottom: 8,
               child: Container(
-                width: 28, height: 28,
+                width: 28,
+                height: 28,
                 decoration: BoxDecoration(
                   color: Colors.black.withOpacity(0.28),
                   shape: BoxShape.circle,
@@ -484,7 +505,7 @@ class _TeacherChatScreenState extends State<TeacherChatScreen> {
     }
 
     if (type == 'audio' && mediaUrl.isNotEmpty) {
-      final dur     = (msg['duration'] as int?) ?? 0;
+      final dur = (msg['duration'] as int?) ?? 0;
       final playing = _playingIndex == index;
       return GestureDetector(
         onTap: () => _togglePlayback(index, mediaUrl),
@@ -493,7 +514,8 @@ class _TeacherChatScreenState extends State<TeacherChatScreen> {
           children: [
             AnimatedContainer(
               duration: const Duration(milliseconds: 180),
-              width: 32, height: 32,
+              width: 32,
+              height: 32,
               decoration: BoxDecoration(
                 color: textColor.withOpacity(playing ? 0.24 : 0.12),
                 shape: BoxShape.circle,
@@ -513,7 +535,8 @@ class _TeacherChatScreenState extends State<TeacherChatScreen> {
                   value: playing ? null : 0.18,
                   minHeight: 5,
                   backgroundColor: textColor.withOpacity(0.24),
-                  valueColor: AlwaysStoppedAnimation(textColor.withOpacity(0.78)),
+                  valueColor:
+                      AlwaysStoppedAnimation(textColor.withOpacity(0.78)),
                 ),
               ),
             ),
@@ -557,7 +580,8 @@ class _TeacherChatScreenState extends State<TeacherChatScreen> {
               child: GestureDetector(
                 onTap: () => Navigator.pop(context),
                 child: Container(
-                  width: 38, height: 38,
+                  width: 38,
+                  height: 38,
                   margin: const EdgeInsets.only(bottom: 10),
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.16),
@@ -575,9 +599,12 @@ class _TeacherChatScreenState extends State<TeacherChatScreen> {
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(22),
               ),
-              child: Image.network(url, fit: BoxFit.contain,
-                errorBuilder: (_, __, ___) => const Icon(
-                  Icons.broken_image_rounded, size: 86, color: AppTheme.primary)),
+              child: Image.network(url,
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, __, ___) => const Icon(
+                      Icons.broken_image_rounded,
+                      size: 86,
+                      color: AppTheme.primary)),
             ),
           ],
         ),
@@ -617,8 +644,10 @@ class _TeacherChatScreenState extends State<TeacherChatScreen> {
                 textInputAction: TextInputAction.send,
                 onSubmitted: (_) => _sendText(),
                 decoration: InputDecoration(
-                  hintText: _isRecording ? 'กำลังอัดเสียง...' : 'พิมพ์ข้อความ...',
-                  hintStyle: GoogleFonts.notoSansThai(color: Colors.grey.shade400),
+                  hintText:
+                      _isRecording ? 'กำลังอัดเสียง...' : 'พิมพ์ข้อความ...',
+                  hintStyle:
+                      GoogleFonts.notoSansThai(color: Colors.grey.shade400),
                   contentPadding:
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   filled: true,
@@ -633,7 +662,8 @@ class _TeacherChatScreenState extends State<TeacherChatScreen> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(999),
-                    borderSide: const BorderSide(color: AppTheme.primary, width: 1.5),
+                    borderSide:
+                        const BorderSide(color: AppTheme.primary, width: 1.5),
                   ),
                 ),
                 style: GoogleFonts.notoSansThai(fontSize: 15),
@@ -643,7 +673,8 @@ class _TeacherChatScreenState extends State<TeacherChatScreen> {
             GestureDetector(
               onTap: _isSending || _isRecording ? null : _sendText,
               child: Container(
-                width: 44, height: 44,
+                width: 44,
+                height: 44,
                 decoration: BoxDecoration(
                   color: (_isSending || _isRecording)
                       ? AppTheme.border
@@ -673,7 +704,8 @@ class _TeacherChatScreenState extends State<TeacherChatScreen> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 40, height: 40,
+        width: 40,
+        height: 40,
         margin: const EdgeInsets.only(right: 4),
         decoration: BoxDecoration(
           color: active ? AppTheme.priceRed : AppTheme.primaryLight,

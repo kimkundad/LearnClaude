@@ -2,7 +2,7 @@ name: learn_video_app
 description: "ครูพี่โฮม - Japanese course app"
 publish_to: 'none'
 
-version: 13.0.0+11
+version: 13.0.2+18
 
 environment:
   sdk: '>=3.0.0 <4.0.0'

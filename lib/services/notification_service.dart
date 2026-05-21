@@ -22,6 +22,7 @@ class NotificationService {
   final _fcm = FirebaseMessaging.instance;
   final _localNotif = FlutterLocalNotificationsPlugin();
   StreamSubscription<String>? _tokenRefreshSubscription;
+  bool _isInitialized = false;
 
   static const _channelId = 'chat_channel';
   static const _channelName = 'ข้อความแชท';
@@ -31,15 +32,7 @@ class NotificationService {
   bool isChatOpen = false;
 
   Future<void> init(BuildContext context) async {
-    // ขอ permission
-    final settings =
-        await _fcm.requestPermission(alert: true, badge: true, sound: true);
-    debugPrint('[FCM] authorization=${settings.authorizationStatus}');
-    await _fcm.setForegroundNotificationPresentationOptions(
-      alert: true,
-      badge: true,
-      sound: true,
-    );
+    await _ensureNotificationReady();
 
     // Setup local notification channel (Android)
     const androidChannel = AndroidNotificationChannel(
@@ -69,12 +62,18 @@ class NotificationService {
         }
       },
     );
-
     // Foreground: แสดง local notification
-    FirebaseMessaging.onMessage.listen((msg) => _showLocal(msg));
+    FirebaseMessaging.onMessage.listen((msg) {
+      debugPrint(
+        '[FCM] onMessage data=${msg.data} '
+        'notification=${msg.notification?.title}/${msg.notification?.body}',
+      );
+      _showLocal(msg);
+    });
 
     // Background tap
     FirebaseMessaging.onMessageOpenedApp.listen((msg) {
+      debugPrint('[FCM] onMessageOpenedApp data=${msg.data}');
       if (!context.mounted) return;
       if (msg.data['type'] == 'order_approved') {
         context.go('/home');
@@ -82,16 +81,44 @@ class NotificationService {
         context.push('/chat');
       }
     });
+    final initialMessage = await FirebaseMessaging.instance.getInitialMessage();
+    if (initialMessage != null) {
+      debugPrint('[FCM] initialMessage data=${initialMessage.data}');
+    }
+    _isInitialized = true;
+  }
+
+  Future<void> _ensureNotificationReady() async {
+    await _fcm.setAutoInitEnabled(true);
+    final settings =
+        await _fcm.requestPermission(alert: true, badge: true, sound: true);
+    debugPrint('[FCM] authorization=${settings.authorizationStatus}');
+    await _fcm.setForegroundNotificationPresentationOptions(
+      alert: false,
+      badge: false,
+      sound: false,
+    );
   }
 
   void _showLocal(RemoteMessage msg) {
-    if (isChatOpen && msg.data['type'] != 'order_approved') return;
+    final type = msg.data['type']?.toString();
+    if (isChatOpen) return;
     final n = msg.notification;
-    if (n == null) return;
+    final title = n?.title ??
+        msg.data['title']?.toString() ??
+        msg.data['notification_title']?.toString() ??
+        'ข้อความใหม่';
+    final body = n?.body ??
+        msg.data['body']?.toString() ??
+        msg.data['message']?.toString() ??
+        msg.data['text']?.toString();
+
+    if (title.trim().isEmpty && (body == null || body.trim().isEmpty)) return;
+
     _localNotif.show(
       msg.hashCode,
-      n.title ?? 'ข้อความใหม่',
-      n.body,
+      title,
+      body,
       NotificationDetails(
         android: AndroidNotificationDetails(
           _channelId,
@@ -106,23 +133,30 @@ class NotificationService {
           presentSound: true,
         ),
       ),
-      payload: msg.data['type'],
+      payload: type,
     );
   }
 
   Future<String?> getToken() async {
+    await _ensureNotificationReady();
     if (Platform.isIOS) {
-      for (var i = 0; i < 10; i++) {
-        final apnsToken = await _fcm.getAPNSToken();
+      String? apnsToken;
+      for (var i = 0; i < 20; i++) {
+        apnsToken = await _fcm.getAPNSToken();
         if (apnsToken != null) break;
         await Future<void>.delayed(const Duration(milliseconds: 500));
       }
+      debugPrint('[FCM] apnsToken=${apnsToken == null ? 'null' : 'ready'}');
+      if (apnsToken == null) return null;
     }
     return _fcm.getToken();
   }
 
   Future<void> saveToken(int userId) async {
     try {
+      if (!_isInitialized) {
+        await _ensureNotificationReady();
+      }
       final token = await getToken();
       final deviceId = await _getDeviceId();
       final platform = Platform.isIOS ? 'ios' : 'android';
@@ -133,7 +167,10 @@ class NotificationService {
         'device_id': deviceId,
       };
       debugPrint('[FCM] token=$token userId=$userId platform=$platform');
-      if (token == null) return;
+      if (token == null) {
+        unawaited(_retrySaveToken(userId));
+        return;
+      }
       final resp = await Dio().post(
         '${AppConfig.chatApi}/save-fcm-token',
         data: payload,
@@ -155,6 +192,31 @@ class NotificationService {
       });
     } catch (e) {
       debugPrint('[FCM] saveToken error: $e');
+    }
+  }
+
+  Future<void> _retrySaveToken(int userId) async {
+    await Future<void>.delayed(const Duration(seconds: 3));
+    try {
+      final token = await getToken();
+      if (token == null) {
+        debugPrint('[FCM] retry token=null userId=$userId');
+        return;
+      }
+      final deviceId = await _getDeviceId();
+      final platform = Platform.isIOS ? 'ios' : 'android';
+      final resp = await Dio().post(
+        '${AppConfig.chatApi}/save-fcm-token',
+        data: {
+          'user_id': userId,
+          'fcm_token': token,
+          'platform': platform,
+          'device_id': deviceId,
+        },
+      );
+      debugPrint('[FCM] retry save-token resp=${resp.statusCode}');
+    } catch (e) {
+      debugPrint('[FCM] retry saveToken error: $e');
     }
   }
 
