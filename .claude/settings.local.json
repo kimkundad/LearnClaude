@@ -312,7 +312,9 @@
       "Bash(find /mnt/d -name \"*.js\" -path \"*chat*\" -not -path \"*/node_modules/*\" 2>/dev/null | head -20)",
       "Read(//mnt/**)",
       "PowerShell(Test-Path \"D:\\\\Nodejs\\\\chatLearn\" ; [System.IO.Directory]::GetFiles\\(\"D:\\\\Nodejs\\\\chatLearn\"\\) | ForEach-Object { Split-Path $_ -Leaf })",
-      "Bash(flutter doctor *)"
+      "Bash(flutter doctor *)",
+      "Bash(dir \"D:\\\\xampp\\\\htdocs\\\\e-testing\" /b)",
+      "Bash(powershell -command ' *)"
     ],
     "additionalDirectories": [
       "D:\\xampp\\htdocs\\e-testing\\public\\uploads",
