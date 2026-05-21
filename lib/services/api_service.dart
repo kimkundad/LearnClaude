@@ -80,6 +80,20 @@ class ApiService {
     return r.data['data'] as Map<String, dynamic>;
   }
 
+  /// ดึง profile ล่าสุดจาก server แล้ว update local cache
+  Future<void> refreshProfile() async {
+    try {
+      final token = await AuthService.instance.getToken();
+      if (token == null) return;
+      final r = await _dio.post('/update_userprofile',
+          data: FormData.fromMap({'token': token}));
+      if (r.data['status'] == 200) {
+        final profile = r.data['data']['profile'] as Map<String, dynamic>;
+        await AuthService.instance.saveSession(token, profile);
+      }
+    } catch (_) {}
+  }
+
   Future<Map<String, dynamic>> register(String name, String email, String password) async {
     final r = await _dio.post('/register', data: FormData.fromMap({
       'name': name,

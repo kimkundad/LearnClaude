@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'firebase_options.dart';
 import 'services/notification_service.dart';
 import 'theme/app_theme.dart';
+import 'services/api_service.dart';
 import 'services/auth_service.dart';
 import 'screens/login_screen.dart';
 import 'screens/register_screen.dart';
@@ -65,12 +66,20 @@ final _router = GoRouter(
     if (!loggedIn && !isPublicPage) return '/login';
 
     if (loggedIn && !isPublicPage) {
-      final complete = await AuthService.instance.isProfileComplete();
+      var complete = await AuthService.instance.isProfileComplete();
+      if (!complete) {
+        await ApiService.instance.refreshProfile();
+        complete = await AuthService.instance.isProfileComplete();
+      }
       if (!complete) return '/complete-profile';
     }
 
     if (loggedIn && isLoginPage) {
-      final complete = await AuthService.instance.isProfileComplete();
+      var complete = await AuthService.instance.isProfileComplete();
+      if (!complete) {
+        await ApiService.instance.refreshProfile();
+        complete = await AuthService.instance.isProfileComplete();
+      }
       return complete ? '/home' : '/complete-profile';
     }
 
