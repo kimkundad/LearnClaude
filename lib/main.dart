@@ -35,7 +35,16 @@ import 'screens/phone_otp_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  try {
+    if (Firebase.apps.isEmpty) {
+      await Firebase.initializeApp(
+          options: DefaultFirebaseOptions.currentPlatform);
+    }
+  } on FirebaseException catch (error) {
+    if (error.code != 'duplicate-app') {
+      rethrow;
+    }
+  }
   FirebaseMessaging.onBackgroundMessage(firebaseBackgroundHandler);
   runApp(const MyApp());
 }
@@ -200,9 +209,9 @@ final _router = GoRouter(
       builder: (context, state) {
         final extra = state.extra as Map<String, dynamic>? ?? {};
         return ExamV2Screen(
-          exerciseId:    (extra['exerciseId'] as int?) ?? 0,
+          exerciseId: (extra['exerciseId'] as int?) ?? 0,
           exerciseTitle: (extra['exerciseTitle'] as String?) ?? 'แบบทดสอบ',
-          saveAttempt:   (extra['saveAttempt'] as bool?) ?? false,
+          saveAttempt: (extra['saveAttempt'] as bool?) ?? false,
         );
       },
     ),
@@ -211,7 +220,7 @@ final _router = GoRouter(
       builder: (context, state) {
         final extra = state.extra as Map<String, dynamic>? ?? {};
         return ExamV2ListScreen(
-          courseId:    (extra['courseId'] as int?) ?? 0,
+          courseId: (extra['courseId'] as int?) ?? 0,
           courseTitle: (extra['courseTitle'] as String?) ?? 'คอร์สเรียน',
         );
       },

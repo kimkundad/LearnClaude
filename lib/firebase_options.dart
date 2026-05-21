@@ -59,21 +59,21 @@ class DefaultFirebaseOptions {
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyAi3-ee_cWMJIoG1z3yVat3jvlkVa_3zu4',
-    appId: '1:944070130732:ios:4a70a880624a300580a589',
-    messagingSenderId: '944070130732',
-    projectId: 'learnsbuy-376d2',
-    storageBucket: 'learnsbuy-376d2.firebasestorage.app',
-    iosBundleId: 'com.example.learnVideoApp',
+    apiKey: 'AIzaSyAGNSwhMxkyfqULZIIjmnr0x7WjSKUoYrQ',
+    appId: '1:738481561377:ios:bb2f25df3e99803931e860',
+    messagingSenderId: '738481561377',
+    projectId: 'learnsbuy-2af81',
+    storageBucket: 'learnsbuy-2af81.firebasestorage.app',
+    iosBundleId: 'com.learnsbuy.app',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyAi3-ee_cWMJIoG1z3yVat3jvlkVa_3zu4',
-    appId: '1:944070130732:ios:4a70a880624a300580a589',
-    messagingSenderId: '944070130732',
-    projectId: 'learnsbuy-376d2',
-    storageBucket: 'learnsbuy-376d2.firebasestorage.app',
-    iosBundleId: 'com.example.learnVideoApp',
+    apiKey: 'AIzaSyAGNSwhMxkyfqULZIIjmnr0x7WjSKUoYrQ',
+    appId: '1:738481561377:ios:bb2f25df3e99803931e860',
+    messagingSenderId: '738481561377',
+    projectId: 'learnsbuy-2af81',
+    storageBucket: 'learnsbuy-2af81.firebasestorage.app',
+    iosBundleId: 'com.learnsbuy.app',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
