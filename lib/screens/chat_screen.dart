@@ -269,7 +269,8 @@ class _ChatScreenState extends State<ChatScreen> {
   String _timeLabel(String? raw) {
     if (raw == null) return '';
     try {
-      final s  = raw.contains('T') || raw.endsWith('Z') ? raw : '${raw}Z';
+      String s = raw.replaceFirst(' ', 'T');
+      if (!s.endsWith('Z') && !RegExp(r'[+-]\d{2}:\d{2}$').hasMatch(s)) s += 'Z';
       final dt = DateTime.parse(s).toLocal();
       return '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
     } catch (_) { return ''; }

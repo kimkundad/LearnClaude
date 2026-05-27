@@ -323,7 +323,8 @@
       "Bash(dir D:/xampp/htdocs/e-testing/database/migrations/ /b)",
       "Bash(findstr /i \"submit pack\")",
       "Bash(ls D:/Nodejs/chatLearn/)",
-      "Read(//d/Nodejs/chatLearn/**)"
+      "Read(//d/Nodejs/chatLearn/**)",
+      "Bash(dir /b \"D:\\\\Nodejs\\\\chatLearn\")"
     ],
     "additionalDirectories": [
       "D:\\xampp\\htdocs\\e-testing\\public\\uploads",
