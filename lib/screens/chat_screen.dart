@@ -114,11 +114,6 @@ class _ChatScreenState extends State<ChatScreen> {
       final list = (r.data as List)
           .map((e) => Map<String, dynamic>.from(e as Map))
           .toList();
-      if (list.isNotEmpty) {
-        final latest = list.last;
-        final raw = latest['created_at']?.toString();
-        debugPrint('[CHAT_TIME] student raw=$raw label=${_timeLabel(raw)}');
-      }
       if (!mounted) return;
       final hasNew = list.isNotEmpty && (list.last['id'] as int?) != _lastId;
       setState(() {
