@@ -314,7 +314,16 @@
       "PowerShell(Test-Path \"D:\\\\Nodejs\\\\chatLearn\" ; [System.IO.Directory]::GetFiles\\(\"D:\\\\Nodejs\\\\chatLearn\"\\) | ForEach-Object { Split-Path $_ -Leaf })",
       "Bash(flutter doctor *)",
       "Bash(dir \"D:\\\\xampp\\\\htdocs\\\\e-testing\" /b)",
-      "Bash(powershell -command ' *)"
+      "Bash(powershell -command ' *)",
+      "Bash(grep -oP '\"[^\"]+\"$')",
+      "Bash(awk -F'\"' '{print $6}')",
+      "Bash(curl -s \"https://raw.githubusercontent.com/earthchie/jquery-Thailand.js/master/jquery.Thailand.js/database/db.json\" -o \"D:\\\\flutter\\\\LearnClaude\\\\lib\\\\data\\\\thailand_db.json\")",
+      "Bash(mysql -u root -e \"SHOW TABLES LIKE '%p_submit%';\" enihongo)",
+      "Bash(mysql -u root --password=\"\" -e \"SHOW TABLES LIKE '%submit%';\" enihongo)",
+      "Bash(dir D:/xampp/htdocs/e-testing/database/migrations/ /b)",
+      "Bash(findstr /i \"submit pack\")",
+      "Bash(ls D:/Nodejs/chatLearn/)",
+      "Read(//d/Nodejs/chatLearn/**)"
     ],
     "additionalDirectories": [
       "D:\\xampp\\htdocs\\e-testing\\public\\uploads",
