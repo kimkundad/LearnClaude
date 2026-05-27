@@ -11,6 +11,19 @@ class ApiException implements Exception {
   String toString() => message;
 }
 
+String _localizedApiMessage(dynamic message) {
+  final text = message?.toString().trim();
+  if (text == null || text.isEmpty) return 'เกิดข้อผิดพลาด';
+
+  switch (text.toLowerCase()) {
+    case 'this course has already been used.':
+    case 'this course has already been used':
+      return 'คอร์สนี้ถูกใช้งานแล้ว';
+    default:
+      return text;
+  }
+}
+
 class ApiService {
   ApiService._();
   static final ApiService instance = ApiService._();
@@ -42,7 +55,7 @@ class ApiService {
     }
     final status = r.data?['status'];
     if (status != 200 && status != null) {
-      throw ApiException(r.data?['message'] ?? 'เกิดข้อผิดพลาด');
+      throw ApiException(_localizedApiMessage(r.data?['message']));
     }
   }
 
@@ -61,7 +74,8 @@ class ApiService {
     return r.data['data']['reset_token'] as String;
   }
 
-  Future<void> resetPassword(String email, String resetToken, String newPassword) async {
+  Future<void> resetPassword(
+      String email, String resetToken, String newPassword) async {
     final r = await _dio.post('/reset-password',
         data: FormData.fromMap({
           'email': email,
@@ -72,10 +86,11 @@ class ApiService {
   }
 
   Future<Map<String, dynamic>> login(String email, String password) async {
-    final r = await _dio.post('/login', data: FormData.fromMap({
-      'email': email,
-      'password': password,
-    }));
+    final r = await _dio.post('/login',
+        data: FormData.fromMap({
+          'email': email,
+          'password': password,
+        }));
     _check(r);
     return r.data['data'] as Map<String, dynamic>;
   }
@@ -94,12 +109,14 @@ class ApiService {
     } catch (_) {}
   }
 
-  Future<Map<String, dynamic>> register(String name, String email, String password) async {
-    final r = await _dio.post('/register', data: FormData.fromMap({
-      'name': name,
-      'email': email,
-      'password': password,
-    }));
+  Future<Map<String, dynamic>> register(
+      String name, String email, String password) async {
+    final r = await _dio.post('/register',
+        data: FormData.fromMap({
+          'name': name,
+          'email': email,
+          'password': password,
+        }));
     _check(r);
     return r.data['data'] as Map<String, dynamic>;
   }
@@ -129,7 +146,8 @@ class ApiService {
   Future<List<dynamic>> getCourses({int departmentId = 0}) async {
     final r = await _dio.get(
       '/courses',
-      queryParameters: departmentId > 0 ? {'department_id': departmentId} : null,
+      queryParameters:
+          departmentId > 0 ? {'department_id': departmentId} : null,
     );
     _check(r);
     return r.data['data'] as List<dynamic>;
@@ -231,7 +249,8 @@ class ApiService {
     final r = await _dio.get('/my-courses', options: await _authOptions());
     _check(r);
     final list = r.data['data'] as List<dynamic>;
-    print('>>> getMyCourses count=${list.length} ids=${list.map((e) => e['course_id']).toList()}');
+    print(
+        '>>> getMyCourses count=${list.length} ids=${list.map((e) => e['course_id']).toList()}');
     return list;
   }
 
@@ -276,15 +295,19 @@ class ApiService {
       'totalmoney': amount,
       'day': date,
       'timer': time,
-      if (slipImage != null) 'image': await MultipartFile.fromFile(
-        slipImage.path, filename: slipImage.path.split('/').last,
-      ),
+      if (slipImage != null)
+        'image': await MultipartFile.fromFile(
+          slipImage.path,
+          filename: slipImage.path.split('/').last,
+        ),
       if (couponId != null) 'coupon_id': couponId,
     };
-    final r = await _mainDio.post('/api/bil_course', data: FormData.fromMap(map));
-    debugPrint('[bil_course] status=${r.data?['status']} msg=${r.data?['message']} err=${r.data?['error']}');
+    final r =
+        await _mainDio.post('/api/bil_course', data: FormData.fromMap(map));
+    debugPrint(
+        '[bil_course] status=${r.data?['status']} msg=${r.data?['message']} err=${r.data?['error']}');
     if ((r.data?['status'] ?? 0) != 200) {
-      final msg = r.data?['message'] ?? 'เกิดข้อผิดพลาด';
+      final msg = _localizedApiMessage(r.data?['message']);
       final err = r.data?['error'];
       throw ApiException(err != null ? '$msg\n($err)' : msg);
     }
@@ -307,11 +330,14 @@ class ApiService {
       'totalmoney': amount,
       'day': date,
       'timer': time,
-      if (slipImage != null) 'image': await MultipartFile.fromFile(
-        slipImage.path, filename: slipImage.path.split('/').last,
-      ),
+      if (slipImage != null)
+        'image': await MultipartFile.fromFile(
+          slipImage.path,
+          filename: slipImage.path.split('/').last,
+        ),
     };
-    final r = await _mainDio.post('/api/bill_submit_course_pack', data: FormData.fromMap(map));
+    final r = await _mainDio.post('/api/bill_submit_course_pack',
+        data: FormData.fromMap(map));
     if ((r.data?['status'] ?? 0) != 200) {
       throw ApiException(r.data?['message'] ?? 'เกิดข้อผิดพลาด');
     }
@@ -405,8 +431,7 @@ class ApiService {
   Future<int> getPoint() async {
     final token = await AuthService.instance.getToken();
     if (token == null) return 0;
-    final r = await _mainDio.post('/api/get_point_v2',
-        data: {'token': token});
+    final r = await _mainDio.post('/api/get_point_v2', data: {'token': token});
     return (r.data['data'] as num?)?.toInt() ?? 0;
   }
 
@@ -414,8 +439,7 @@ class ApiService {
   Future<int> deductPoint() async {
     final token = await AuthService.instance.getToken();
     if (token == null) return 0;
-    final r = await _mainDio.post('/api/del_point_v4',
-        data: {'token': token});
+    final r = await _mainDio.post('/api/del_point_v4', data: {'token': token});
     return (r.data['data'] as num?)?.toInt() ?? 0;
   }
 
@@ -424,16 +448,19 @@ class ApiService {
   /// GET api_v3/exam-v2/list/{courseId} — list exercises for a course (optional auth for best score)
   Future<List<dynamic>> getExamList(int courseId) async {
     Options? opts;
-    try { opts = await _authOptions(); } catch (_) {}
-    final r = await _dio.get('/exam-v2/list/$courseId',
-        options: opts);
+    try {
+      opts = await _authOptions();
+    } catch (_) {}
+    final r = await _dio.get('/exam-v2/list/$courseId', options: opts);
     return (r.data['exercises'] as List<dynamic>?) ?? [];
   }
 
   /// GET api_v3/exam-v2/{id} — get exercise with questions (public)
   Future<Map<String, dynamic>> getExamDetail(int id) async {
     Options? opts;
-    try { opts = await _authOptions(); } catch (_) {}
+    try {
+      opts = await _authOptions();
+    } catch (_) {}
     final r = await _dio.get('/exam-v2/$id', options: opts);
     return r.data as Map<String, dynamic>;
   }

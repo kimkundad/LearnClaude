@@ -1,10 +1,11 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../config/app_config.dart';
 import '../theme/app_theme.dart';
+import '../utils/chat_time.dart';
 import 'teacher_chat_screen.dart';
 
 class TeacherInboxScreen extends StatefulWidget {
@@ -46,7 +47,7 @@ class _TeacherInboxScreenState extends State<TeacherInboxScreen> {
           .map((e) => Map<String, dynamic>.from(e as Map))
           .toList();
       setState(() {
-        _rooms    = list;
+        _rooms = list;
         _isLoading = false;
       });
       _applySearch();
@@ -68,16 +69,17 @@ class _TeacherInboxScreenState extends State<TeacherInboxScreen> {
   }
 
   String _timeLabel(String? raw) {
-    if (raw == null) return '';
+    final clock = formatChatClockInThailand(raw);
+    final dt = parseChatTimeInThailand(raw);
+    if (dt == null) return clock;
     try {
-      final dt = DateTime.parse(raw).toLocal();
-      final now = DateTime.now();
+      final now = DateTime.now().toUtc().add(const Duration(hours: 7));
       final diff = now.difference(dt);
-      if (diff.inMinutes < 1)  return 'เมื่อกี้';
+      if (diff.inMinutes < 1) return 'เมื่อกี้';
       if (diff.inMinutes < 60) return '${diff.inMinutes} น. ก่อน';
-      if (diff.inHours   < 24) return '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
-      if (diff.inDays    == 1) return 'เมื่อวาน';
-      if (diff.inDays    < 7)  return _thaiWeekday(dt.weekday);
+      if (diff.inHours < 24) return clock;
+      if (diff.inDays == 1) return 'เมื่อวาน';
+      if (diff.inDays < 7) return _thaiWeekday(dt.weekday);
       return '${dt.day}/${dt.month}';
     } catch (_) {
       return '';
@@ -85,7 +87,15 @@ class _TeacherInboxScreenState extends State<TeacherInboxScreen> {
   }
 
   String _thaiWeekday(int w) {
-    const days = ['จันทร์', 'อังคาร', 'พุธ', 'พฤหัสฯ', 'ศุกร์', 'เสาร์', 'อาทิตย์'];
+    const days = [
+      'จันทร์',
+      'อังคาร',
+      'พุธ',
+      'พฤหัสฯ',
+      'ศุกร์',
+      'เสาร์',
+      'อาทิตย์'
+    ];
     return days[(w - 1).clamp(0, 6)];
   }
 
@@ -106,7 +116,8 @@ class _TeacherInboxScreenState extends State<TeacherInboxScreen> {
     if (newField != null) return (newField as num).toInt();
     final isRead = room['is_read'];
     if (isRead == null) return 0;
-    final isReadInt = isRead is bool ? (isRead ? 1 : 0) : (isRead as num).toInt();
+    final isReadInt =
+        isRead is bool ? (isRead ? 1 : 0) : (isRead as num).toInt();
     return isReadInt == 0 ? 1 : 0;
   }
 
@@ -130,7 +141,8 @@ class _TeacherInboxScreenState extends State<TeacherInboxScreen> {
         backgroundColor: AppTheme.primary,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.chevron_left_rounded, color: Colors.white, size: 30),
+          icon: const Icon(Icons.chevron_left_rounded,
+              color: Colors.white, size: 30),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
@@ -144,7 +156,10 @@ class _TeacherInboxScreenState extends State<TeacherInboxScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh_rounded, color: Colors.white),
-            onPressed: () { setState(() => _isLoading = true); _load(); },
+            onPressed: () {
+              setState(() => _isLoading = true);
+              _load();
+            },
           ),
         ],
       ),
@@ -187,7 +202,10 @@ class _TeacherInboxScreenState extends State<TeacherInboxScreen> {
           suffixIcon: _searchCtrl.text.isNotEmpty
               ? IconButton(
                   icon: const Icon(Icons.clear_rounded, size: 18),
-                  onPressed: () { _searchCtrl.clear(); _applySearch(); },
+                  onPressed: () {
+                    _searchCtrl.clear();
+                    _applySearch();
+                  },
                 )
               : null,
           filled: true,
@@ -204,21 +222,21 @@ class _TeacherInboxScreenState extends State<TeacherInboxScreen> {
   }
 
   Widget _buildRow(Map<String, dynamic> room) {
-    final name       = (room['name'] as String?) ?? 'นักเรียน';
-    final avatarUrl  = _avatarUrl(room['avatar'] as String?);
-    final preview    = _previewText(room);
-    final timeLabel  = _timeLabel(room['created_at'] as String?);
-    final unread     = _unreadCount(room);
-    final roomId     = (room['room_id'] as num?)?.toInt() ?? 0;
+    final name = (room['name'] as String?) ?? 'นักเรียน';
+    final avatarUrl = _avatarUrl(room['avatar'] as String?);
+    final preview = _previewText(room);
+    final timeLabel = _timeLabel(room['created_at'] as String?);
+    final unread = _unreadCount(room);
+    final roomId = (room['room_id'] as num?)?.toInt() ?? 0;
 
     return InkWell(
       onTap: () async {
         await Navigator.of(context).push(
           MaterialPageRoute(
             builder: (_) => TeacherChatScreen(
-              roomId:      roomId,
+              roomId: roomId,
               studentName: name,
-              avatarUrl:   avatarUrl.isNotEmpty ? avatarUrl : null,
+              avatarUrl: avatarUrl.isNotEmpty ? avatarUrl : null,
             ),
           ),
         );
@@ -243,7 +261,8 @@ class _TeacherInboxScreenState extends State<TeacherInboxScreen> {
                           name,
                           style: GoogleFonts.notoSansThai(
                             fontSize: 15,
-                            fontWeight: unread > 0 ? FontWeight.w900 : FontWeight.w700,
+                            fontWeight:
+                                unread > 0 ? FontWeight.w900 : FontWeight.w700,
                             color: AppTheme.textDark,
                           ),
                           overflow: TextOverflow.ellipsis,
@@ -253,8 +272,11 @@ class _TeacherInboxScreenState extends State<TeacherInboxScreen> {
                         timeLabel,
                         style: GoogleFonts.notoSansThai(
                           fontSize: 11,
-                          color: unread > 0 ? AppTheme.primary : AppTheme.textLight,
-                          fontWeight: unread > 0 ? FontWeight.w700 : FontWeight.w400,
+                          color: unread > 0
+                              ? AppTheme.primary
+                              : AppTheme.textLight,
+                          fontWeight:
+                              unread > 0 ? FontWeight.w700 : FontWeight.w400,
                         ),
                       ),
                     ],
@@ -269,8 +291,11 @@ class _TeacherInboxScreenState extends State<TeacherInboxScreen> {
                           overflow: TextOverflow.ellipsis,
                           style: GoogleFonts.notoSansThai(
                             fontSize: 13,
-                            color: unread > 0 ? AppTheme.textDark : AppTheme.textLight,
-                            fontWeight: unread > 0 ? FontWeight.w700 : FontWeight.w400,
+                            color: unread > 0
+                                ? AppTheme.textDark
+                                : AppTheme.textLight,
+                            fontWeight:
+                                unread > 0 ? FontWeight.w700 : FontWeight.w400,
                           ),
                         ),
                       ),
@@ -278,7 +303,8 @@ class _TeacherInboxScreenState extends State<TeacherInboxScreen> {
                         const SizedBox(width: 8),
                         Container(
                           constraints: const BoxConstraints(minWidth: 20),
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
                             color: AppTheme.primary,
                             borderRadius: BorderRadius.circular(999),
@@ -324,7 +350,6 @@ class _TeacherInboxScreenState extends State<TeacherInboxScreen> {
                 )
               : null,
         ),
-
         if (hasUnread)
           Positioned(
             right: 0,
@@ -347,7 +372,8 @@ class _TeacherInboxScreenState extends State<TeacherInboxScreen> {
     return Center(
       child: Text(
         'ยังไม่มีข้อความ',
-        style: GoogleFonts.notoSansThai(fontSize: 15, color: AppTheme.textLight),
+        style:
+            GoogleFonts.notoSansThai(fontSize: 15, color: AppTheme.textLight),
       ),
     );
   }

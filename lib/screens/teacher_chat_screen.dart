@@ -13,6 +13,7 @@ import '../config/app_config.dart';
 import '../services/api_service.dart';
 import '../services/notification_service.dart';
 import '../theme/app_theme.dart';
+import '../utils/chat_time.dart';
 
 class TeacherChatScreen extends StatefulWidget {
   final int roomId;
@@ -76,6 +77,11 @@ class _TeacherChatScreenState extends State<TeacherChatScreen> {
       final list = (r.data as List)
           .map((e) => Map<String, dynamic>.from(e as Map))
           .toList();
+      if (list.isNotEmpty) {
+        final latest = list.last;
+        final raw = latest['created_at']?.toString();
+        debugPrint('[CHAT_TIME] teacher raw=$raw label=${_timeLabel(raw)}');
+      }
       if (!mounted) return;
       final hasNew = list.isNotEmpty && (list.last['id'] as int?) != _lastId;
       setState(() {
@@ -255,15 +261,7 @@ class _TeacherChatScreenState extends State<TeacherChatScreen> {
       (msg['sender_id'] as int?) == AppConfig.teacherId;
 
   String _timeLabel(String? raw) {
-    if (raw == null) return '';
-    try {
-      String s = raw.replaceFirst(' ', 'T');
-      if (!s.endsWith('Z') && !RegExp(r'[+-]\d{2}:\d{2}$').hasMatch(s)) s += 'Z';
-      final dt = DateTime.parse(s).toLocal();
-      return '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
-    } catch (_) {
-      return '';
-    }
+    return formatChatClockInThailand(raw);
   }
 
   String _fmtDur(int s) => '${s ~/ 60}:${(s % 60).toString().padLeft(2, '0')}';

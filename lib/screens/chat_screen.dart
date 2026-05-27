@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:io';
 
 import 'package:audioplayers/audioplayers.dart';
@@ -15,6 +15,7 @@ import '../services/api_service.dart';
 import '../services/auth_service.dart';
 import '../services/notification_service.dart';
 import '../theme/app_theme.dart';
+import '../utils/chat_time.dart';
 
 class ChatScreen extends StatefulWidget {
   final String? initialMessage;
@@ -25,19 +26,19 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _ChatScreenState extends State<ChatScreen> {
-  final _dio           = Dio(BaseOptions(baseUrl: AppConfig.chatApi));
-  final _msgCtrl       = TextEditingController();
-  final _scrollCtrl    = ScrollController();
-  final _imagePicker   = ImagePicker();
+  final _dio = Dio(BaseOptions(baseUrl: AppConfig.chatApi));
+  final _msgCtrl = TextEditingController();
+  final _scrollCtrl = ScrollController();
+  final _imagePicker = ImagePicker();
   final _audioRecorder = AudioRecorder();
-  final _audioPlayer   = AudioPlayer();
+  final _audioPlayer = AudioPlayer();
 
   Timer? _pollTimer;
   StreamSubscription<void>? _playerSub;
 
   List<Map<String, dynamic>> _messages = [];
-  bool _loading     = true;
-  bool _isSending   = false;
+  bool _loading = true;
+  bool _isSending = false;
   bool _isRecording = false;
   DateTime? _recordStart;
   int? _playingIndex;
@@ -73,7 +74,7 @@ class _ChatScreenState extends State<ChatScreen> {
     try {
       final user = await AuthService.instance.getUser();
       _myUserId = (user?['id'] as num?)?.toInt();
-      _myName   = (user?['name'] as String?) ?? 'นักเรียน';
+      _myName = (user?['name'] as String?) ?? 'นักเรียน';
 
       if (_myUserId == null) {
         if (mounted) setState(() => _loading = false);
@@ -98,8 +99,7 @@ class _ChatScreenState extends State<ChatScreen> {
       }
 
       // poll every 5 s like teacher
-      _pollTimer = Timer.periodic(
-        const Duration(seconds: 5), (_) => _load());
+      _pollTimer = Timer.periodic(const Duration(seconds: 5), (_) => _load());
     } catch (_) {
       if (mounted) setState(() => _loading = false);
     }
@@ -110,15 +110,20 @@ class _ChatScreenState extends State<ChatScreen> {
   Future<void> _load({bool markRead = false}) async {
     if (_roomId == null) return;
     try {
-      final r    = await _dio.get('/messages/$_roomId');
+      final r = await _dio.get('/messages/$_roomId');
       final list = (r.data as List)
           .map((e) => Map<String, dynamic>.from(e as Map))
           .toList();
+      if (list.isNotEmpty) {
+        final latest = list.last;
+        final raw = latest['created_at']?.toString();
+        debugPrint('[CHAT_TIME] student raw=$raw label=${_timeLabel(raw)}');
+      }
       if (!mounted) return;
       final hasNew = list.isNotEmpty && (list.last['id'] as int?) != _lastId;
       setState(() {
         _messages = list;
-        _loading  = false;
+        _loading = false;
         if (list.isNotEmpty) _lastId = list.last['id'] as int?;
       });
       if (hasNew) _scrollToTop();
@@ -131,8 +136,7 @@ class _ChatScreenState extends State<ChatScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollCtrl.hasClients) {
         _scrollCtrl.animateTo(0,
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeOut);
+            duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
       }
     });
   }
@@ -147,11 +151,11 @@ class _ChatScreenState extends State<ChatScreen> {
     setState(() => _isSending = true);
     try {
       await _dio.post('/send-message', data: {
-        'room_id':      _roomId,
-        'sender_id':    _myUserId,
-        'message':      text,
+        'room_id': _roomId,
+        'sender_id': _myUserId,
+        'message': text,
         'message_type': 'text',
-        'name':         _myName,
+        'name': _myName,
       });
       await _load();
     } catch (_) {
@@ -168,20 +172,22 @@ class _ChatScreenState extends State<ChatScreen> {
 
     setState(() => _isSending = true);
     try {
-      final result   = await ApiService.instance.uploadChatMedia(File(picked.path));
+      final result =
+          await ApiService.instance.uploadChatMedia(File(picked.path));
       final mediaUrl = result['url'] as String;
       await _dio.post('/send-message', data: {
-        'room_id':      _roomId,
-        'sender_id':    _myUserId,
+        'room_id': _roomId,
+        'sender_id': _myUserId,
         'message_type': 'image',
-        'media_url':    mediaUrl,
-        'name':         _myName,
+        'media_url': mediaUrl,
+        'name': _myName,
       });
       await _load();
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('ส่งรูปไม่สำเร็จ: $e', style: GoogleFonts.notoSansThai())));
+            content: Text('ส่งรูปไม่สำเร็จ: $e',
+                style: GoogleFonts.notoSansThai())));
       }
     } finally {
       if (mounted) setState(() => _isSending = false);
@@ -196,15 +202,17 @@ class _ChatScreenState extends State<ChatScreen> {
     }
     final ok = await _audioRecorder.hasPermission();
     if (!ok) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('ไม่สามารถใช้ไมโครโฟนได้ กรุณาอนุญาตสิทธิ์ก่อน',
-            style: GoogleFonts.notoSansThai())));
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('ไม่สามารถใช้ไมโครโฟนได้ กรุณาอนุญาตสิทธิ์ก่อน',
+                style: GoogleFonts.notoSansThai())));
       return;
     }
-    final dir  = await getTemporaryDirectory();
-    final path = '${dir.path}/voice_${DateTime.now().millisecondsSinceEpoch}.m4a';
-    await _audioRecorder.start(
-        const RecordConfig(encoder: AudioEncoder.aacLc), path: path);
+    final dir = await getTemporaryDirectory();
+    final path =
+        '${dir.path}/voice_${DateTime.now().millisecondsSinceEpoch}.m4a';
+    await _audioRecorder.start(const RecordConfig(encoder: AudioEncoder.aacLc),
+        path: path);
     setState(() {
       _isRecording = true;
       _recordStart = DateTime.now();
@@ -212,9 +220,9 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _stopAndSendVoice() async {
-    final path  = await _audioRecorder.stop();
+    final path = await _audioRecorder.stop();
     final start = _recordStart;
-    final secs  = start == null
+    final secs = start == null
         ? 1
         : DateTime.now().difference(start).inSeconds.clamp(1, 599).toInt();
     setState(() {
@@ -225,20 +233,22 @@ class _ChatScreenState extends State<ChatScreen> {
 
     setState(() => _isSending = true);
     try {
-      final result   = await ApiService.instance.uploadChatMedia(File(path));
+      final result = await ApiService.instance.uploadChatMedia(File(path));
       final mediaUrl = result['url'] as String;
       await _dio.post('/send-message', data: {
-        'room_id':      _roomId,
-        'sender_id':    _myUserId,
+        'room_id': _roomId,
+        'sender_id': _myUserId,
         'message_type': 'audio',
-        'media_url':    mediaUrl,
-        'duration':     secs,
-        'name':         _myName,
+        'media_url': mediaUrl,
+        'duration': secs,
+        'name': _myName,
       });
       await _load();
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('ส่งเสียงไม่สำเร็จ: $e', style: GoogleFonts.notoSansThai())));
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('ส่งเสียงไม่สำเร็จ: $e',
+                style: GoogleFonts.notoSansThai())));
     } finally {
       if (mounted) setState(() => _isSending = false);
     }
@@ -267,17 +277,10 @@ class _ChatScreenState extends State<ChatScreen> {
       (msg['sender_id'] as num?)?.toInt() == _myUserId;
 
   String _timeLabel(String? raw) {
-    if (raw == null) return '';
-    try {
-      String s = raw.replaceFirst(' ', 'T');
-      if (!s.endsWith('Z') && !RegExp(r'[+-]\d{2}:\d{2}$').hasMatch(s)) s += 'Z';
-      final dt = DateTime.parse(s).toLocal();
-      return '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
-    } catch (_) { return ''; }
+    return formatChatClockInThailand(raw);
   }
 
-  String _fmtDur(int s) =>
-      '${s ~/ 60}:${(s % 60).toString().padLeft(2, '0')}';
+  String _fmtDur(int s) => '${s ~/ 60}:${(s % 60).toString().padLeft(2, '0')}';
 
   // ── Build ─────────────────────────────────────────────────────────────────
 
@@ -329,8 +332,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           reverse: true,
                           keyboardDismissBehavior:
                               ScrollViewKeyboardDismissBehavior.onDrag,
-                          padding:
-                              const EdgeInsets.fromLTRB(16, 18, 16, 16),
+                          padding: const EdgeInsets.fromLTRB(16, 18, 16, 16),
                           itemCount: _messages.length,
                           itemBuilder: (_, listIdx) {
                             final i = _messages.length - 1 - listIdx;
@@ -346,43 +348,42 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Widget _emptyState() => Center(
-    child: Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: const BoxDecoration(
-              color: AppTheme.primaryLight, shape: BoxShape.circle),
-          child: const Icon(Icons.chat_bubble_outline_rounded,
-              color: AppTheme.primary, size: 40),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: const BoxDecoration(
+                  color: AppTheme.primaryLight, shape: BoxShape.circle),
+              child: const Icon(Icons.chat_bubble_outline_rounded,
+                  color: AppTheme.primary, size: 40),
+            ),
+            const SizedBox(height: 14),
+            Text('เริ่มต้นการสนทนา',
+                style: GoogleFonts.notoSansThai(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    color: AppTheme.textDark)),
+            const SizedBox(height: 6),
+            Text('ส่งข้อความหาครูพี่โฮมได้เลย',
+                style: GoogleFonts.notoSansThai(
+                    fontSize: 13,
+                    color: AppTheme.textLight,
+                    fontWeight: FontWeight.w600)),
+          ],
         ),
-        const SizedBox(height: 14),
-        Text('เริ่มต้นการสนทนา',
-            style: GoogleFonts.notoSansThai(
-                fontSize: 16,
-                fontWeight: FontWeight.w800,
-                color: AppTheme.textDark)),
-        const SizedBox(height: 6),
-        Text('ส่งข้อความหาครูพี่โฮมได้เลย',
-            style: GoogleFonts.notoSansThai(
-                fontSize: 13,
-                color: AppTheme.textLight,
-                fontWeight: FontWeight.w600)),
-      ],
-    ),
-  );
+      );
 
   Widget _statusStrip() {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      color: _isRecording
-          ? const Color(0xFFFFF1F2)
-          : const Color(0xFFF2FAF8),
+      color: _isRecording ? const Color(0xFFFFF1F2) : const Color(0xFFF2FAF8),
       child: Row(
         children: [
           Container(
-            width: 9, height: 9,
+            width: 9,
+            height: 9,
             decoration: BoxDecoration(
               color: _isRecording ? AppTheme.priceRed : AppTheme.primary,
               shape: BoxShape.circle,
@@ -404,20 +405,21 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Widget _bubble(int index, Map<String, dynamic> msg) {
-    final isMe      = _isMe(msg);
-    final type      = (msg['message_type'] as String?) ?? 'text';
-    final text      = (msg['message'] as String?) ?? '';
-    final mediaUrl  = (msg['media_url'] as String?) ?? '';
-    final senderName = isMe ? _myName : ((msg['name'] as String?) ?? 'ครูพี่โฮม');
-    final timeStr   = _timeLabel(msg['created_at'] as String?);
+    final isMe = _isMe(msg);
+    final type = (msg['message_type'] as String?) ?? 'text';
+    final text = (msg['message'] as String?) ?? '';
+    final mediaUrl = (msg['media_url'] as String?) ?? '';
+    final senderName =
+        isMe ? _myName : ((msg['name'] as String?) ?? 'ครูพี่โฮม');
+    final timeStr = _timeLabel(msg['created_at'] as String?);
     final bubbleColor = isMe ? AppTheme.primary : const Color(0xFFF0F3F6);
 
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
-        constraints: BoxConstraints(
-            maxWidth: MediaQuery.of(context).size.width * 0.75),
+        constraints:
+            BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
         child: Column(
           crossAxisAlignment:
               isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
@@ -429,9 +431,9 @@ class _ChatScreenState extends State<ChatScreen> {
               decoration: BoxDecoration(
                 color: bubbleColor,
                 borderRadius: BorderRadius.only(
-                  topLeft:     const Radius.circular(18),
-                  topRight:    const Radius.circular(18),
-                  bottomLeft:  Radius.circular(isMe ? 18 : 5),
+                  topLeft: const Radius.circular(18),
+                  topRight: const Radius.circular(18),
+                  bottomLeft: Radius.circular(isMe ? 18 : 5),
                   bottomRight: Radius.circular(isMe ? 5 : 18),
                 ),
               ),
@@ -467,8 +469,8 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  Widget _bubbleContent(int index, bool isMe, String type,
-      String text, String mediaUrl, Map<String, dynamic> msg) {
+  Widget _bubbleContent(int index, bool isMe, String type, String text,
+      String mediaUrl, Map<String, dynamic> msg) {
     final textColor = isMe ? Colors.white : AppTheme.textDark;
 
     if (type == 'image' && mediaUrl.isNotEmpty) {
@@ -478,12 +480,14 @@ class _ChatScreenState extends State<ChatScreen> {
           children: [
             Image.network(
               mediaUrl,
-              width: 220, height: 160,
+              width: 220,
+              height: 160,
               fit: BoxFit.cover,
               loadingBuilder: (_, child, progress) => progress == null
                   ? child
                   : SizedBox(
-                      width: 220, height: 160,
+                      width: 220,
+                      height: 160,
                       child: Center(
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
@@ -495,14 +499,17 @@ class _ChatScreenState extends State<ChatScreen> {
                       ),
                     ),
               errorBuilder: (_, __, ___) => Container(
-                  width: 220, height: 100,
+                  width: 220,
+                  height: 100,
                   color: Colors.grey.shade200,
                   child: const Icon(Icons.broken_image_rounded, size: 40)),
             ),
             Positioned(
-              right: 8, bottom: 8,
+              right: 8,
+              bottom: 8,
               child: Container(
-                width: 28, height: 28,
+                width: 28,
+                height: 28,
                 decoration: BoxDecoration(
                     color: Colors.black.withOpacity(0.28),
                     shape: BoxShape.circle),
@@ -516,7 +523,7 @@ class _ChatScreenState extends State<ChatScreen> {
     }
 
     if (type == 'audio' && mediaUrl.isNotEmpty) {
-      final dur     = (msg['duration'] as num?)?.toInt() ?? 0;
+      final dur = (msg['duration'] as num?)?.toInt() ?? 0;
       final playing = _playingIndex == index;
       return GestureDetector(
         onTap: () => _togglePlayback(index, mediaUrl),
@@ -525,13 +532,15 @@ class _ChatScreenState extends State<ChatScreen> {
           children: [
             AnimatedContainer(
               duration: const Duration(milliseconds: 180),
-              width: 32, height: 32,
+              width: 32,
+              height: 32,
               decoration: BoxDecoration(
                   color: textColor.withOpacity(playing ? 0.24 : 0.12),
                   shape: BoxShape.circle),
               child: Icon(
                   playing ? Icons.pause_rounded : Icons.play_arrow_rounded,
-                  color: textColor, size: 21),
+                  color: textColor,
+                  size: 21),
             ),
             const SizedBox(width: 8),
             SizedBox(
@@ -551,9 +560,7 @@ class _ChatScreenState extends State<ChatScreen> {
             Text(
               playing ? 'กำลังเล่น...' : 'เสียง ${_fmtDur(dur)}',
               style: GoogleFonts.notoSansThai(
-                  fontSize: 13,
-                  color: textColor,
-                  fontWeight: FontWeight.w800),
+                  fontSize: 13, color: textColor, fontWeight: FontWeight.w800),
             ),
           ],
         ),
@@ -583,26 +590,28 @@ class _ChatScreenState extends State<ChatScreen> {
               child: GestureDetector(
                 onTap: () => Navigator.pop(context),
                 child: Container(
-                  width: 38, height: 38,
+                  width: 38,
+                  height: 38,
                   margin: const EdgeInsets.only(bottom: 10),
                   decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.16),
                       shape: BoxShape.circle),
-                  child: const Icon(Icons.close_rounded,
-                      color: Colors.white),
+                  child: const Icon(Icons.close_rounded, color: Colors.white),
                 ),
               ),
             ),
             Container(
-              width: double.infinity, height: 360,
+              width: double.infinity,
+              height: 360,
               clipBehavior: Clip.antiAlias,
               decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(22)),
-              child: Image.network(url, fit: BoxFit.contain,
+                  color: Colors.white, borderRadius: BorderRadius.circular(22)),
+              child: Image.network(url,
+                  fit: BoxFit.contain,
                   errorBuilder: (_, __, ___) => const Icon(
                       Icons.broken_image_rounded,
-                      size: 86, color: AppTheme.primary)),
+                      size: 86,
+                      color: AppTheme.primary)),
             ),
           ],
         ),
@@ -627,9 +636,7 @@ class _ChatScreenState extends State<ChatScreen> {
               onTap: _isSending || _isRecording ? null : _sendImage,
             ),
             _iconBtn(
-              icon: _isRecording
-                  ? Icons.stop_rounded
-                  : Icons.mic_none_rounded,
+              icon: _isRecording ? Icons.stop_rounded : Icons.mic_none_rounded,
               onTap: _isSending ? null : _toggleRecording,
               active: _isRecording,
             ),
@@ -643,13 +650,12 @@ class _ChatScreenState extends State<ChatScreen> {
                 textInputAction: TextInputAction.send,
                 onSubmitted: (_) => _sendText(),
                 decoration: InputDecoration(
-                  hintText: _isRecording
-                      ? 'กำลังอัดเสียง...'
-                      : 'พิมพ์ข้อความ...',
-                  hintStyle: GoogleFonts.notoSansThai(
-                      color: Colors.grey.shade400),
-                  contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 12),
+                  hintText:
+                      _isRecording ? 'กำลังอัดเสียง...' : 'พิมพ์ข้อความ...',
+                  hintStyle:
+                      GoogleFonts.notoSansThai(color: Colors.grey.shade400),
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   filled: true,
                   fillColor: const Color(0xFFF8F8F8),
                   border: OutlineInputBorder(
@@ -670,7 +676,8 @@ class _ChatScreenState extends State<ChatScreen> {
             GestureDetector(
               onTap: _isSending || _isRecording ? null : _sendText,
               child: Container(
-                width: 44, height: 44,
+                width: 44,
+                height: 44,
                 decoration: BoxDecoration(
                   color: (_isSending || _isRecording)
                       ? AppTheme.border
@@ -681,7 +688,8 @@ class _ChatScreenState extends State<ChatScreen> {
                   _isSending
                       ? Icons.hourglass_empty_rounded
                       : Icons.send_rounded,
-                  color: Colors.white, size: 21,
+                  color: Colors.white,
+                  size: 21,
                 ),
               ),
             ),
@@ -699,7 +707,8 @@ class _ChatScreenState extends State<ChatScreen> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 40, height: 40,
+        width: 40,
+        height: 40,
         margin: const EdgeInsets.only(right: 4),
         decoration: BoxDecoration(
           color: active ? AppTheme.priceRed : AppTheme.primaryLight,
