@@ -65,23 +65,26 @@ class MyCourseScreenState extends State<MyCourseScreen>
 
   Future<void> _loadData() async {
     try {
-      final results = await Future.wait([
-        ApiService.instance.getMyCourses(),
-        ApiService.instance.getPendingOrders(),
-      ]);
-      final rawCourses  = results[0];
-      final rawPending  = results[1];
+      final rawCourses = await ApiService.instance.getMyCourses();
+      List<dynamic> rawPending = [];
+      try {
+        rawPending = await ApiService.instance.getPendingOrders();
+      } catch (e) {
+        print('>>> getPendingOrders error: $e');
+      }
 
       final prefs = await SharedPreferences.getInstance();
       int userPoint = 0;
       try { userPoint = await ApiService.instance.getPoint(); } catch (_) {}
 
-      setState(() {
-        _userPoint = userPoint;
-        _courses = List.generate(rawCourses.length, (i) {
+      List<_OwnedCourse> courses = [];
+      List<_PendingOrder> pending = [];
+
+      try {
+        courses = List.generate(rawCourses.length, (i) {
           final c = rawCourses[i] as Map<String, dynamic>;
-          final total = (c['videocount'] as int?) ?? 0;
-          final cid = (c['course_id'] ?? c['id'] ?? c['c_id'] as Object?);
+          final total = (c['videocount'] as num?)?.toInt() ?? 0;
+          final cid = (c['course_id'] ?? c['id'] ?? c['c_id']);
           final courseId = (cid as num?)?.toInt() ?? 0;
           final done = prefs.getStringList('cdone_$courseId')?.length ?? 0;
           return _OwnedCourse(
@@ -98,7 +101,19 @@ class MyCourseScreenState extends State<MyCourseScreen>
             imageFile: c['image_course'] as String?,
           );
         });
-        _pendingOrders = List.generate(rawPending.length, (i) {
+        // dedup by courseId — keep last occurrence (latest order)
+        final seen = <int>{};
+        courses = courses.reversed
+            .where((c) => seen.add(c.courseId))
+            .toList()
+            .reversed
+            .toList();
+      } catch (e) {
+        print('>>> _courses generate error: $e');
+      }
+
+      try {
+        pending = List.generate(rawPending.length, (i) {
           final o = rawPending[i] as Map<String, dynamic>;
           final statusInt = (o['order_status'] as num?)?.toInt() ?? 1;
           final rawCode = (o['code_order'] ?? o['order_code'])?.toString() ?? '${o['order_id']}';
@@ -117,9 +132,20 @@ class MyCourseScreenState extends State<MyCourseScreen>
             courses: coursesList,
           );
         });
+      } catch (e) {
+        print('>>> _pendingOrders generate error: $e');
+      }
+
+      print('>>> setState courses=${courses.length} pending=${pending.length}');
+      setState(() {
+        _userPoint = userPoint;
+        _courses = courses;
+        _pendingOrders = pending;
         _loading = false;
       });
-    } catch (_) {
+      print('>>> after setState _loading=$_loading _courses=${_courses.length}');
+    } catch (e) {
+      print('>>> _loadData error: $e');
       setState(() => _loading = false);
     }
   }
@@ -127,12 +153,15 @@ class MyCourseScreenState extends State<MyCourseScreen>
   void reload() => _loadData();
 
   static int _daysLeft(String? endDay) {
-    if (endDay == null || endDay.isEmpty) return 0;
+    if (endDay == null || endDay.isEmpty) return 999;
     try {
       final end = DateTime.parse(endDay);
-      return end.difference(DateTime.now()).inDays;
+      final expDate = DateTime(end.year, end.month, end.day);
+      final now = DateTime.now();
+      final todayDate = DateTime(now.year, now.month, now.day);
+      return expDate.difference(todayDate).inDays;
     } catch (_) {
-      return 0;
+      return 999;
     }
   }
 
@@ -201,6 +230,7 @@ class MyCourseScreenState extends State<MyCourseScreen>
     context.push('/video', extra: {
       'courseId': course.courseId,
       'title':    course.title,
+      'endDay':   course.expiresAt,
     });
   }
 
@@ -515,6 +545,7 @@ class MyCourseScreenState extends State<MyCourseScreen>
         'course_id': course.courseId,
         'title_course': course.title,
         'image_course': course.imageFile,
+        'end_day': course.expiresAt,
       }),
       child: Container(
         decoration: BoxDecoration(
@@ -534,23 +565,41 @@ class MyCourseScreenState extends State<MyCourseScreen>
             SizedBox(
               height: 132,
               child: Stack(
+                fit: StackFit.expand,
                 children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: course.gradient,
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
+                  // รูปคอร์ส — fallback เป็น gradient ถ้าไม่มีรูป
+                  if (course.imageFile != null && course.imageFile!.isNotEmpty)
+                    Image.network(
+                      '${AppConfig.uploadsBase}${course.imageFile}',
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: course.gradient,
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                        ),
+                      ),
+                    )
+                  else
+                    Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: course.gradient,
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
                       ),
                     ),
-                  ),
-                  Positioned(
-                    right: 22,
-                    top: 32,
-                    child: Icon(
-                      course.icon,
-                      size: 66,
-                      color: Colors.white.withOpacity(0.72),
+                  // overlay มืดเพื่อให้อ่านข้อความได้
+                  Container(
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Colors.transparent, Colors.black54],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                      ),
                     ),
                   ),
                   Positioned(
@@ -560,7 +609,7 @@ class MyCourseScreenState extends State<MyCourseScreen>
                       padding: const EdgeInsets.symmetric(
                           horizontal: 9, vertical: 5),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.black.withOpacity(0.35),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
@@ -575,17 +624,20 @@ class MyCourseScreenState extends State<MyCourseScreen>
                   ),
                   Positioned(
                     left: 16,
-                    right: 92,
-                    bottom: 16,
+                    right: 16,
+                    bottom: 14,
                     child: Text(
                       course.title,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: GoogleFonts.notoSansThai(
-                        fontSize: 18,
-                        height: 1.22,
+                        fontSize: 15,
+                        height: 1.3,
                         color: Colors.white,
                         fontWeight: FontWeight.w900,
+                        shadows: const [
+                          Shadow(color: Colors.black54, blurRadius: 6),
+                        ],
                       ),
                     ),
                   ),
@@ -1276,20 +1328,22 @@ class _FilesSheetState extends State<_FilesSheet> {
     _loadFiles();
   }
 
-  // external storage → visible in file manager; falls back to app docs dir
   Future<Directory> _getSaveDir() async {
-    final ext = await getExternalStorageDirectory();
-    if (ext != null) {
-      final folder = Directory('${ext.path}/LearnSbuy');
-      if (!folder.existsSync()) folder.createSync(recursive: true);
-      return folder;
-    }
+    try {
+      final ext = await getExternalStorageDirectory();
+      if (ext != null) {
+        final folder = Directory('${ext.path}/LearnSbuy');
+        if (!folder.existsSync()) folder.createSync(recursive: true);
+        return folder;
+      }
+    } catch (_) {}
     return getApplicationDocumentsDirectory();
   }
 
   Future<void> _loadFiles() async {
     try {
       final data = await ApiService.instance.getFileApp(widget.courseId);
+      print('>>> getFileApp courseId=${widget.courseId} keys=${data.keys} fileCount=${(data['file'] as List?)?.length}');
       final files = (data['file'] as List? ?? [])
           .map((e) => Map<String, dynamic>.from(e as Map))
           .toList();
@@ -1309,6 +1363,7 @@ class _FilesSheetState extends State<_FilesSheet> {
         });
       }
     } catch (e) {
+      print('>>> _loadFiles error courseId=${widget.courseId}: $e');
       if (mounted) setState(() => _loading = false);
     }
   }

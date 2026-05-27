@@ -481,7 +481,7 @@ class _PaymentSuccessScreenState extends State<PaymentSuccessScreen>
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                'หากไม่ได้รับการยืนยันภายใน 3 ชั่วโมง กรุณาติดต่อทีมงานผ่าน Line Official หรือโทร 086-xxx-xxxx',
+                'หากไม่ได้รับการยืนยันภายใน 3 ชั่วโมง กรุณาติดต่อทีมงานผ่าน Line Official @ZA-SHI',
                 style: GoogleFonts.notoSansThai(
                   fontSize: 13,
                   color: const Color(0xFF5D4037),

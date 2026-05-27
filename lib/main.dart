@@ -182,6 +182,7 @@ final _router = GoRouter(
         return VideoPlayerScreen(
           courseId: extra?['courseId'] as int? ?? 0,
           courseTitle: extra?['title'] as String? ?? 'บทเรียน',
+          endDay: extra?['endDay'] as String?,
         );
       },
     ),

@@ -87,10 +87,10 @@ class AuthService {
     if (user == null) return false;
     final hbd          = (user['hbd']           as String?)?.trim() ?? '';
     final receiverName = (user['receiver_name']  as String?)?.trim() ?? '';
-    final province     = (user['province']       as String?)?.trim() ?? '';
+    final address      = (user['address']        as String?)?.trim() ?? '';
     final phone        = (user['phone']          as String?)?.trim() ?? '';
     return hbd.isNotEmpty && receiverName.isNotEmpty &&
-           province.isNotEmpty && phone.isNotEmpty;
+           address.isNotEmpty && phone.isNotEmpty;
   }
 
   Future<void> logout() async {

@@ -1,5 +1,6 @@
 ﻿import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -22,6 +23,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
   bool _showFullDesc = false;
   bool _isOwned     = false;
   bool _isLoggedIn  = false;
+  String? _endDay;
 
   // detail data
   bool _detailLoading = true;
@@ -71,6 +73,32 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
       ? _course['url_youtube'] as String : null;
   String? get _imageFile  => (_course['image_course']  as String?);
 
+  bool get _isExpired {
+    final d = _endDay;
+    if (d == null || d.isEmpty) return false;
+    try {
+      final exp = DateTime.parse(d);
+      final expDate = DateTime(exp.year, exp.month, exp.day);
+      final today   = DateTime.now();
+      final todayDate = DateTime(today.year, today.month, today.day);
+      return todayDate.isAfter(expDate);
+    } catch (_) { return false; }
+  }
+
+  static const _thMonthsShort = [
+    'ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.',
+    'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.',
+  ];
+
+  String get _endDayFormatted {
+    final d = _endDay;
+    if (d == null || d.isEmpty) return '';
+    try {
+      final dt = DateTime.parse(d);
+      return '${dt.day} ${_thMonthsShort[dt.month - 1]} ${dt.year + 543}';
+    } catch (_) { return d; }
+  }
+
   // ── lifecycle ──────────────────────────────────────────────────────────────
 
   @override
@@ -80,6 +108,8 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     if (widget.courseData?.containsKey('course_id') == true) {
       _isOwned = true;
     }
+    _endDay = widget.courseData?['end_day'] as String?;
+    print('>>> [initState] end_day from courseData: $_endDay');
     _checkLogin();
     if (_courseId > 0) {
       _loadDetail();
@@ -103,6 +133,10 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
   Future<void> _loadDetail() async {
     try {
       final data = await ApiService.instance.getCourseDetail(_courseId);
+      print('>>> course detail keys: ${data.keys}');
+      print('>>> end_day: ${data['end_day']}');
+      print('>>> submitcourse: ${data['submitcourse']}');
+      print('>>> is_owned: ${data['is_owned']}');
       if (!mounted) return;
       final course   = Map<String, dynamic>.from(data['course'] as Map);
       final exVideos = (data['ex_video'] as List? ?? [])
@@ -111,11 +145,32 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
       final videos   = (data['videos'] as List? ?? [])
           .map((e) => Map<String, dynamic>.from(e as Map))
           .toList();
+      final isOwned = data['is_owned'] == true;
+      String? endDay = (data['end_day'] as String?)
+          ?? (data['submitcourse']?['end_day'] as String?)
+          ?? _endDay;
+
+      // ถ้า owned แต่ยังไม่มี end_day → ดึงจาก my-courses
+      if (isOwned && (endDay == null || endDay.isEmpty)) {
+        try {
+          final myCourses = await ApiService.instance.getMyCourses();
+          final match = myCourses.cast<Map<String, dynamic>>().firstWhere(
+            (c) => (c['course_id'] as num?)?.toInt() == _courseId
+                || (c['id'] as num?)?.toInt() == _courseId,
+            orElse: () => {},
+          );
+          if (match.isNotEmpty) {
+            endDay = match['end_day'] as String?;
+          }
+        } catch (_) {}
+      }
+
       setState(() {
         _course   = course;
         _exVideos = exVideos;
         _videos   = videos;
-        _isOwned  = data['is_owned'] == true;
+        _isOwned  = isOwned;
+        _endDay   = endDay;
         _detailLoading = false;
       });
       _initMedia();
@@ -1263,6 +1318,157 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
 
   // ── Bottom Bar ─────────────────────────────────────────────────────────────
 
+  Widget _buildBottomBarContent(BuildContext context) {
+    // ยังไม่ซื้อ: ราคา + ปุ่มจอง
+    if (!_isOwned) {
+      return Row(
+        children: [
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                _price > 0 ? '฿${_fmtPrice(_price)}' : 'ราคา',
+                style: GoogleFonts.notoSansThai(
+                    fontSize: 22, fontWeight: FontWeight.w900,
+                    color: AppTheme.textDark, height: 1.1),
+              ),
+            ],
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: ElevatedButton(
+              onPressed: () => context.push('/payment', extra: {
+                'title': _title,
+                'price': _price,
+                'id': _courseId,
+                'type': 'course',
+              }),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primary,
+                foregroundColor: Colors.white,
+                minimumSize: const Size(double.infinity, 48),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                elevation: 0,
+              ),
+              child: Text('จองคอร์สเรียน',
+                  style: GoogleFonts.notoSansThai(fontSize: 16, fontWeight: FontWeight.w800)),
+            ),
+          ),
+        ],
+      );
+    }
+
+    // ซื้อแล้ว + หมดอายุ: ปุ่มติดต่อเจ้าหน้าที่ (กดได้ แสดง dialog)
+    if (_isExpired) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () => showDialog(
+                context: context,
+                builder: (_) => AlertDialog(
+                  title: Text('ติดต่อเจ้าหน้าที่',
+                      style: GoogleFonts.notoSansThai(fontWeight: FontWeight.w800)),
+                  content: Text('คอร์สนี้หมดอายุแล้ว\nกรุณาติดต่อเจ้าหน้าที่เพื่อต่ออายุ',
+                      style: GoogleFonts.notoSansThai()),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text('ปิด', style: GoogleFonts.notoSansThai()),
+                    ),
+                  ],
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.grey.shade400,
+                foregroundColor: Colors.white,
+                minimumSize: const Size(double.infinity, 48),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                elevation: 0,
+              ),
+              child: Text('ติดต่อเจ้าหน้าที่',
+                  style: GoogleFonts.notoSansThai(fontSize: 16, fontWeight: FontWeight.w800)),
+            ),
+          ),
+          if (_endDayFormatted.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text('หมดอายุ $_endDayFormatted',
+                style: GoogleFonts.notoSansThai(fontSize: 11, color: Colors.red.shade400)),
+          ],
+        ],
+      );
+    }
+
+    // ซื้อแล้ว + ยังไม่หมดอายุ: 2 ปุ่ม
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: ElevatedButton(
+                onPressed: _detailLoading
+                    ? null
+                    : () => context.push('/video', extra: {
+                          'courseId': _courseId,
+                          'title': _title,
+                          'endDay': _endDay,
+                        }),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF388E3C),
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size(double.infinity, 48),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  elevation: 0,
+                ),
+                child: Text('เข้าเรียน',
+                    style: GoogleFonts.notoSansThai(fontSize: 16, fontWeight: FontWeight.w800)),
+              ),
+            ),
+            const SizedBox(width: 10),
+            OutlinedButton(
+              onPressed: () => showDialog(
+                context: context,
+                builder: (_) => AlertDialog(
+                  title: Text('ติดต่อสอบถาม',
+                      style: GoogleFonts.notoSansThai(fontWeight: FontWeight.w800)),
+                  content: Text('หากมีข้อสงสัยเกี่ยวกับคอร์สนี้\nกรุณาติดต่อเจ้าหน้าที่',
+                      style: GoogleFonts.notoSansThai()),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text('ปิด', style: GoogleFonts.notoSansThai()),
+                    ),
+                  ],
+                ),
+              ),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppTheme.primary,
+                side: const BorderSide(color: AppTheme.primary),
+                minimumSize: const Size(48, 48),
+                padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              ),
+              child: Text('ติดต่อ',
+                  style: GoogleFonts.notoSansThai(fontSize: 14, fontWeight: FontWeight.w700)),
+            ),
+          ],
+        ),
+        if (_endDayFormatted.isNotEmpty) ...[
+          const SizedBox(height: 4),
+          Text('หมดอายุ $_endDayFormatted',
+              style: GoogleFonts.notoSansThai(fontSize: 11, color: AppTheme.textLight)),
+        ],
+      ],
+    );
+  }
+
   Widget _buildBottomBar(BuildContext context) {
     final bottomInset = MediaQuery.of(context).padding.bottom;
     return Container(
@@ -1275,50 +1481,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
             offset: const Offset(0, -4))],
       ),
       padding: EdgeInsets.fromLTRB(16, 12, 16, 12 + bottomInset),
-      child: Row(
-        children: [
-          if (!_isOwned) ...[
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _price > 0 ? '฿${_fmtPrice(_price)}' : 'ราคา',
-                  style: GoogleFonts.notoSansThai(
-                      fontSize: 22, fontWeight: FontWeight.w900, color: AppTheme.textDark, height: 1.1),
-                ),
-              ],
-            ),
-            const SizedBox(width: 16),
-          ],
-          Expanded(
-            child: ElevatedButton(
-              onPressed: _isOwned
-                  ? () => context.push('/video', extra: {
-                        'courseId': _courseId,
-                        'title': _title,
-                      })
-                  : () => context.push('/payment', extra: {
-                        'title': _title,
-                        'price': _price,
-                        'id': _courseId,
-                        'type': 'course',
-                      }),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: _isOwned ? const Color(0xFF388E3C) : AppTheme.primary,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                elevation: 0,
-              ),
-              child: Text(
-                _isOwned ? 'เข้าเรียน' : 'จองคอร์สเรียน',
-                style: GoogleFonts.notoSansThai(fontSize: 16, fontWeight: FontWeight.w800),
-              ),
-            ),
-          ),
-        ],
-      ),
+      child: _buildBottomBarContent(context),
     );
   }
 

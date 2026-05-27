@@ -167,13 +167,9 @@ class ApiService {
     required String phone,
     String? hbd,
     String? address,
+    String? lineId,
     String? receiverName,
     String? receiverPhone,
-    String? province,
-    String? district,
-    String? subdistrict,
-    String? zipCode,
-    String? addressDetail,
     File? avatar,
   }) async {
     final map = <String, dynamic>{
@@ -182,13 +178,9 @@ class ApiService {
       'phone': phone,
       if (hbd != null) 'hbd': hbd,
       if (address != null) 'address': address,
+      if (lineId != null) 'line_id': lineId,
       if (receiverName != null) 'receiver_name': receiverName,
       if (receiverPhone != null) 'receiver_phone': receiverPhone,
-      if (province != null) 'province': province,
-      if (district != null) 'district': district,
-      if (subdistrict != null) 'subdistrict': subdistrict,
-      if (zipCode != null) 'zip_code': zipCode,
-      if (addressDetail != null) 'address_detail': addressDetail,
     };
     if (avatar != null) {
       map['avatar'] = await MultipartFile.fromFile(
@@ -238,7 +230,9 @@ class ApiService {
   Future<List<dynamic>> getMyCourses() async {
     final r = await _dio.get('/my-courses', options: await _authOptions());
     _check(r);
-    return r.data['data'] as List<dynamic>;
+    final list = r.data['data'] as List<dynamic>;
+    print('>>> getMyCourses count=${list.length} ids=${list.map((e) => e['course_id']).toList()}');
+    return list;
   }
 
   Future<List<dynamic>> getPendingOrders() async {
@@ -271,7 +265,7 @@ class ApiService {
     required int amount,
     required String date,
     required String time,
-    required File slipImage,
+    File? slipImage,
     int? couponId,
   }) async {
     final token = await AuthService.instance.getToken();
@@ -282,7 +276,7 @@ class ApiService {
       'totalmoney': amount,
       'day': date,
       'timer': time,
-      'image': await MultipartFile.fromFile(
+      if (slipImage != null) 'image': await MultipartFile.fromFile(
         slipImage.path, filename: slipImage.path.split('/').last,
       ),
       if (couponId != null) 'coupon_id': couponId,
@@ -303,7 +297,7 @@ class ApiService {
     required int amount,
     required String date,
     required String time,
-    required File slipImage,
+    File? slipImage,
   }) async {
     final token = await AuthService.instance.getToken();
     final map = <String, dynamic>{
@@ -313,7 +307,7 @@ class ApiService {
       'totalmoney': amount,
       'day': date,
       'timer': time,
-      'image': await MultipartFile.fromFile(
+      if (slipImage != null) 'image': await MultipartFile.fromFile(
         slipImage.path, filename: slipImage.path.split('/').last,
       ),
     };

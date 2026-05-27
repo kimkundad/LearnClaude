@@ -119,23 +119,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 24),
-              _AppLogoHeader(),
-              const SizedBox(height: 16),
-              Text(
-                'สมัครสมาชิก 🎉',
-                style: GoogleFonts.notoSansThai(
-                  fontSize: 28,
-                  fontWeight: FontWeight.w800,
-                  color: AppTheme.textDark,
+              const SizedBox(height: 32),
+              Center(
+                child: Image.asset(
+                  'assets/logo/Learnsbuy_New_Logo_mail.png',
+                  height: 120,
+                  fit: BoxFit.contain,
                 ),
               ),
-              const SizedBox(height: 6),
-              Text(
-                'สร้างบัญชีเพื่อเริ่มเรียน',
-                style: GoogleFonts.notoSansThai(fontSize: 15, color: AppTheme.textLight),
-              ),
-              const SizedBox(height: 28),
+              const SizedBox(height: 32),
               _buildLabel('ชื่อ-นามสกุล (ภาษาไทย)'),
               const SizedBox(height: 8),
               TextField(

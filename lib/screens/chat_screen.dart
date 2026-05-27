@@ -268,7 +268,8 @@ class _ChatScreenState extends State<ChatScreen> {
   String _timeLabel(String? raw) {
     if (raw == null) return '';
     try {
-      final dt = DateTime.parse(raw).toLocal();
+      final s  = raw.contains('T') || raw.endsWith('Z') ? raw : '${raw}Z';
+      final dt = DateTime.parse(s).toLocal();
       return '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
     } catch (_) { return ''; }
   }

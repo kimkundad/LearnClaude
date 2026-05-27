@@ -31,11 +31,13 @@ const _securityChannel = MethodChannel('com.learnsbuy/security');
 class VideoPlayerScreen extends StatefulWidget {
   final int courseId;
   final String courseTitle;
+  final String? endDay;
 
   const VideoPlayerScreen({
     super.key,
     required this.courseId,
     required this.courseTitle,
+    this.endDay,
   });
 
   @override
@@ -74,7 +76,66 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen>
     WidgetsBinding.instance.addObserver(this);
     _enableSecurity();
     _loadUserProfile();
-    _loadInitialData();
+    // ตรวจหมดอายุก่อนโหลดวิดีโอ
+    WidgetsBinding.instance.addPostFrameCallback((_) => _checkExpiry());
+  }
+
+  void _checkExpiry() {
+    final d = widget.endDay;
+    if (d == null || d.isEmpty) {
+      _loadInitialData();
+      return;
+    }
+    bool expired = false;
+    try {
+      final exp = DateTime.parse(d);
+      final expDate = DateTime(exp.year, exp.month, exp.day);
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      expired = today.isAfter(expDate);
+    } catch (_) {}
+
+    if (expired) {
+      // pop กลับแล้วแสดง dialog
+      if (context.canPop()) context.pop();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        showDialog(
+          context: context,
+          builder: (_) => AlertDialog(
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16)),
+            title: Text(
+              'คอร์สนี้หมดอายุแล้ว',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.notoSansThai(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 17,
+                  color: const Color(0xFF1A1A2E)),
+            ),
+            content: Text(
+              'กรุณาติดต่อเจ้าหน้าที่ LINE : @ZA-SHI',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.notoSansThai(
+                  fontSize: 14, color: const Color(0xFF666666)),
+            ),
+            actionsAlignment: MainAxisAlignment.center,
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text('OK',
+                    style: GoogleFonts.notoSansThai(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF32D191))),
+              ),
+            ],
+          ),
+        );
+      });
+    } else {
+      _loadInitialData();
+    }
   }
 
   @override
@@ -369,7 +430,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen>
   </style>
 </head>
 <body>
-  <video controls controlsList="nodownload" playsinline preload="metadata"${poster.isNotEmpty ? ' poster="$poster"' : ''}>
+  <video controls controlsList="nodownload nofullscreen noremoteplayback" playsinline webkit-playsinline preload="metadata"${poster.isNotEmpty ? ' poster="$poster"' : ''}>
     <source src="$videoUrl" type="video/mp4">
   </video>
   <script>
@@ -460,7 +521,10 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen>
   void _exitFullscreen() {
     setState(() => _isFullscreen = false);
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    SystemChrome.setEnabledSystemUIMode(
+      SystemUiMode.manual,
+      overlays: SystemUiOverlay.values,
+    );
   }
 
   // ── Build ──────────────────────────────────────────────────────────────────

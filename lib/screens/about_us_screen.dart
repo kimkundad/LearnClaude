@@ -64,18 +64,17 @@ class AboutUsScreen extends StatelessWidget {
         children: [
           // Logo
           Container(
-            width: 72,
-            height: 72,
+            width: 88,
+            height: 88,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white,
               borderRadius: BorderRadius.circular(20),
               border: Border.all(color: Colors.white.withOpacity(0.4), width: 2),
             ),
-            child: Center(
-              child: Text(
-                'ホ',
-                style: GoogleFonts.notoSansThai(fontSize: 36, fontWeight: FontWeight.w900, color: Colors.white),
-              ),
+            padding: const EdgeInsets.all(8),
+            child: Image.asset(
+              'assets/logo/Learnsbuy_New_Logo_mail.png',
+              fit: BoxFit.contain,
             ),
           ),
           const SizedBox(height: 16),
@@ -85,13 +84,13 @@ class AboutUsScreen extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            'เสาหลักแห่งศิลป์ญี่ปุ่น',
+            'อันดับ 1 ที่สื่อยอมรับ',
             style: GoogleFonts.notoSansThai(fontSize: 24, fontWeight: FontWeight.w900, color: Colors.white, height: 1.2),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 12),
           Text(
-            'สถาบันสอนภาษาญี่ปุ่นออนไลน์ ที่เชื่อว่าทุกคนเรียนได้\nด้วยระบบที่ออกแบบมาเพื่อผลสอบจริง',
+            'สถาบันที่ได้รับเชิญจากกระทรวงศึกษาธิการ,\nGMM, True, Dek-D เริ่มจาก 0 ก็สำเร็จได้',
             style: GoogleFonts.notoSansThai(fontSize: 14, color: Colors.white.withOpacity(0.9), height: 1.6),
             textAlign: TextAlign.center,
           ),
@@ -159,7 +158,7 @@ class AboutUsScreen extends StatelessWidget {
                       const SizedBox(height: 6),
                       Text('ครูพี่โฮม',
                         style: GoogleFonts.notoSansThai(fontSize: 20, fontWeight: FontWeight.w900, color: AppTheme.textDark)),
-                      Text('อ.ประมาตร ชัยกิตติวานิช',
+                      Text('อ.พรหมเทพ ชัยกิตติวณิชย์',
                         style: GoogleFonts.notoSansThai(fontSize: 12, color: AppTheme.textLight)),
                       const SizedBox(height: 8),
                       Text(
@@ -201,7 +200,7 @@ class AboutUsScreen extends StatelessWidget {
                     children: [
                       Text('คะแนน PAT ภาษาญี่ปุ่น 300/300',
                         style: GoogleFonts.notoSansThai(fontSize: 14, fontWeight: FontWeight.w800, color: const Color(0xFF7B5900))),
-                      Text('คนเดียวในประเทศไทยที่ทำได้',
+                      Text('คนแรกของประเทศไทย',
                         style: GoogleFonts.notoSansThai(fontSize: 12, color: const Color(0xFF9D6C00))),
                     ],
                   ),
@@ -221,7 +220,7 @@ class AboutUsScreen extends StatelessWidget {
       _Stat('12K+', 'ผู้เรียน', Icons.people_alt_rounded),
       _Stat('24', 'คอร์ส', Icons.play_lesson_rounded),
       _Stat('4.9★', 'คะแนน', Icons.star_rounded),
-      _Stat('8 ปี', 'ประสบการณ์', Icons.workspace_premium_rounded),
+      _Stat('24 ปี', 'ประสบการณ์', Icons.workspace_premium_rounded),
     ];
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
@@ -266,7 +265,7 @@ class AboutUsScreen extends StatelessWidget {
           _sectionTitle('เกี่ยวกับเรา', Icons.info_outline_rounded),
           const SizedBox(height: 12),
           Text(
-            'Learnsbuy / ZA-SHI คือสถาบันสอนภาษาออนไลน์ที่เชี่ยวชาญด้านภาษาญี่ปุ่น เกาหลี เยอรมัน และจีน ครอบคลุมทั้งการเตรียมสอบ A-Level PAT และ JLPT ทุกระดับ ด้วยระบบการสอนที่ออกแบบให้เรียนซ้ำได้ วัดผลได้จริง พร้อม PDF และช่องทางถาม-ตอบกับครูโดยตรง',
+            'Learnsbuy / ZA-SHI คือสถาบันสอนภาษาออนไลน์ที่เชี่ยวชาญด้านภาษาญี่ปุ่น เกาหลี เยอรมัน และจีน ครอบคลุมทั้งการเตรียมสอบ A-Level PAT และ JLPT ทุกระดับ ด้วยระบบการสอนที่ออกแบบให้เรียนซ้ำได้ วัดผลได้จริง หนังสือฟรี และช่องทางถาม-ตอบกับครูโดยตรง',
             style: GoogleFonts.notoSansThai(fontSize: 14, color: AppTheme.textMedium, height: 1.7),
           ),
         ],
@@ -279,10 +278,10 @@ class AboutUsScreen extends StatelessWidget {
   Widget _buildAchievements() {
     final items = [
       _Item(Icons.military_tech_rounded, 'เกียรตินิยมอันดับ 1 เหรียญทอง', 'จุฬาลงกรณ์มหาวิทยาลัย เอกภาษาญี่ปุ่น'),
-      _Item(Icons.emoji_events_rounded, 'PAT ภาษาญี่ปุ่น 300/300', 'คนเดียวในประเทศไทยที่ทำได้เต็ม'),
-      _Item(Icons.flight_takeoff_rounded, 'ทุนแลกเปลี่ยนที่โตเกียว', 'ได้รับทุนศึกษาภาษาญี่ปุ่น ณ กรุงโตเกียว'),
+      _Item(Icons.emoji_events_rounded, 'PAT ภาษาญี่ปุ่น 300/300', 'คนแรกของประเทศไทย'),
+      _Item(Icons.flight_takeoff_rounded, 'ทุนแลกเปลี่ยนที่โตเกียว', 'ทุนไปศึกษาภาษาญี่ปุ่น ณ กรุงโตเกียว'),
       _Item(Icons.trending_up_rounded, 'สถิติสูงสุดในไทย', 'พาผู้เรียนสอบติดจุฬาฯ สูงที่สุดในประเทศ'),
-      _Item(Icons.record_voice_over_rounded, 'วิทยากรระดับนานาชาติ', 'Toyota, Mitsubishi Tokyo UFJ, EXPO 2005 Aichi'),
+      _Item(Icons.record_voice_over_rounded, 'วิทยากรระดับนานาชาติ', 'Toyota, Mitsubishi Tokyo UFJ, JAPAN EXPO'),
     ];
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
@@ -307,8 +306,8 @@ class AboutUsScreen extends StatelessWidget {
 
   Widget _buildExperience() {
     final items = [
-      _Item(Icons.school_rounded, 'หัวหน้าสาขาภาษาญี่ปุ่น', 'จุฬาลงกรณ์มหาวิทยาลัย'),
-      _Item(Icons.business_rounded, 'ล่ามและวิทยากรองค์กร', 'Fujitsu, JICA, กรมส่งเสริมการส่งออก'),
+      _Item(Icons.school_rounded, 'อาจารย์และวิทยากร', 'จุฬาลงกรณ์มหาวิทยาลัย, รร.เตรียมอุดมศึกษา ฯลฯ'),
+      _Item(Icons.business_rounded, 'ล่ามและวิทยากรองค์กร', 'Toyota, Fujitsu, JICA, กรมส่งเสริมการส่งออก'),
       _Item(Icons.language_rounded, 'ผู้สอนภาษาไทย', 'JETRO (องค์การส่งเสริมการค้าต่างประเทศของญี่ปุ่น)'),
       _Item(Icons.public_rounded, 'ผู้ประสานงาน EXPO 2005', 'งาน World Expo เมือง Aichi ประเทศญี่ปุ่น'),
     ];

@@ -6,7 +6,6 @@ import 'package:image_picker/image_picker.dart';
 import '../theme/app_theme.dart';
 import '../services/auth_service.dart';
 import '../services/api_service.dart';
-import '../data/address_data.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -21,12 +20,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final _phoneCtrl         = TextEditingController();
   final _receiverNameCtrl  = TextEditingController();
   final _receiverPhoneCtrl = TextEditingController();
-  final _addressDetailCtrl = TextEditingController();
-
-  String? _province;
-  String? _district;
-  String? _subdistrict;
-  String? _zipCode;
+  final _addressCtrl       = TextEditingController();
+  final _lineIdCtrl        = TextEditingController();
 
   DateTime? _birthday;
   bool _loading = true;
@@ -81,20 +76,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _phoneCtrl.text         = (u['phone']          as String?) ?? '';
     _receiverNameCtrl.text  = (u['receiver_name']  as String?) ?? '';
     _receiverPhoneCtrl.text = (u['receiver_phone'] as String?) ?? '';
-    _addressDetailCtrl.text = (u['address_detail'] as String?) ?? '';
+    _addressCtrl.text       = (u['address']        as String?) ?? '';
+    _lineIdCtrl.text        = (u['line_id']        as String?) ?? '';
 
     _avatarInitial = _nameCtrl.text.isNotEmpty ? _nameCtrl.text[0].toUpperCase() : '?';
     final f = u['avatar'] as String?;
     _avatarUrl = (f != null && f.isNotEmpty) ? '$_avatarBase$f' : null;
-
-    final prov = u['province']    as String?;
-    final dist = u['district']    as String?;
-    final sub  = u['subdistrict'] as String?;
-    final zip  = u['zip_code']    as String?;
-    if (prov != null && prov.isNotEmpty) _province    = prov;
-    if (dist != null && dist.isNotEmpty) _district    = dist;
-    if (sub  != null && sub.isNotEmpty)  _subdistrict = sub;
-    if (zip  != null && zip.isNotEmpty)  _zipCode     = zip;
 
     final hbd = u['hbd'] as String?;
     if (hbd != null && hbd.isNotEmpty) {
@@ -109,7 +96,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _phoneCtrl.dispose();
     _receiverNameCtrl.dispose();
     _receiverPhoneCtrl.dispose();
-    _addressDetailCtrl.dispose();
+    _addressCtrl.dispose();
+    _lineIdCtrl.dispose();
     super.dispose();
   }
 
@@ -178,94 +166,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     if (picked != null) setState(() => _birthday = picked);
   }
 
-  Future<void> _openPicker(
-    List<String> items,
-    String title,
-    void Function(String) onSelect,
-  ) async {
-    final search = ValueNotifier('');
-    await showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => DraggableScrollableSheet(
-        initialChildSize: 0.6,
-        minChildSize: 0.4,
-        maxChildSize: 0.92,
-        builder: (_, scrollCtrl) => Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-          ),
-          child: Column(
-            children: [
-              const SizedBox(height: 8),
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                child: Text(
-                  title,
-                  style: GoogleFonts.notoSansThai(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w800,
-                    color: AppTheme.textDark,
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                child: TextField(
-                  decoration: InputDecoration(
-                    hintText: 'ค้นหา...',
-                    hintStyle: GoogleFonts.notoSansThai(color: AppTheme.textLight),
-                    prefixIcon: const Icon(Icons.search_rounded, color: AppTheme.textLight),
-                    contentPadding: const EdgeInsets.symmetric(vertical: 10),
-                  ),
-                  onChanged: (v) => search.value = v,
-                ),
-              ),
-              Divider(height: 1, color: AppTheme.border),
-              Expanded(
-                child: ValueListenableBuilder<String>(
-                  valueListenable: search,
-                  builder: (_, q, __) {
-                    final filtered = q.isEmpty
-                        ? items
-                        : items.where((e) => e.contains(q)).toList();
-                    return ListView.builder(
-                      controller: scrollCtrl,
-                      itemCount: filtered.length,
-                      itemBuilder: (_, i) => ListTile(
-                        title: Text(
-                          filtered[i],
-                          style: GoogleFonts.notoSansThai(
-                            fontSize: 15,
-                            color: AppTheme.textDark,
-                          ),
-                        ),
-                        onTap: () {
-                          onSelect(filtered[i]);
-                          Navigator.pop(ctx);
-                        },
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   Future<void> _save() async {
     FocusScope.of(context).unfocus();
     setState(() => _saving = true);
@@ -277,11 +177,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         hbd:           _birthdayApi.isNotEmpty ? _birthdayApi : null,
         receiverName:  _receiverNameCtrl.text.trim().isNotEmpty ? _receiverNameCtrl.text.trim() : null,
         receiverPhone: _receiverPhoneCtrl.text.trim().isNotEmpty ? _receiverPhoneCtrl.text.trim() : null,
-        province:      _province,
-        district:      _district,
-        subdistrict:   _subdistrict,
-        zipCode:       _zipCode,
-        addressDetail: _addressDetailCtrl.text.trim().isNotEmpty ? _addressDetailCtrl.text.trim() : null,
+        address:       _addressCtrl.text.trim().isNotEmpty ? _addressCtrl.text.trim() : null,
+        lineId:        _lineIdCtrl.text.trim().isNotEmpty ? _lineIdCtrl.text.trim() : null,
         avatar:        _pickedAvatar,
       );
       final token = await AuthService.instance.getToken();
@@ -372,61 +269,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                               textCapitalization: TextCapitalization.words),
                           _textField('เบอร์ติดต่อผู้รับ', _receiverPhoneCtrl, Icons.phone_outlined,
                               keyboardType: TextInputType.phone),
-                          _pickerField(
-                            label: 'จังหวัด',
-                            value: _province,
-                            icon: Icons.location_city_outlined,
-                            onTap: () => _openPicker(
-                              AddressService.getProvinces(),
-                              'เลือกจังหวัด',
-                              (v) => setState(() {
-                                _province    = v;
-                                _district    = null;
-                                _subdistrict = null;
-                                _zipCode     = null;
-                              }),
-                            ),
-                          ),
-                          _pickerField(
-                            label: 'เขต/อำเภอ',
-                            value: _district,
-                            icon: Icons.map_outlined,
-                            enabled: _province != null,
-                            hint: _province == null ? 'เลือกจังหวัดก่อน' : 'กรุณาเลือก',
-                            onTap: () => _openPicker(
-                              AddressService.getDistricts(_province!),
-                              'เลือกเขต/อำเภอ',
-                              (v) => setState(() {
-                                _district    = v;
-                                _subdistrict = null;
-                                _zipCode     = null;
-                              }),
-                            ),
-                          ),
-                          _pickerField(
-                            label: 'แขวง/ตำบล',
-                            value: _subdistrict,
-                            icon: Icons.place_outlined,
-                            enabled: _district != null,
-                            hint: _district == null ? 'เลือกเขต/อำเภอก่อน' : 'กรุณาเลือก',
-                            onTap: () => _openPicker(
-                              AddressService.getSubdistricts(_province!, _district!)
-                                  .map((e) => e['name']!)
-                                  .toList(),
-                              'เลือกแขวง/ตำบล',
-                              (v) => setState(() {
-                                _subdistrict = v;
-                                _zipCode     = AddressService.getZip(_province!, _district!, v);
-                              }),
-                            ),
-                          ),
-                          _zipField(),
                           _textField(
-                            'บ้านเลขที่ / ซอย / ถนน',
-                            _addressDetailCtrl,
+                            'ที่อยู่สำหรับจัดส่ง',
+                            _addressCtrl,
                             Icons.home_outlined,
-                            maxLines: 3,
+                            maxLines: 4,
                             keyboardType: TextInputType.multiline,
+                          ),
+                          _textField(
+                            'ID LINE (ไม่บังคับ)',
+                            _lineIdCtrl,
+                            Icons.chat_bubble_outline_rounded,
                           ),
                         ],
                       ),
@@ -623,115 +476,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               contentPadding: maxLines > 1
                   ? const EdgeInsets.fromLTRB(0, 14, 16, 14)
                   : null,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _pickerField({
-    required String label,
-    required String? value,
-    required IconData icon,
-    bool enabled = true,
-    String hint = 'กรุณาเลือก',
-    VoidCallback? onTap,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: GoogleFonts.notoSansThai(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: AppTheme.textLight,
-            ),
-          ),
-          const SizedBox(height: 6),
-          GestureDetector(
-            onTap: enabled ? onTap : null,
-            child: Container(
-              decoration: BoxDecoration(
-                color: enabled ? Colors.white : Colors.grey.shade50,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppTheme.border),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-              child: Row(
-                children: [
-                  Icon(
-                    icon,
-                    color: enabled ? AppTheme.primary : AppTheme.textLight,
-                    size: 19,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      value ?? hint,
-                      style: GoogleFonts.notoSansThai(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: value != null ? AppTheme.textDark : AppTheme.textLight,
-                      ),
-                    ),
-                  ),
-                  Icon(
-                    Icons.keyboard_arrow_down_rounded,
-                    color: enabled ? AppTheme.primary : AppTheme.textLight,
-                    size: 20,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _zipField() {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'รหัสไปรษณีย์',
-            style: GoogleFonts.notoSansThai(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: AppTheme.textLight,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.grey.shade50,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppTheme.border),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-            child: Row(
-              children: [
-                const Icon(
-                  Icons.local_post_office_outlined,
-                  color: AppTheme.textLight,
-                  size: 19,
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  _zipCode ?? 'กรอกอัตโนมัติเมื่อเลือกแขวง',
-                  style: GoogleFonts.notoSansThai(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: _zipCode != null ? AppTheme.textDark : AppTheme.textLight,
-                  ),
-                ),
-              ],
             ),
           ),
         ],

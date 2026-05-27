@@ -187,18 +187,6 @@ class _PaymentScreenState extends State<PaymentScreen> {
       _showDebug('accounts ว่าง — getBanks() ล้มเหลว');
       return;
     }
-    if (_slipImage == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('กรุณาแนบสลิปการโอนเงิน',
-              style: GoogleFonts.notoSansThai(fontWeight: FontWeight.w700)),
-          backgroundColor: AppTheme.priceRed,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-      );
-      return;
-    }
     setState(() => _isSubmitting = true);
     try {
       final d = _transferDate;
@@ -216,7 +204,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
           amount: widget.price,
           date: dateStr,
           time: timeStr,
-          slipImage: _slipImage!,
+          slipImage: _slipImage,
         );
       } else {
         await ApiService.instance.submitCoursePayment(
@@ -225,7 +213,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
           amount: _finalPrice,
           date: dateStr,
           time: timeStr,
-          slipImage: _slipImage!,
+          slipImage: _slipImage,
           couponId: _couponId,
         );
       }
@@ -620,10 +608,26 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('แนบสลิปการโอน',
-                        style: GoogleFonts.notoSansThai(
-                            fontSize: 15, fontWeight: FontWeight.w800,
-                            color: AppTheme.textDark)),
+                    Row(
+                      children: [
+                        Text('แนบสลิปการโอน',
+                            style: GoogleFonts.notoSansThai(
+                                fontSize: 15, fontWeight: FontWeight.w800,
+                                color: AppTheme.textDark)),
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: AppTheme.textLight.withOpacity(0.12),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text('ไม่บังคับ',
+                              style: GoogleFonts.notoSansThai(
+                                  fontSize: 11, color: AppTheme.textLight,
+                                  fontWeight: FontWeight.w600)),
+                        ),
+                      ],
+                    ),
                     Text('รองรับไฟล์ JPG, PNG',
                         style: GoogleFonts.notoSansThai(
                             fontSize: 12, color: AppTheme.textLight,
@@ -709,12 +713,12 @@ class _PaymentScreenState extends State<PaymentScreen> {
                               color: AppTheme.primary, size: 32),
                         ),
                         const SizedBox(height: 10),
-                        Text('แตะเพื่อเลือกรูปสลิป',
+                        Text('แตะเพื่อแนบสลิป (ถ้ามี)',
                             style: GoogleFonts.notoSansThai(
                                 fontSize: 14, color: AppTheme.primary,
                                 fontWeight: FontWeight.w700)),
                         const SizedBox(height: 4),
-                        Text('จากกล้องหรือแกลเลอรี่',
+                        Text('ไม่แนบก็ส่งได้ — รองรับ JPG, PNG',
                             style: GoogleFonts.notoSansThai(
                                 fontSize: 12, color: AppTheme.textLight,
                                 fontWeight: FontWeight.w600)),

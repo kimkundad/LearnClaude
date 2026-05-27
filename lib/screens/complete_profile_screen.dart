@@ -4,7 +4,6 @@ import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_theme.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
-import '../data/address_data.dart';
 
 class CompleteProfileScreen extends StatefulWidget {
   const CompleteProfileScreen({super.key});
@@ -16,15 +15,14 @@ class CompleteProfileScreen extends StatefulWidget {
 class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
   final _receiverNameCtrl  = TextEditingController();
   final _receiverPhoneCtrl = TextEditingController();
-  final _addressDetailCtrl = TextEditingController();
+  final _addressCtrl       = TextEditingController();
+  final _lineIdCtrl        = TextEditingController();
   final _studentPhoneCtrl  = TextEditingController();
 
-  String? _province;
-  String? _district;
-  String? _subdistrict;
-  String? _zipCode;
   DateTime? _birthday;
   bool _saving = false;
+  bool _loading = true;
+  bool _phoneAlreadySet = false;
   String _countryCode = '+66';
 
   static const _countryCodes = [
@@ -72,18 +70,56 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
   bool get _canSave =>
       _receiverNameCtrl.text.trim().isNotEmpty &&
       _receiverPhoneCtrl.text.trim().isNotEmpty &&
-      _province != null &&
-      _district != null &&
-      _subdistrict != null &&
-      _addressDetailCtrl.text.trim().isNotEmpty &&
+      _addressCtrl.text.trim().isNotEmpty &&
       _birthday != null &&
       _studentPhoneCtrl.text.trim().length >= 9;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfile();
+  }
+
+  Future<void> _loadProfile() async {
+    final user = await AuthService.instance.getUser();
+    if (user != null) {
+      _receiverNameCtrl.text  = (user['receiver_name']  as String?) ?? '';
+      _receiverPhoneCtrl.text = (user['receiver_phone'] as String?) ?? '';
+      _addressCtrl.text       = (user['address']        as String?) ?? '';
+      _lineIdCtrl.text        = (user['line_id']        as String?) ?? '';
+      final hbd = user['hbd'] as String?;
+      if (hbd != null && hbd.isNotEmpty) {
+        try { _birthday = DateTime.parse(hbd); } catch (_) {}
+      }
+      final phone = (user['phone'] as String?)?.trim() ?? '';
+      if (phone.isNotEmpty) {
+        _phoneAlreadySet = true;
+        _prefillPhone(phone);
+      }
+    }
+    if (mounted) setState(() => _loading = false);
+  }
+
+  void _prefillPhone(String phone) {
+    final sorted = [..._countryCodes]
+      ..sort((a, b) => b['code']!.length.compareTo(a['code']!.length));
+    for (final c in sorted) {
+      final code = c['code']!;
+      if (phone.startsWith(code)) {
+        _countryCode = code;
+        _studentPhoneCtrl.text = phone.substring(code.length);
+        return;
+      }
+    }
+    _studentPhoneCtrl.text = phone;
+  }
 
   @override
   void dispose() {
     _receiverNameCtrl.dispose();
     _receiverPhoneCtrl.dispose();
-    _addressDetailCtrl.dispose();
+    _addressCtrl.dispose();
+    _lineIdCtrl.dispose();
     _studentPhoneCtrl.dispose();
     super.dispose();
   }
@@ -117,92 +153,6 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
       ),
     );
     if (picked != null) setState(() => _birthday = picked);
-  }
-
-  Future<void> _openPicker(
-    List<String> items,
-    String title,
-    void Function(String) onSelect,
-  ) async {
-    final search = ValueNotifier('');
-    await showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => DraggableScrollableSheet(
-        initialChildSize: 0.65,
-        minChildSize: 0.4,
-        maxChildSize: 0.92,
-        builder: (_, scrollCtrl) => Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-          ),
-          child: Column(
-            children: [
-              const SizedBox(height: 8),
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                child: Text(
-                  title,
-                  style: GoogleFonts.notoSansThai(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w800,
-                    color: AppTheme.textDark,
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                child: TextField(
-                  autofocus: true,
-                  decoration: InputDecoration(
-                    hintText: 'ค้นหา...',
-                    hintStyle: GoogleFonts.notoSansThai(color: AppTheme.textLight),
-                    prefixIcon: const Icon(Icons.search_rounded, color: AppTheme.textLight),
-                    contentPadding: const EdgeInsets.symmetric(vertical: 10),
-                  ),
-                  onChanged: (v) => search.value = v,
-                ),
-              ),
-              Divider(height: 1, color: AppTheme.border),
-              Expanded(
-                child: ValueListenableBuilder<String>(
-                  valueListenable: search,
-                  builder: (_, q, __) {
-                    final filtered = q.isEmpty
-                        ? items
-                        : items.where((e) => e.contains(q)).toList();
-                    return ListView.builder(
-                      controller: scrollCtrl,
-                      itemCount: filtered.length,
-                      itemBuilder: (_, i) => ListTile(
-                        title: Text(
-                          filtered[i],
-                          style: GoogleFonts.notoSansThai(fontSize: 15, color: AppTheme.textDark),
-                        ),
-                        onTap: () {
-                          onSelect(filtered[i]);
-                          Navigator.pop(ctx);
-                        },
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 
   Future<void> _openCountryPicker() async {
@@ -321,21 +271,22 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
         hbd:           _birthdayApi.isNotEmpty ? _birthdayApi : null,
         receiverName:  _receiverNameCtrl.text.trim(),
         receiverPhone: _receiverPhoneCtrl.text.trim(),
-        province:      _province,
-        district:      _district,
-        subdistrict:   _subdistrict,
-        zipCode:       _zipCode,
-        addressDetail: _addressDetailCtrl.text.trim(),
+        address:       _addressCtrl.text.trim(),
+        lineId:        _lineIdCtrl.text.trim().isNotEmpty ? _lineIdCtrl.text.trim() : null,
       );
       final token = await AuthService.instance.getToken();
       if (token != null) await AuthService.instance.saveSession(token, updated);
       if (!mounted) return;
-      final rawPhone = _studentPhoneCtrl.text.trim();
-      final localNumber = rawPhone.startsWith('0') ? rawPhone.substring(1) : rawPhone;
-      context.go('/phone-otp', extra: {
-        'phone': '$_countryCode$localNumber',
-        'phoneCode': _countryCode,
-      });
+      if (_phoneAlreadySet) {
+        context.go('/home');
+      } else {
+        final rawPhone = _studentPhoneCtrl.text.trim();
+        final localNumber = rawPhone.startsWith('0') ? rawPhone.substring(1) : rawPhone;
+        context.go('/phone-otp', extra: {
+          'phone': '$_countryCode$localNumber',
+          'phoneCode': _countryCode,
+        });
+      }
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -352,6 +303,12 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_loading) {
+      return const Scaffold(
+        backgroundColor: Color(0xFFF5F7FA),
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
       body: Column(
@@ -377,60 +334,12 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                     _textField('เบอร์ติดต่อผู้รับ *', _receiverPhoneCtrl, Icons.phone_outlined,
                         hint: 'เบอร์โทรสำหรับติดต่อผู้รับ',
                         keyboardType: TextInputType.phone),
-                    _pickerField(
-                      label: 'จังหวัด *',
-                      value: _province,
-                      icon: Icons.location_city_outlined,
-                      hint: 'เลือกจังหวัด',
-                      onTap: () => _openPicker(
-                        AddressService.getProvinces(),
-                        'เลือกจังหวัด',
-                        (v) => setState(() {
-                          _province = v;
-                          _district = null;
-                          _subdistrict = null;
-                          _zipCode = null;
-                        }),
-                      ),
-                    ),
-                    _pickerField(
-                      label: 'เขต/อำเภอ *',
-                      value: _district,
-                      icon: Icons.map_outlined,
-                      enabled: _province != null,
-                      hint: _province == null ? 'เลือกจังหวัดก่อน' : 'เลือกเขต/อำเภอ',
-                      onTap: () => _openPicker(
-                        AddressService.getDistricts(_province!),
-                        'เลือกเขต/อำเภอ',
-                        (v) => setState(() {
-                          _district = v;
-                          _subdistrict = null;
-                          _zipCode = null;
-                        }),
-                      ),
-                    ),
-                    _pickerField(
-                      label: 'แขวง/ตำบล *',
-                      value: _subdistrict,
-                      icon: Icons.place_outlined,
-                      enabled: _district != null,
-                      hint: _district == null ? 'เลือกเขต/อำเภอก่อน' : 'เลือกแขวง/ตำบล',
-                      onTap: () => _openPicker(
-                        AddressService.getSubdistricts(_province!, _district!)
-                            .map((e) => e['name']!)
-                            .toList(),
-                        'เลือกแขวง/ตำบล',
-                        (v) => setState(() {
-                          _subdistrict = v;
-                          _zipCode = AddressService.getZip(_province!, _district!, v);
-                        }),
-                      ),
-                    ),
-                    _zipDisplay(),
-                    _textField('บ้านเลขที่ / ซอย / ถนน *', _addressDetailCtrl, Icons.home_outlined,
-                        hint: 'เช่น 123/45 ซอยลาดพร้าว 48',
-                        maxLines: 2,
+                    _textField('ที่อยู่จัดส่ง *', _addressCtrl, Icons.home_outlined,
+                        hint: 'เช่น 20/426 ซอยมิสทีน ถนนราษฎร์พัฒนา\nแขวงสะพานสูง เขตสะพานสูง กรุงเทพมหานคร 10240',
+                        maxLines: 4,
                         keyboardType: TextInputType.multiline),
+                    _textField('ID LINE (ไม่บังคับ)', _lineIdCtrl, Icons.chat_bubble_outline_rounded,
+                        hint: 'เช่น @yourlineid'),
                   ],
                 ),
                 const SizedBox(height: 16),
@@ -446,7 +355,9 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                 _buildSection(
                   step: '3',
                   title: 'เบอร์ติดต่อนักเรียน',
-                  subtitle: 'เบอร์จริงของนักเรียนหรือผู้ปกครอง\nต้องยืนยัน OTP ในขั้นตอนถัดไป',
+                  subtitle: _phoneAlreadySet
+                      ? 'เบอร์นี้ได้รับการยืนยันแล้ว ไม่ต้องยืนยันซ้ำ'
+                      : 'เบอร์จริงของนักเรียนหรือผู้ปกครอง\nต้องยืนยัน OTP ในขั้นตอนถัดไป',
                   icon: Icons.phone_iphone_rounded,
                   color: const Color(0xFF32D191),
                   children: [
@@ -460,11 +371,19 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.info_outline_rounded, color: Color(0xFF16A34A), size: 16),
+                          Icon(
+                            _phoneAlreadySet
+                                ? Icons.check_circle_rounded
+                                : Icons.info_outline_rounded,
+                            color: const Color(0xFF16A34A),
+                            size: 16,
+                          ),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              'จะมีขั้นตอนยืนยัน OTP ผ่าน SMS หลังบันทึก',
+                              _phoneAlreadySet
+                                  ? 'เบอร์นี้ได้รับการยืนยันแล้ว จะบันทึกโดยไม่ต้องยืนยัน OTP'
+                                  : 'จะมีขั้นตอนยืนยัน OTP ผ่าน SMS หลังบันทึก',
                               style: GoogleFonts.notoSansThai(
                                 fontSize: 12,
                                 color: const Color(0xFF15803D),
@@ -760,119 +679,6 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     );
   }
 
-  Widget _pickerField({
-    required String label,
-    required String? value,
-    required IconData icon,
-    bool enabled = true,
-    String hint = 'กรุณาเลือก',
-    VoidCallback? onTap,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: GoogleFonts.notoSansThai(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: AppTheme.textLight,
-            ),
-          ),
-          const SizedBox(height: 6),
-          GestureDetector(
-            onTap: enabled ? onTap : null,
-            child: Container(
-              decoration: BoxDecoration(
-                color: enabled ? Colors.white : Colors.grey.shade50,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: value != null ? AppTheme.primary.withOpacity(0.4) : AppTheme.border,
-                ),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-              child: Row(
-                children: [
-                  Icon(
-                    icon,
-                    color: enabled ? AppTheme.primary : AppTheme.textLight,
-                    size: 19,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      value ?? hint,
-                      style: GoogleFonts.notoSansThai(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: value != null ? AppTheme.textDark : AppTheme.textLight,
-                      ),
-                    ),
-                  ),
-                  Icon(
-                    value != null
-                        ? Icons.check_circle_rounded
-                        : Icons.keyboard_arrow_down_rounded,
-                    color: value != null ? AppTheme.primary : AppTheme.textLight,
-                    size: 20,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _zipDisplay() {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'รหัสไปรษณีย์',
-            style: GoogleFonts.notoSansThai(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: AppTheme.textLight,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.grey.shade50,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppTheme.border),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-            child: Row(
-              children: [
-                const Icon(Icons.local_post_office_outlined, color: AppTheme.textLight, size: 19),
-                const SizedBox(width: 12),
-                Text(
-                  _zipCode ?? 'กรอกอัตโนมัติเมื่อเลือกแขวง/ตำบล',
-                  style: GoogleFonts.notoSansThai(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: _zipCode != null ? AppTheme.textDark : AppTheme.textLight,
-                  ),
-                ),
-                if (_zipCode != null) ...[
-                  const SizedBox(width: 8),
-                  const Icon(Icons.check_circle_rounded, color: AppTheme.primary, size: 18),
-                ],
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _birthdayField() {
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
@@ -942,27 +748,53 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'เบอร์โทรศัพท์ *',
-            style: GoogleFonts.notoSansThai(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: AppTheme.textLight,
-            ),
+          Row(
+            children: [
+              Text(
+                'เบอร์โทรศัพท์ *',
+                style: GoogleFonts.notoSansThai(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.textLight,
+                ),
+              ),
+              if (_phoneAlreadySet) ...[
+                const SizedBox(width: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF16A34A),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    'ยืนยันแล้ว',
+                    style: GoogleFonts.notoSansThai(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            ],
           ),
           const SizedBox(height: 6),
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               GestureDetector(
-                onTap: _openCountryPicker,
+                onTap: _phoneAlreadySet ? null : _openCountryPicker,
                 child: Container(
                   height: 52,
                   padding: const EdgeInsets.symmetric(horizontal: 10),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: _phoneAlreadySet ? Colors.grey.shade50 : Colors.white,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppTheme.primary.withOpacity(0.4)),
+                    border: Border.all(
+                      color: _phoneAlreadySet
+                          ? AppTheme.border
+                          : AppTheme.primary.withOpacity(0.4),
+                    ),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -995,10 +827,11 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                 child: TextField(
                   controller: _studentPhoneCtrl,
                   keyboardType: TextInputType.phone,
-                  onChanged: (_) => setState(() {}),
+                  readOnly: _phoneAlreadySet,
+                  onChanged: _phoneAlreadySet ? null : (_) => setState(() {}),
                   style: GoogleFonts.notoSansThai(
                     fontSize: 15,
-                    color: AppTheme.textDark,
+                    color: _phoneAlreadySet ? AppTheme.textLight : AppTheme.textDark,
                     fontWeight: FontWeight.w600,
                   ),
                   decoration: InputDecoration(
@@ -1007,12 +840,14 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                         color: AppTheme.textLight, fontSize: 14),
                     prefixIcon: const Icon(Icons.phone_outlined,
                         color: AppTheme.primary, size: 19),
+                    filled: _phoneAlreadySet,
+                    fillColor: _phoneAlreadySet ? Colors.grey.shade50 : null,
                   ),
                 ),
               ),
             ],
           ),
-          if (_studentPhoneCtrl.text.trim().isNotEmpty) ...[
+          if (!_phoneAlreadySet && _studentPhoneCtrl.text.trim().isNotEmpty) ...[
             const SizedBox(height: 6),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -1093,7 +928,9 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                   )
                 : const Icon(Icons.arrow_forward_rounded, size: 20),
             label: Text(
-              _saving ? 'กำลังบันทึก...' : 'บันทึกและยืนยันเบอร์โทร',
+              _saving
+                  ? 'กำลังบันทึก...'
+                  : (_phoneAlreadySet ? 'บันทึกข้อมูล' : 'บันทึกและยืนยันเบอร์โทร'),
               style: GoogleFonts.notoSansThai(fontSize: 16, fontWeight: FontWeight.w800),
             ),
           ),

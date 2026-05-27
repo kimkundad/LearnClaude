@@ -18,5 +18,5 @@ class AppConfig {
   static const String uploadsBase = '$mainUrl/assets/uploads/';
 
   // Base URL for course PDF files (file_of_course field)
-  static const String fileCoursesBase = 'https://www.learnsbuy.com/assets/file_courses/';
+  static const String fileCoursesBase = '$mainUrl/assets/file_courses/';
 }
