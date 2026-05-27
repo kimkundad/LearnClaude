@@ -31,6 +31,9 @@ class NotificationService {
   /// Set true when ChatScreen is active — suppresses foreground notifications
   bool isChatOpen = false;
 
+  /// Unread chat message count — shown as badge on home chat icon
+  final unreadChatCount = ValueNotifier<int>(0);
+
   Future<void> init(BuildContext context) async {
     await _ensureNotificationReady();
 
@@ -102,6 +105,9 @@ class NotificationService {
 
   void _showLocal(RemoteMessage msg) {
     final type = msg.data['type']?.toString();
+    if (type != 'order_approved' && !isChatOpen) {
+      unreadChatCount.value++;
+    }
     if (isChatOpen) return;
     final n = msg.notification;
     final title = n?.title ??

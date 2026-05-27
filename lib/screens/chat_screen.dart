@@ -51,6 +51,7 @@ class _ChatScreenState extends State<ChatScreen> {
   void initState() {
     super.initState();
     NotificationService.instance.isChatOpen = true;
+    NotificationService.instance.unreadChatCount.value = 0;
     _init();
   }
 

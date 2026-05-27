@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../config/app_config.dart';
 import '../theme/app_theme.dart';
 import '../services/api_service.dart';
 
@@ -530,9 +531,7 @@ class _ExamV2ScreenState extends State<ExamV2Screen>
   }
 
   String _imageBaseUrl() {
-    // image stored as filename only, served from uploads/exercise_v2/
-    const base = 'http://localhost:8087/uploads/exercise_v2/';
-    return base;
+    return '${AppConfig.mainUrl}/uploads/exercise_v2/';
   }
 
   Widget _buildOptionCard(int index, _Option opt, _Question q) {

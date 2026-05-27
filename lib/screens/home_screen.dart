@@ -327,25 +327,56 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
-          Material(
-            color: AppTheme.white,
-            borderRadius: BorderRadius.circular(10),
-            child: InkWell(
-              onTap: _openChat,
-              borderRadius: BorderRadius.circular(10),
-              child: Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
+          ValueListenableBuilder<int>(
+            valueListenable: NotificationService.instance.unreadChatCount,
+            builder: (_, count, __) => Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Material(
+                  color: AppTheme.white,
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: AppTheme.border),
+                  child: InkWell(
+                    onTap: _openChat,
+                    borderRadius: BorderRadius.circular(10),
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: AppTheme.border),
+                      ),
+                      child: const Icon(
+                        Icons.chat_bubble_outline,
+                        color: AppTheme.textMedium,
+                        size: 20,
+                      ),
+                    ),
+                  ),
                 ),
-                child: const Icon(
-                  Icons.chat_bubble_outline,
-                  color: AppTheme.textMedium,
-                  size: 20,
-                ),
-              ),
+                if (count > 0)
+                  Positioned(
+                    top: -4,
+                    right: -4,
+                    child: Container(
+                      padding: const EdgeInsets.all(3),
+                      constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFE8273D),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Text(
+                        count > 99 ? '99+' : '$count',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.notoSansThai(
+                          fontSize: 10,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w900,
+                          height: 1,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ),
         ],

@@ -338,7 +338,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                         hint: 'เช่น 20/426 ซอยมิสทีน ถนนราษฎร์พัฒนา\nแขวงสะพานสูง เขตสะพานสูง กรุงเทพมหานคร 10240',
                         maxLines: 4,
                         keyboardType: TextInputType.multiline),
-                    _textField('ID LINE (ไม่บังคับ)', _lineIdCtrl, Icons.chat_bubble_outline_rounded,
+                    _textField('LINE ID', _lineIdCtrl, Icons.chat_bubble_outline_rounded,
                         hint: 'เช่น @yourlineid'),
                   ],
                 ),
