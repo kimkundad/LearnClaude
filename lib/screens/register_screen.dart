@@ -140,7 +140,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 16),
               _buildLabel('อีเมล'),
-              const SizedBox(height: 8),
+              const SizedBox(height: 8), 
               TextField(
                 controller: _emailCtrl,
                 onChanged: (_) => setState(() {}),
